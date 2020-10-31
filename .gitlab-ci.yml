@@ -1,0 +1,155 @@
+default:
+  before_script:
+    - apk add bash
+    - pip install nose
+
+py2.7-core:
+  image: python:2.7
+  variables:
+    YTDL_TEST_SET: core
+  before_script:
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
+
+py2.7-download:
+  image: python:2.7
+  variables:
+    YTDL_TEST_SET: download
+  allow_failure: true
+  before_script:
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.2-core:
+  image: python:3.2
+  variables:
+    YTDL_TEST_SET: core
+  before_script:
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.2-download:
+  image: python:3.2
+  variables:
+    YTDL_TEST_SET: download
+  allow_failure: true
+  before_script:
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.3-core:
+  image: python:3.3-alpine
+  variables:
+    YTDL_TEST_SET: core
+  before_script:
+    - apk update
+    - apk add bash
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.3-download:
+  image: python:3.3-alpine
+  variables:
+    YTDL_TEST_SET: download
+  before_script:
+    - apk update
+    - apk add bash
+    - pip install nose
+  allow_failure: true
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.4-core:
+  image: python:3.4-alpine
+  variables:
+    YTDL_TEST_SET: core
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.4-download:
+  image: python:3.4-alpine
+  variables:
+    YTDL_TEST_SET: download
+  allow_failure: true
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.5-core:
+  image: python:3.5-alpine
+  variables:
+    YTDL_TEST_SET: core
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.5-download:
+  image: python:3.5-alpine
+  variables:
+    YTDL_TEST_SET: download
+  allow_failure: true
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.6-core:
+  image: python:3.6-alpine
+  variables:
+    YTDL_TEST_SET: core
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.6-download:
+  image: python:3.6-alpine
+  variables:
+    YTDL_TEST_SET: download
+  allow_failure: true
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.7-core:
+  image: python:3.7-alpine
+  variables:
+    YTDL_TEST_SET: core
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.7-download:
+  image: python:3.7-alpine
+  variables:
+    YTDL_TEST_SET: download
+  allow_failure: true
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.8-core:
+  image: python:3.8-alpine
+  variables:
+    YTDL_TEST_SET: core
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.8-download:
+  image: python:3.2-alpine
+  variables:
+    YTDL_TEST_SET: download
+  allow_failure: true
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.9-core:
+  image: python:3.9-alpine
+  variables:
+    YTDL_TEST_SET: core
+  script:
+    - ./devscripts/run_tests.sh
+
+py3.9-download:
+  image: python:3.9-alpine
+  variables:
+    YTDL_TEST_SET: download
+  allow_failure: true
+  script:
+    - ./devscripts/run_tests.sh
