@@ -132,7 +132,7 @@ py3.8-core:
     - ./devscripts/run_tests.sh
 
 py3.8-download:
-  image: python:3.2-alpine
+  image: python:3.8-alpine
   variables:
     YTDL_TEST_SET: download
   allow_failure: true
