@@ -2470,14 +2470,14 @@ class XAttrUnavailableError(HaruhiDLError):
     pass
 
 
-def _create_http_connection(ydl_handler, http_class, is_https, *args, **kwargs):
+def _create_http_connection(hdl_handler, http_class, is_https, *args, **kwargs):
     # Working around python 2 bug (see http://bugs.python.org/issue17849) by limiting
     # expected HTTP responses to meet HTTP/1.0 or later (see also
     # https://github.com/ytdl-org/haruhi-dl/issues/6727)
     if sys.version_info < (3, 0):
         kwargs['strict'] = True
     hc = http_class(*args, **compat_kwargs(kwargs))
-    source_address = ydl_handler._params.get('source_address')
+    source_address = hdl_handler._params.get('source_address')
 
     if source_address is not None:
         # This is to workaround _create_connection() from socket where it will try all

@@ -46,9 +46,9 @@ class TestAnnotations(unittest.TestCase):
     def test_info_json(self):
         expected = list(EXPECTED_ANNOTATIONS)  # Two annotations could have the same text.
         ie = haruhi_dl.extractor.YoutubeIE()
-        ydl = HaruhiDL(params)
-        ydl.add_info_extractor(ie)
-        ydl.download([TEST_ID])
+        hdl = HaruhiDL(params)
+        hdl.add_info_extractor(ie)
+        hdl.download([TEST_ID])
         self.assertTrue(os.path.exists(ANNOTATIONS_FILE))
         annoxml = None
         with io.open(ANNOTATIONS_FILE, 'r', encoding='utf-8') as annof:

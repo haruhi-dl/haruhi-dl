@@ -16,11 +16,11 @@ from .utils import (
 
 
 class Cache(object):
-    def __init__(self, ydl):
-        self._ydl = ydl
+    def __init__(self, hdl):
+        self._hdl = hdl
 
     def _get_root_dir(self):
-        res = self._ydl.params.get('cachedir')
+        res = self._hdl.params.get('cachedir')
         if res is None:
             cache_root = compat_getenv('XDG_CACHE_HOME', '~/.cache')
             res = os.path.join(cache_root, 'haruhi-dl')
@@ -35,7 +35,7 @@ class Cache(object):
 
     @property
     def enabled(self):
-        return self._ydl.params.get('cachedir') is not False
+        return self._hdl.params.get('cachedir') is not False
 
     def store(self, section, key, data, dtype='json'):
         assert dtype in ('json',)
@@ -53,7 +53,7 @@ class Cache(object):
             write_json_file(data, fn)
         except Exception:
             tb = traceback.format_exc()
-            self._ydl.report_warning(
+            self._hdl.report_warning(
                 'Writing cache to %r failed: %s' % (fn, tb))
 
     def load(self, section, key, dtype='json', default=None):
@@ -72,7 +72,7 @@ class Cache(object):
                     file_size = os.path.getsize(cache_fn)
                 except (OSError, IOError) as oe:
                     file_size = str(oe)
-                self._ydl.report_warning(
+                self._hdl.report_warning(
                     'Cache retrieval from %s failed (%s)' % (cache_fn, file_size))
         except IOError:
             pass  # No cache available
@@ -81,16 +81,16 @@ class Cache(object):
 
     def remove(self):
         if not self.enabled:
-            self._ydl.to_screen('Cache is disabled (Did you combine --no-cache-dir and --rm-cache-dir?)')
+            self._hdl.to_screen('Cache is disabled (Did you combine --no-cache-dir and --rm-cache-dir?)')
             return
 
         cachedir = self._get_root_dir()
         if not any((term in cachedir) for term in ('cache', 'tmp')):
             raise Exception('Not removing directory %s - this does not look like a cache dir' % cachedir)
 
-        self._ydl.to_screen(
+        self._hdl.to_screen(
             'Removing cache dir %s .' % cachedir, skip_eol=True)
         if os.path.exists(cachedir):
-            self._ydl.to_screen('.', skip_eol=True)
+            self._hdl.to_screen('.', skip_eol=True)
             shutil.rmtree(cachedir)
-        self._ydl.to_screen('.')
+        self._hdl.to_screen('.')

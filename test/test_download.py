@@ -123,18 +123,18 @@ def generator(test_case, tname):
             params.setdefault('extract_flat', 'in_playlist')
             params.setdefault('skip_download', True)
 
-        ydl = HaruhiDL(params, auto_init=False)
-        ydl.add_default_info_extractors()
+        hdl = HaruhiDL(params, auto_init=False)
+        hdl.add_default_info_extractors()
         finished_hook_called = set()
 
         def _hook(status):
             if status['status'] == 'finished':
                 finished_hook_called.add(status['filename'])
-        ydl.add_progress_hook(_hook)
-        expect_warnings(ydl, test_case.get('expected_warnings', []))
+        hdl.add_progress_hook(_hook)
+        expect_warnings(hdl, test_case.get('expected_warnings', []))
 
         def get_tc_filename(tc):
-            return ydl.prepare_filename(tc.get('info_dict', {}))
+            return hdl.prepare_filename(tc.get('info_dict', {}))
 
         res_dict = None
 
@@ -154,7 +154,7 @@ def generator(test_case, tname):
                     # We're not using .download here since that is just a shim
                     # for outside error handling, and returns the exit code
                     # instead of the result dict.
-                    res_dict = ydl.extract_info(
+                    res_dict = hdl.extract_info(
                         test_case['url'],
                         force_generic_extractor=params.get('force_generic_extractor', False))
                 except (DownloadError, ExtractorError) as err:

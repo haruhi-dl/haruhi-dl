@@ -938,9 +938,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         },
         {
             # Multifeed video with comma in title (see https://github.com/ytdl-org/haruhi-dl/issues/8536)
-            'url': 'https://www.youtube.com/watch?v=gVfLd0zydlo',
+            'url': 'https://www.youtube.com/watch?v=gVfLd0zhdlo',
             'info_dict': {
-                'id': 'gVfLd0zydlo',
+                'id': 'gVfLd0zhdlo',
                 'title': 'DevConf.cz 2016 Day 2 Workshops 1 14:00 - 15:30',
             },
             'playlist_count': 2,
@@ -2629,7 +2629,7 @@ class YoutubePlaylistIE(YoutubePlaylistBaseInfoExtractor):
     }, {
         'url': 'PLtPgu7CB4gbY9oDN3drwC3cMbJggS7dKl',
         'info_dict': {
-            'title': 'YDL_safe_search',
+            'title': 'HDL_safe_search',
             'id': 'PLtPgu7CB4gbY9oDN3drwC3cMbJggS7dKl',
         },
         'playlist_count': 2,

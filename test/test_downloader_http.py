@@ -88,8 +88,8 @@ class TestHttpFD(unittest.TestCase):
 
     def download(self, params, ep):
         params['logger'] = FakeLogger()
-        ydl = HaruhiDL(params)
-        downloader = HttpFD(ydl, params)
+        hdl = HaruhiDL(params)
+        downloader = HttpFD(hdl, params)
         filename = 'testfile.mp4'
         try_rm(encodeFilename(filename))
         self.assertTrue(downloader.real_download(filename, {

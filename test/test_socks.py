@@ -12,7 +12,7 @@ import random
 import subprocess
 
 from test.helper import (
-    FakeYDL,
+    FakeHDL,
     get_params,
 )
 from haruhi_dl.compat import (
@@ -35,44 +35,44 @@ class TestMultipleSocks(unittest.TestCase):
         params = self._check_params(['primary_proxy', 'primary_server_ip'])
         if params is None:
             return
-        ydl = FakeYDL({
+        hdl = FakeHDL({
             'proxy': params['primary_proxy']
         })
         self.assertEqual(
-            ydl.urlopen('http://yt-dl.org/ip').read().decode('utf-8'),
+            hdl.urlopen('http://ifconfig.me/ip').read().decode('utf-8'),
             params['primary_server_ip'])
 
     def test_proxy_https(self):
         params = self._check_params(['primary_proxy', 'primary_server_ip'])
         if params is None:
             return
-        ydl = FakeYDL({
+        hdl = FakeHDL({
             'proxy': params['primary_proxy']
         })
         self.assertEqual(
-            ydl.urlopen('https://yt-dl.org/ip').read().decode('utf-8'),
+            hdl.urlopen('https://ifconfig.me/ip').read().decode('utf-8'),
             params['primary_server_ip'])
 
     def test_secondary_proxy_http(self):
         params = self._check_params(['secondary_proxy', 'secondary_server_ip'])
         if params is None:
             return
-        ydl = FakeYDL()
-        req = compat_urllib_request.Request('http://yt-dl.org/ip')
+        hdl = FakeHDL()
+        req = compat_urllib_request.Request('http://ifconfig.me/ip')
         req.add_header('Ytdl-request-proxy', params['secondary_proxy'])
         self.assertEqual(
-            ydl.urlopen(req).read().decode('utf-8'),
+            hdl.urlopen(req).read().decode('utf-8'),
             params['secondary_server_ip'])
 
     def test_secondary_proxy_https(self):
         params = self._check_params(['secondary_proxy', 'secondary_server_ip'])
         if params is None:
             return
-        ydl = FakeYDL()
-        req = compat_urllib_request.Request('https://yt-dl.org/ip')
+        hdl = FakeHDL()
+        req = compat_urllib_request.Request('https://ifconfig.me/ip')
         req.add_header('Ytdl-request-proxy', params['secondary_proxy'])
         self.assertEqual(
-            ydl.urlopen(req).read().decode('utf-8'),
+            hdl.urlopen(req).read().decode('utf-8'),
             params['secondary_server_ip'])
 
 
@@ -99,10 +99,10 @@ class TestSocks(unittest.TestCase):
         if self._SKIP_SOCKS_TEST:
             return '127.0.0.1'
 
-        ydl = FakeYDL({
+        hdl = FakeHDL({
             'proxy': '%s://127.0.0.1:%d' % (protocol, self.port),
         })
-        return ydl.urlopen('http://yt-dl.org/ip').read().decode('utf-8')
+        return hdl.urlopen('http://ifconfig.me/ip').read().decode('utf-8')
 
     def test_socks4(self):
         self.assertTrue(isinstance(self._get_ip('socks4'), compat_str))

@@ -112,7 +112,7 @@ for f in $RELEASE_FILES; do gpg --passphrase-repeat 5 --detach-sig "build/$versi
 ROOT=$(pwd)
 python devscripts/create-github-release.py ChangeLog $version "$ROOT/build/$version"
 
-ssh ytdl@yt-dl.org "sh html/update_latest.sh $version"
+#ssh ytdl@yt-dl.org "sh html/update_latest.sh $version"
 
 /bin/echo -e "\n### Now switching to gh-pages..."
 git clone --branch gh-pages --single-branch . build/gh-pages

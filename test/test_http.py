@@ -77,8 +77,8 @@ class TestHTTP(unittest.TestCase):
         if sys.version_info[0] == 3:
             return
 
-        ydl = HaruhiDL({'logger': FakeLogger()})
-        r = ydl.extract_info('http://127.0.0.1:%d/302' % self.port)
+        hdl = HaruhiDL({'logger': FakeLogger()})
+        r = hdl.extract_info('http://127.0.0.1:%d/302' % self.port)
         self.assertEqual(r['entries'][0]['url'], 'http://127.0.0.1:%d/vid.mp4' % self.port)
 
 
@@ -96,13 +96,13 @@ class TestHTTPS(unittest.TestCase):
 
     def test_nocheckcertificate(self):
         if sys.version_info >= (2, 7, 9):  # No certificate checking anyways
-            ydl = HaruhiDL({'logger': FakeLogger()})
+            hdl = HaruhiDL({'logger': FakeLogger()})
             self.assertRaises(
                 Exception,
-                ydl.extract_info, 'https://127.0.0.1:%d/video.html' % self.port)
+                hdl.extract_info, 'https://127.0.0.1:%d/video.html' % self.port)
 
-        ydl = HaruhiDL({'logger': FakeLogger(), 'nocheckcertificate': True})
-        r = ydl.extract_info('https://127.0.0.1:%d/video.html' % self.port)
+        hdl = HaruhiDL({'logger': FakeLogger(), 'nocheckcertificate': True})
+        r = hdl.extract_info('https://127.0.0.1:%d/video.html' % self.port)
         self.assertEqual(r['entries'][0]['url'], 'https://127.0.0.1:%d/vid.mp4' % self.port)
 
 
@@ -139,25 +139,25 @@ class TestProxy(unittest.TestCase):
 
     def test_proxy(self):
         geo_proxy = '127.0.0.1:{0}'.format(self.geo_port)
-        ydl = HaruhiDL({
+        hdl = HaruhiDL({
             'proxy': '127.0.0.1:{0}'.format(self.port),
             'geo_verification_proxy': geo_proxy,
         })
         url = 'http://foo.com/bar'
-        response = ydl.urlopen(url).read().decode('utf-8')
+        response = hdl.urlopen(url).read().decode('utf-8')
         self.assertEqual(response, 'normal: {0}'.format(url))
 
         req = compat_urllib_request.Request(url)
         req.add_header('Ytdl-request-proxy', geo_proxy)
-        response = ydl.urlopen(req).read().decode('utf-8')
+        response = hdl.urlopen(req).read().decode('utf-8')
         self.assertEqual(response, 'geo: {0}'.format(url))
 
     def test_proxy_with_idn(self):
-        ydl = HaruhiDL({
+        hdl = HaruhiDL({
             'proxy': '127.0.0.1:{0}'.format(self.port),
         })
         url = 'http://中文.tw/'
-        response = ydl.urlopen(url).read().decode('utf-8')
+        response = hdl.urlopen(url).read().decode('utf-8')
         # b'xn--fiq228c' is '中文'.encode('idna')
         self.assertEqual(response, 'normal: http://xn--fiq228c.tw/')
 

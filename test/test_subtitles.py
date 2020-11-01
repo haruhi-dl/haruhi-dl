@@ -7,7 +7,7 @@ import sys
 import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from test.helper import FakeYDL, md5
+from test.helper import FakeHDL, md5
 
 
 from haruhi_dl.extractor import (
@@ -35,7 +35,7 @@ class BaseTestSubtitles(unittest.TestCase):
     IE = None
 
     def setUp(self):
-        self.DL = FakeYDL()
+        self.DL = FakeHDL()
         self.ie = self.IE()
         self.DL.add_info_extractor(self.ie)
 

@@ -107,7 +107,7 @@ class HttpFD(FileDownloader):
             # Establish connection
             try:
                 try:
-                    ctx.data = self.ydl.urlopen(request)
+                    ctx.data = self.hdl.urlopen(request)
                 except (compat_urllib_error.URLError, ) as err:
                     if isinstance(err.reason, socket.timeout):
                         raise RetryDownload(err)
@@ -149,7 +149,7 @@ class HttpFD(FileDownloader):
                     # Unable to resume (requested range not satisfiable)
                     try:
                         # Open the connection again without the range header
-                        ctx.data = self.ydl.urlopen(
+                        ctx.data = self.hdl.urlopen(
                             sanitized_Request(url, None, headers))
                         content_length = ctx.data.info()['Content-Length']
                     except (compat_urllib_error.HTTPError, ) as err:

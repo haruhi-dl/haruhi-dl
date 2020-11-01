@@ -279,7 +279,7 @@ class F4mFD(FragmentFD):
         return media
 
     def _get_bootstrap_from_url(self, bootstrap_url):
-        bootstrap = self.ydl.urlopen(bootstrap_url).read()
+        bootstrap = self.hdl.urlopen(bootstrap_url).read()
         return read_bootstrap_info(bootstrap)
 
     def _update_live_fragments(self, bootstrap_url, latest_fragment):
@@ -321,7 +321,7 @@ class F4mFD(FragmentFD):
         requested_bitrate = info_dict.get('tbr')
         self.to_screen('[%s] Downloading f4m manifest' % self.FD_NAME)
 
-        urlh = self.ydl.urlopen(self._prepare_url(info_dict, man_url))
+        urlh = self.hdl.urlopen(self._prepare_url(info_dict, man_url))
         man_url = urlh.geturl()
         # Some manifests may be malformed, e.g. prosiebensat1 generated manifests
         # (see https://github.com/ytdl-org/haruhi-dl/issues/6215#issuecomment-121704244

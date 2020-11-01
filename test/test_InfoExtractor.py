@@ -9,7 +9,7 @@ import sys
 import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from test.helper import FakeYDL, expect_dict, expect_value, http_server_port
+from test.helper import FakeHDL, expect_dict, expect_value, http_server_port
 from haruhi_dl.compat import compat_etree_fromstring, compat_http_server
 from haruhi_dl.extractor.common import InfoExtractor
 from haruhi_dl.extractor import YoutubeIE, get_info_extractor
@@ -41,7 +41,7 @@ class TestIE(InfoExtractor):
 
 class TestInfoExtractor(unittest.TestCase):
     def setUp(self):
-        self.ie = TestIE(FakeYDL())
+        self.ie = TestIE(FakeHDL())
 
     def test_ie_key(self):
         self.assertEqual(get_info_extractor(YoutubeIE.ie_key()), YoutubeIE)

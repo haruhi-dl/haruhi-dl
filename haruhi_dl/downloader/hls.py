@@ -59,7 +59,7 @@ class HlsFD(FragmentFD):
         man_url = info_dict['url']
         self.to_screen('[%s] Downloading m3u8 manifest' % self.FD_NAME)
 
-        urlh = self.ydl.urlopen(self._prepare_url(info_dict, man_url))
+        urlh = self.hdl.urlopen(self._prepare_url(info_dict, man_url))
         man_url = urlh.geturl()
         s = urlh.read().decode('utf-8', 'ignore')
 
@@ -70,7 +70,7 @@ class HlsFD(FragmentFD):
             self.report_warning(
                 'hlsnative has detected features it does not support, '
                 'extraction will be delegated to ffmpeg')
-            fd = FFmpegFD(self.ydl, self.params)
+            fd = FFmpegFD(self.hdl, self.params)
             for ph in self._progress_hooks:
                 fd.add_progress_hook(ph)
             return fd.real_download(filename, info_dict)
@@ -168,7 +168,7 @@ class HlsFD(FragmentFD):
                         return False
                     if decrypt_info['METHOD'] == 'AES-128':
                         iv = decrypt_info.get('IV') or compat_struct_pack('>8xq', media_sequence)
-                        decrypt_info['KEY'] = decrypt_info.get('KEY') or self.ydl.urlopen(
+                        decrypt_info['KEY'] = decrypt_info.get('KEY') or self.hdl.urlopen(
                             self._prepare_url(info_dict, info_dict.get('_decryption_key_url') or decrypt_info['URI'])).read()
                         frag_content = AES.new(
                             decrypt_info['KEY'], AES.MODE_CBC, iv).decrypt(frag_content)

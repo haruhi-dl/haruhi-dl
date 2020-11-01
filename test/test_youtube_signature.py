@@ -12,7 +12,7 @@ import io
 import re
 import string
 
-from test.helper import FakeYDL
+from test.helper import FakeHDL
 from haruhi_dl.extractor import YoutubeIE
 from haruhi_dl.compat import compat_str, compat_urlretrieve
 
@@ -116,8 +116,8 @@ def make_tfunc(url, stype, sig_input, expected_sig):
         if not os.path.exists(fn):
             compat_urlretrieve(url, fn)
 
-        ydl = FakeYDL()
-        ie = YoutubeIE(ydl)
+        hdl = FakeHDL()
+        ie = YoutubeIE(hdl)
         if stype == 'js':
             with io.open(fn, encoding='utf-8') as testf:
                 jscode = testf.read()
