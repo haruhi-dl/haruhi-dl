@@ -50,13 +50,6 @@ from ..utils import (
     urlencode_postdata,
 )
 
-# am not a professional coder, this codebase can go to hell
-def mess(a,b):
-   	c=a[0]
-   	a[0]=a[b%len(a)]
-   	a[b%len(a)]=c
-   	return a
-
 class YoutubeBaseInfoExtractor(InfoExtractor):
     """Provide base functions for Youtube extractors"""
     _LOGIN_URL = 'https://accounts.google.com/ServiceLogin'
@@ -660,25 +653,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'skip_download': True,
             },
         },
-        {
-            'url': 'https://www.youtube.com/watch?v=a9LDPn-MO4I',
-            'note': '256k DASH audio (format 141) via DASH manifest',
-            'info_dict': {
-                'id': 'a9LDPn-MO4I',
-                'ext': 'm4a',
-                'upload_date': '20121002',
-                'uploader_id': '8KVIDEO',
-                'uploader_url': r're:https?://(?:www\.)?youtube\.com/user/8KVIDEO',
-                'description': '',
-                'uploader': '8KVIDEO',
-                'title': 'UHDTV TEST 8K VIDEO.mp4'
-            },
-            'params': {
-                'youtube_include_dash_manifest': True,
-                'format': '141',
-            },
-            'skip': 'format 141 not served anymore',
-        },
         # DASH manifest with encrypted signature
         {
             'url': 'https://www.youtube.com/watch?v=IB3lcPjvWLA',
@@ -817,59 +791,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'title': '[A-made] 變態妍字幕版 太妍 我就是這樣的人',
             },
         },
-        # url_encoded_fmt_stream_map is empty string
-        {
-            'url': 'qEJwOuvDf7I',
-            'info_dict': {
-                'id': 'qEJwOuvDf7I',
-                'ext': 'webm',
-                'title': 'Обсуждение судебной практики по выборам 14 сентября 2014 года в Санкт-Петербурге',
-                'description': '',
-                'upload_date': '20150404',
-                'uploader_id': 'spbelect',
-                'uploader': 'Наблюдатели Петербурга',
-            },
-            'params': {
-                'skip_download': 'requires avconv',
-            },
-            'skip': 'This live event has ended.',
-        },
-        # Extraction from multiple DASH manifests (https://github.com/ytdl-org/haruhi-dl/pull/6097)
-        {
-            'url': 'https://www.youtube.com/watch?v=FIl7x6_3R5Y',
-            'info_dict': {
-                'id': 'FIl7x6_3R5Y',
-                'ext': 'webm',
-                'title': 'md5:7b81415841e02ecd4313668cde88737a',
-                'description': 'md5:116377fd2963b81ec4ce64b542173306',
-                'duration': 220,
-                'upload_date': '20150625',
-                'uploader_id': 'dorappi2000',
-                'uploader_url': r're:https?://(?:www\.)?youtube\.com/user/dorappi2000',
-                'uploader': 'dorappi2000',
-                'formats': 'mincount:31',
-            },
-            'skip': 'not actual anymore',
-        },
-        # DASH manifest with segment_list
-        {
-            'url': 'https://www.youtube.com/embed/CsmdDsKjzN8',
-            'md5': '8ce563a1d667b599d21064e982ab9e31',
-            'info_dict': {
-                'id': 'CsmdDsKjzN8',
-                'ext': 'mp4',
-                'upload_date': '20150501',  # According to '<meta itemprop="datePublished"', but in other places it's 20150510
-                'uploader': 'Airtek',
-                'description': 'Retransmisión en directo de la XVIII media maratón de Zaragoza.',
-                'uploader_id': 'UCzTzUmjXxxacNnL8I3m4LnQ',
-                'title': 'Retransmisión XVIII Media maratón Zaragoza 2015',
-            },
-            'params': {
-                'youtube_include_dash_manifest': True,
-                'format': '135',  # bestvideo
-            },
-            'skip': 'This live event has ended.',
-        },
         {
             # Multifeed videos (multiple cameras), URL is for Main Camera
             'url': 'https://www.youtube.com/watch?v=jqWvoWXjCVs',
@@ -986,23 +907,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'only_matching': True,
         },
         {
-            # Video with yt:stretch=17:0
-            'url': 'https://www.youtube.com/watch?v=Q39EVAstoRM',
-            'info_dict': {
-                'id': 'Q39EVAstoRM',
-                'ext': 'mp4',
-                'title': 'Clash Of Clans#14 Dicas De Ataque Para CV 4',
-                'description': 'md5:ee18a25c350637c8faff806845bddee9',
-                'upload_date': '20151107',
-                'uploader_id': 'UCCr7TALkRbo3EtFzETQF1LA',
-                'uploader': 'CH GAMER DROID',
-            },
-            'params': {
-                'skip_download': True,
-            },
-            'skip': 'This video does not exist.',
-        },
-        {
             # Video licensed under Creative Commons
             'url': 'https://www.youtube.com/watch?v=M4gD1WSo5mA',
             'info_dict': {
@@ -1048,25 +952,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             # YouTube Red paid video (https://github.com/ytdl-org/haruhi-dl/issues/10059)
             'url': 'https://www.youtube.com/watch?v=i1Ko8UG-Tdo',
             'only_matching': True,
-        },
-        {
-            # Rental video preview
-            'url': 'https://www.youtube.com/watch?v=yYr8q0y5Jfg',
-            'info_dict': {
-                'id': 'uGpuVWrhIzE',
-                'ext': 'mp4',
-                'title': 'Piku - Trailer',
-                'description': 'md5:c36bd60c3fd6f1954086c083c72092eb',
-                'upload_date': '20150811',
-                'uploader': 'FlixMatrix',
-                'uploader_id': 'FlixMatrixKaravan',
-                'uploader_url': r're:https?://(?:www\.)?youtube\.com/user/FlixMatrixKaravan',
-                'license': 'Standard YouTube License',
-            },
-            'params': {
-                'skip_download': True,
-            },
-            'skip': 'This video is not available.',
         },
         {
             # YouTube Red video with episode data
@@ -1133,27 +1018,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             # DRM protected
             'url': 'https://www.youtube.com/watch?v=s7_qI6_mIXc',
             'only_matching': True,
-        },
-        {
-            # Video with unsupported adaptive stream type formats
-            'url': 'https://www.youtube.com/watch?v=Z4Vy8R84T1U',
-            'info_dict': {
-                'id': 'Z4Vy8R84T1U',
-                'ext': 'mp4',
-                'title': 'saman SMAN 53 Jakarta(Sancety) opening COFFEE4th at SMAN 53 Jakarta',
-                'description': 'md5:d41d8cd98f00b204e9800998ecf8427e',
-                'duration': 433,
-                'upload_date': '20130923',
-                'uploader': 'Amelia Putri Harwita',
-                'uploader_id': 'UCpOxM49HJxmC1qCalXyB3_Q',
-                'uploader_url': r're:https?://(?:www\.)?youtube\.com/channel/UCpOxM49HJxmC1qCalXyB3_Q',
-                'formats': 'maxcount:10',
-            },
-            'params': {
-                'skip_download': True,
-                'youtube_include_dash_manifest': False,
-            },
-            'skip': 'not actual anymore',
         },
         {
             # Youtube Music Auto-generated description
@@ -1385,49 +1249,25 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 '    return %s\n') % (signature_id_tuple, expr_code)
         self.to_screen('Extracted signature function:\n' + code)
 
-    def _parse_sig_js(self, jscode):
-        funcname = self._search_regex(
-            (r'.*[a-z]\=a\.split.*a\.join.*',
-             r'\b[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\b[a-zA-Z0-9]+\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'(?:\b|[^a-zA-Z0-9$])(?P<sig>[a-zA-Z0-9$]{2})\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)',
-             r'(?P<sig>[a-zA-Z0-9$]+)\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)',
-             # Obsolete patterns
-             r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*(?:encodeURIComponent\s*\()?\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\b[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\b[a-zA-Z0-9]+\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\bc\s*&&\s*a\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\bc\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\bc\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\('),
-            jscode, 'Initial JS player signature function name', group='sig')
-
-        jsi = JSInterpreter(jscode)
-        initial_function = jsi.extract_function(funcname)
-        return lambda s: initial_function([s])
-
-    def _parse_sig_swf(self, file_contents):
-        swfi = SWFInterpreter(file_contents)
-        TARGET_CLASSNAME = 'SignatureDecipher'
-        searched_class = swfi.extract_class(TARGET_CLASSNAME)
-        initial_function = swfi.extract_function(searched_class, 'decipher')
-        return lambda s: initial_function([s])
+    def mess(self,a,b):
+        c=a[0]
+        a[0]=a[b%len(a)]
+        a[b%len(a)]=c
+        return a
 
     def _decrypt_signature(self, s, video_id, player_url, age_gate=False):
         """Turn the encrypted s field into a working signature"""
         a=[char for char in s]
-        a=mess(a,67)
+        a=self.mess(a,67)
         a=a[1:]
-        a=mess(a,49)
+        a=self.mess(a,49)
         a=a[3:]
-        a=mess(a,52)
+        a=self.mess(a,52)
         a.reverse()
         a=a[1:]
-        a=mess(a,43)
+        a=self.mess(a,43)
         a.reverse()
         return "".join(a)
-        
 
     def _get_subtitles(self, video_id, webpage):
         try:
@@ -2379,12 +2219,12 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         def _extract_count(count_name):
             return str_to_int(self._search_regex(
-                r'-%s-button[^>]+><span[^>]+class="yt-uix-button-content"[^>]*>([\d,]+)</span>'
+                r'"label":"([0-9,]+) %s'
                 % re.escape(count_name),
                 video_webpage, count_name, default=None))
 
-        like_count = _extract_count('like')
-        dislike_count = _extract_count('dislike')
+        like_count = _extract_count('likes')
+        dislike_count = _extract_count('dislikes')
 
         if view_count is None:
             view_count = str_to_int(self._search_regex(

@@ -113,10 +113,6 @@ class BRIE(InfoExtractor):
                 media['upload_date'] = ''.join(reversed(broadcast_date.split('.')))
             medias.append(media)
 
-        if len(medias) > 1:
-            self._downloader.report_warning(
-                'found multiple medias; please '
-                'report this with the video URL to http://yt-dl.org/bug')
         if not medias:
             raise ExtractorError('No media entries found')
         return medias[0]

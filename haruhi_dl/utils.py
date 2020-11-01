@@ -2319,8 +2319,8 @@ def bug_reports_message():
     if ytdl_is_updateable():
         update_cmd = 'type  haruhi-dl -U  to update'
     else:
-        update_cmd = 'see  https://yt-dl.org/update  on how to update'
-    msg = '; please report this issue on https://yt-dl.org/bug .'
+        update_cmd = 'see  https://haruhi.download/update  on how to update'
+    msg = '; please report this issue on https://haruhi.download/bug .'
     msg += ' Make sure you are using the latest version; %s.' % update_cmd
     msg += ' Be sure to call haruhi-dl with the --verbose flag and include its complete output.'
     return msg
