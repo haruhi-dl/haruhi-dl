@@ -1,17 +1,17 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import codecs
 import re
 
 from .common import InfoExtractor
 from ..utils import (
+    compat_urllib_parse_unquote_plus,
     ExtractorError,
     float_or_none,
-    int_or_none,
     multipart_encode,
     parse_duration,
     random_birthday,
+    rot47,
     urljoin,
 )
 
@@ -43,25 +43,21 @@ class CDAIE(InfoExtractor):
             'description': 'md5:60d76b71186dcce4e0ba6d4bbdb13e1a',
             'thumbnail': r're:^https?://.*\.jpg$',
             'uploader': 'crash404',
-            'view_count': int,
             'average_rating': float,
             'duration': 137,
             'age_limit': 0,
         }
     }, {
         # Age-restricted
-        'url': 'http://www.cda.pl/video/1273454c4',
+        'url': 'https://www.cda.pl/video/225836e',
         'info_dict': {
-            'id': '1273454c4',
+            'id': '225836e',
             'ext': 'mp4',
-            'title': 'Bronson (2008) napisy HD 1080p',
-            'description': 'md5:1b6cb18508daf2dc4e0fa4db77fec24c',
-            'height': 1080,
-            'uploader': 'boniek61',
+            'title': 'Cycki',
+            'description': 'cycki cycuszki fajne ciekawe azja ajzatka',
             'thumbnail': r're:^https?://.*\.jpg$',
-            'duration': 5554,
+            'duration': 6,
             'age_limit': 18,
-            'view_count': int,
             'average_rating': float,
         },
     }, {
@@ -90,7 +86,7 @@ class CDAIE(InfoExtractor):
             raise ExtractorError('This video is only available for premium users.', expected=True)
 
         need_confirm_age = False
-        if self._html_search_regex(r'(<form[^>]+action="/a/validatebirth")',
+        if self._html_search_regex(r'(<form[^>]+action="[^>]*/a/validatebirth")',
                                    webpage, 'birthday validate form', default=None):
             webpage = self._download_age_confirm_page(
                 url, video_id, note='Confirming age')
@@ -98,24 +94,17 @@ class CDAIE(InfoExtractor):
 
         formats = []
 
-        uploader = self._search_regex(r'''(?x)
-            <(span|meta)[^>]+itemprop=(["\'])author\2[^>]*>
-            (?:<\1[^>]*>[^<]*</\1>|(?!</\1>)(?:.|\n))*?
-            <(span|meta)[^>]+itemprop=(["\'])name\4[^>]*>(?P<uploader>[^<]+)</\3>
-        ''', webpage, 'uploader', default=None, group='uploader')
-        view_count = self._search_regex(
-            r'Odsłony:(?:\s|&nbsp;)*([0-9]+)', webpage,
-            'view_count', default=None)
+        uploader = self._search_regex(r'"author":\s*{[^}]*"name":\s*"([^"]+)"',
+                                      webpage, 'uploader', default=None)
         average_rating = self._search_regex(
-            r'<(?:span|meta)[^>]+itemprop=(["\'])ratingValue\1[^>]*>(?P<rating_value>[0-9.]+)',
-            webpage, 'rating', fatal=False, group='rating_value')
+            r'<span class="rating">\s*([\d.]+)',
+            webpage, 'rating', fatal=False)
 
         info_dict = {
             'id': video_id,
             'title': self._og_search_title(webpage),
             'description': self._og_search_description(webpage),
             'uploader': uploader,
-            'view_count': int_or_none(view_count),
             'average_rating': float_or_none(average_rating),
             'thumbnail': self._og_search_thumbnail(webpage),
             'formats': formats,
@@ -137,10 +126,14 @@ class CDAIE(InfoExtractor):
             if not video or 'file' not in video:
                 self.report_warning('Unable to extract %s version information' % version)
                 return
-            if video['file'].startswith('uggc'):
-                video['file'] = codecs.decode(video['file'], 'rot_13')
-                if video['file'].endswith('adc.mp4'):
-                    video['file'] = video['file'].replace('adc.mp4', '.mp4')
+            video['file'] = rot47(compat_urllib_parse_unquote_plus(video['file']))
+            if not video['file'].startswith('http'):
+                video['file'] = 'https://' + video['file']
+            video['file'] = video['file'].replace('.3cda.pl', '.cda.pl')
+            if video['file'].endswith('adc.mp4'):
+                video['file'] = video['file'].replace('adc.mp4', '.mp4')
+            if not video['file'].endswith('.mp4'):
+                video['file'] = video['file'][:-3] + '.mp4'
             f = {
                 'url': video['file'],
             }
@@ -167,7 +160,7 @@ class CDAIE(InfoExtractor):
                 handler = self._download_webpage
 
             webpage = handler(
-                self._BASE_URL + href, video_id,
+                href if href.startswith('http') else self._BASE_URL + href, video_id,
                 'Downloading %s version information' % resolution, fatal=False)
             if not webpage:
                 # Manually report warning because empty page is returned when
