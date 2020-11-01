@@ -15,7 +15,7 @@ import io
 import json
 import xml.etree.ElementTree
 
-from youtube_dl.utils import (
+from haruhi_dl.utils import (
     age_restricted,
     args_to_str,
     encode_base_n,
@@ -105,7 +105,7 @@ from youtube_dl.utils import (
     cli_bool_option,
     parse_codecs,
 )
-from youtube_dl.compat import (
+from haruhi_dl.compat import (
     compat_chr,
     compat_etree_fromstring,
     compat_getenv,
@@ -1396,7 +1396,7 @@ Line 1
         self.assertEqual(caesar('ebg', 'acegik', -2), 'abc')
 
     def test_rot47(self):
-        self.assertEqual(rot47('youtube-dl'), r'J@FEF36\5=')
+        self.assertEqual(rot47('haruhi-dl'), r'J@FEF36\5=')
         self.assertEqual(rot47('YOUTUBE-DL'), r'*~&%&qt\s{')
 
     def test_urshift(self):

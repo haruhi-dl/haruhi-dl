@@ -6,7 +6,7 @@ DOWNLOAD_TESTS="age_restriction|download|iqiyi_sdk_interpreter|socks|subtitles|w
 test_set=""
 multiprocess_args=""
 
-case "$YTDL_TEST_SET" in
+case "$HDL_TEST_SET" in
     core)
         test_set="-I test_($DOWNLOAD_TESTS)\.py"
     ;;

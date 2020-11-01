@@ -7,7 +7,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-from youtube_dl.extractor import (
+from haruhi_dl.extractor import (
     gen_extractors,
 )
 

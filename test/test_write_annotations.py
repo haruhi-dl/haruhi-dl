@@ -15,13 +15,13 @@ import io
 
 import xml.etree.ElementTree
 
-import youtube_dl.YoutubeDL
-import youtube_dl.extractor
+import haruhi_dl.HaruhiDL
+import haruhi_dl.extractor
 
 
-class YoutubeDL(youtube_dl.YoutubeDL):
+class HaruhiDL(haruhi_dl.HaruhiDL):
     def __init__(self, *args, **kwargs):
-        super(YoutubeDL, self).__init__(*args, **kwargs)
+        super(HaruhiDL, self).__init__(*args, **kwargs)
         self.to_stderr = self.to_screen
 
 
@@ -45,8 +45,8 @@ class TestAnnotations(unittest.TestCase):
 
     def test_info_json(self):
         expected = list(EXPECTED_ANNOTATIONS)  # Two annotations could have the same text.
-        ie = youtube_dl.extractor.YoutubeIE()
-        ydl = YoutubeDL(params)
+        ie = haruhi_dl.extractor.YoutubeIE()
+        ydl = HaruhiDL(params)
         ydl.add_info_extractor(ie)
         ydl.download([TEST_ID])
         self.assertTrue(os.path.exists(ANNOTATIONS_FILE))

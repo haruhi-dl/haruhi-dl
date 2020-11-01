@@ -10,10 +10,10 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from test.helper import http_server_port, try_rm
-from youtube_dl import YoutubeDL
-from youtube_dl.compat import compat_http_server
-from youtube_dl.downloader.http import HttpFD
-from youtube_dl.utils import encodeFilename
+from haruhi_dl import HaruhiDL
+from haruhi_dl.compat import compat_http_server
+from haruhi_dl.downloader.http import HttpFD
+from haruhi_dl.utils import encodeFilename
 import threading
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -88,7 +88,7 @@ class TestHttpFD(unittest.TestCase):
 
     def download(self, params, ep):
         params['logger'] = FakeLogger()
-        ydl = YoutubeDL(params)
+        ydl = HaruhiDL(params)
         downloader = HttpFD(ydl, params)
         filename = 'testfile.mp4'
         try_rm(encodeFilename(filename))

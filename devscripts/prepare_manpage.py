@@ -16,7 +16,7 @@ youtube\-dl \- download videos from youtube.com or other video platforms
 
 # SYNOPSIS
 
-**youtube-dl** \[OPTIONS\] URL [URL...]
+**haruhi-dl** \[OPTIONS\] URL [URL...]
 
 '''
 
@@ -33,7 +33,7 @@ def main():
         readme = f.read()
 
     readme = re.sub(r'(?s)^.*?(?=# DESCRIPTION)', '', readme)
-    readme = re.sub(r'\s+youtube-dl \[OPTIONS\] URL \[URL\.\.\.\]', '', readme)
+    readme = re.sub(r'\s+haruhi-dl \[OPTIONS\] URL \[URL\.\.\.\]', '', readme)
     readme = PREFIX + readme
 
     readme = filter_options(readme)

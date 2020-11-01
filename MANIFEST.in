@@ -2,8 +2,8 @@ include README.md
 include LICENSE
 include AUTHORS
 include ChangeLog
-include youtube-dl.bash-completion
-include youtube-dl.fish
-include youtube-dl.1
+include haruhi-dl.bash-completion
+include haruhi-dl.fish
+include haruhi-dl.1
 recursive-include docs Makefile conf.py *.rst
 recursive-include test *

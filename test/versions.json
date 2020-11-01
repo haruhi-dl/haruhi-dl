@@ -4,29 +4,29 @@
     "versions": {
         "2013.01.02": {
             "bin": [
-                "http://youtube-dl.org/downloads/2013.01.02/youtube-dl", 
+                "http://haruhi-dl.org/downloads/2013.01.02/haruhi-dl", 
                 "f5b502f8aaa77675c4884938b1e4871ebca2611813a0c0e74f60c0fbd6dcca6b"
             ], 
             "exe": [
-                "http://youtube-dl.org/downloads/2013.01.02/youtube-dl.exe", 
+                "http://haruhi-dl.org/downloads/2013.01.02/haruhi-dl.exe", 
                 "75fa89d2ce297d102ff27675aa9d92545bbc91013f52ec52868c069f4f9f0422"
             ], 
             "tar": [
-                "http://youtube-dl.org/downloads/2013.01.02/youtube-dl-2013.01.02.tar.gz", 
+                "http://haruhi-dl.org/downloads/2013.01.02/haruhi-dl-2013.01.02.tar.gz", 
                 "6a66d022ac8e1c13da284036288a133ec8dba003b7bd3a5179d0c0daca8c8196"
             ]
         }, 
         "2013.01.06": {
             "bin": [
-                "http://youtube-dl.org/downloads/2013.01.06/youtube-dl", 
+                "http://haruhi-dl.org/downloads/2013.01.06/haruhi-dl", 
                 "64b6ed8865735c6302e836d4d832577321b4519aa02640dc508580c1ee824049"
             ], 
             "exe": [
-                "http://youtube-dl.org/downloads/2013.01.06/youtube-dl.exe", 
+                "http://haruhi-dl.org/downloads/2013.01.06/haruhi-dl.exe", 
                 "58609baf91e4389d36e3ba586e21dab882daaaee537e4448b1265392ae86ff84"
             ], 
             "tar": [
-                "http://youtube-dl.org/downloads/2013.01.06/youtube-dl-2013.01.06.tar.gz", 
+                "http://haruhi-dl.org/downloads/2013.01.06/haruhi-dl-2013.01.06.tar.gz", 
                 "fe77ab20a95d980ed17a659aa67e371fdd4d656d19c4c7950e7b720b0c2f1a86"
             ]
         }

@@ -10,13 +10,13 @@ import types
 import ssl
 import sys
 
-import youtube_dl.extractor
-from youtube_dl import YoutubeDL
-from youtube_dl.compat import (
+import haruhi_dl.extractor
+from haruhi_dl import HaruhiDL
+from haruhi_dl.compat import (
     compat_os_name,
     compat_str,
 )
-from youtube_dl.utils import (
+from haruhi_dl.utils import (
     preferredencoding,
     write_string,
 )
@@ -61,7 +61,7 @@ def report_warning(message):
     sys.stderr.write(output)
 
 
-class FakeYDL(YoutubeDL):
+class FakeYDL(HaruhiDL):
     def __init__(self, override=None):
         # Different instances of the downloader can't share the same dictionary
         # some test set the "sublang" parameter, which would break the md5 checks.
@@ -90,7 +90,7 @@ class FakeYDL(YoutubeDL):
 
 
 def gettestcases(include_onlymatching=False):
-    for ie in youtube_dl.extractor.gen_extractors():
+    for ie in haruhi_dl.extractor.gen_extractors():
         for tc in ie.get_testcases(include_onlymatching):
             yield tc
 
@@ -192,7 +192,7 @@ def expect_info_dict(self, got_dict, expected_dict):
     if got_dict.get('_type') not in ('playlist', 'multi_video'):
         for key in ('id', 'url', 'title', 'ext'):
             self.assertTrue(got_dict.get(key), 'Missing mandatory field %s' % key)
-    # Check for mandatory fields that are automatically set by YoutubeDL
+    # Check for mandatory fields that are automatically set by HaruhiDL
     for key in ['webpage_url', 'extractor', 'extractor_key']:
         self.assertTrue(got_dict.get(key), 'Missing field: %s' % key)
 

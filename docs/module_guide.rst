@@ -1,18 +1,18 @@
-Using the ``youtube_dl`` module
+Using the ``haruhi_dl`` module
 ===============================
 
-When using the ``youtube_dl`` module, you start by creating an instance of :class:`YoutubeDL` and adding all the available extractors:
+When using the ``haruhi_dl`` module, you start by creating an instance of :class:`HaruhiDL` and adding all the available extractors:
 
 .. code-block:: python
 
-    >>> from youtube_dl import YoutubeDL
-    >>> ydl = YoutubeDL()
+    >>> from haruhi_dl import HaruhiDL
+    >>> ydl = HaruhiDL()
     >>> ydl.add_default_info_extractors()
 
 Extracting video information
 ----------------------------
 
-You use the :meth:`YoutubeDL.extract_info` method for getting the video information, which returns a dictionary:
+You use the :meth:`HaruhiDL.extract_info` method for getting the video information, which returns a dictionary:
 
 .. code-block:: python
 
@@ -22,7 +22,7 @@ You use the :meth:`YoutubeDL.extract_info` method for getting the video informat
     [youtube] BaW_jenozKc: Downloading video info webpage
     [youtube] BaW_jenozKc: Extracting video information
     >>> info['title']
-    'youtube-dl test video "\'/\\ä↭𝕐'
+    'haruhi-dl test video "\'/\\ä↭𝕐'
     >>> info['height'], info['width']
     (720, 1280)
 

@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from test.helper import try_rm
 
 
-from youtube_dl import YoutubeDL
+from haruhi_dl import HaruhiDL
 
 
 def _download_restricted(url, filename, age):
@@ -22,7 +22,7 @@ def _download_restricted(url, filename, age):
         'writeinfojson': True,
         'outtmpl': '%(id)s.%(ext)s',
     }
-    ydl = YoutubeDL(params)
+    ydl = HaruhiDL(params)
     ydl.add_default_info_extractors()
     json_filename = os.path.splitext(filename)[0] + '.info.json'
     try_rm(json_filename)

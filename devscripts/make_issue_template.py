@@ -16,9 +16,9 @@ def main():
     with io.open(infile, encoding='utf-8') as inf:
         issue_template_tmpl = inf.read()
 
-    # Get the version from youtube_dl/version.py without importing the package
-    exec(compile(open('youtube_dl/version.py').read(),
-                 'youtube_dl/version.py', 'exec'))
+    # Get the version from haruhi_dl/version.py without importing the package
+    exec(compile(open('haruhi_dl/version.py').read(),
+                 'haruhi_dl/version.py', 'exec'))
 
     out = issue_template_tmpl % {'version': locals()['__version__']}
 

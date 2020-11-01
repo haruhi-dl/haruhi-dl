@@ -10,7 +10,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-from youtube_dl.compat import (
+from haruhi_dl.compat import (
     compat_getenv,
     compat_setenv,
     compat_etree_Element,
@@ -46,11 +46,11 @@ class TestCompat(unittest.TestCase):
         compat_setenv('HOME', old_home or '')
 
     def test_all_present(self):
-        import youtube_dl.compat
-        all_names = youtube_dl.compat.__all__
+        import haruhi_dl.compat
+        all_names = haruhi_dl.compat.__all__
         present_names = set(filter(
             lambda c: '_' in c and not c.startswith('_'),
-            dir(youtube_dl.compat))) - set(['unicode_literals'])
+            dir(haruhi_dl.compat))) - set(['unicode_literals'])
         self.assertEqual(all_names, sorted(present_names))
 
     def test_compat_urllib_parse_unquote(self):

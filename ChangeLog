@@ -1,3 +1,15 @@
+version 2020.11.01
+Core
+* Changed naming to HaruhiDL
+
+Extractors
+* [youtube] Fixed extracting videos
+* [youtube] Removed JSInterpreter and SWFInterpreter, as they would be a
+   hassle to maintain in the future
+
+
+--- fork line ---
+
 version 2020.09.20
 
 Core
@@ -234,7 +246,7 @@ Extractors
 version 2020.03.01
 
 Core
-* [YoutubeDL] Force redirect URL to unicode on python 2
+* [HaruhiDL] Force redirect URL to unicode on python 2
 - [options] Remove duplicate short option -v for --version (#24162)
 
 Extractors
@@ -255,7 +267,7 @@ Extractors
 version 2020.02.16
 
 Core
-* [YoutubeDL] Fix playlist entry indexing with --playlist-items (#10591,
+* [HaruhiDL] Fix playlist entry indexing with --playlist-items (#10591,
   #10622)
 * [update] Fix updating via symlinks (#23991)
 + [compat] Introduce compat_realpath (#23991)
@@ -649,7 +661,7 @@ Extractors
 version 2019.09.28
 
 Core
-* [YoutubeDL] Honour all --get-* options with --flat-playlist (#22493)
+* [HaruhiDL] Honour all --get-* options with --flat-playlist (#22493)
 
 Extractors
 * [vk] Fix extraction (#22522)
@@ -715,7 +727,7 @@ version 2019.08.13
 
 Core
 * [downloader/fragment] Fix ETA calculation of resumed download (#21992)
-* [YoutubeDL] Check annotations availability (#18582)
+* [HaruhiDL] Check annotations availability (#18582)
 
 Extractors
 * [youtube:playlist] Improve flat extraction (#21927)
@@ -1178,7 +1190,7 @@ version 2019.02.08
 
 Core
 * [utils] Improve JSON-LD regular expression (#18058)
-* [YoutubeDL] Fallback to ie_key of matching extractor while making
+* [HaruhiDL] Fallback to ie_key of matching extractor while making
   download archive id when no explicit ie_key is provided (#19022)
 
 Extractors
@@ -1249,7 +1261,7 @@ Extractors
 version 2019.01.24
 
 Core
-* [YoutubeDL] Fix negation for string operators in format selection (#18961)
+* [HaruhiDL] Fix negation for string operators in format selection (#18961)
 
 
 version 2019.01.23
@@ -1257,7 +1269,7 @@ version 2019.01.23
 Core
 * [utils] Fix urljoin for paths with non-http(s) schemes
 * [extractor/common] Improve jwplayer relative URL handling (#18892)
-+ [YoutubeDL] Add negation support for string comparisons in format selection
++ [HaruhiDL] Add negation support for string comparisons in format selection
   expressions (#18600, #18805)
 * [extractor/common] Improve HLS video-only format detection (#18923)
 
@@ -1388,8 +1400,8 @@ Extractors
 version 2018.12.09
 
 Core
-* [YoutubeDL] Keep session cookies in cookie file between runs
-* [YoutubeDL] Recognize session cookies with expired set to 0 (#12929)
+* [HaruhiDL] Keep session cookies in cookie file between runs
+* [HaruhiDL] Recognize session cookies with expired set to 0 (#12929)
 
 Extractors
 + [teachable] Add support for teachable platform sites (#5451, #18150, #18272)
@@ -1931,7 +1943,7 @@ Extractors
 version 2018.05.09
 
 Core
-* [YoutubeDL] Ensure ext exists for automatic captions
+* [HaruhiDL] Ensure ext exists for automatic captions
 * Introduce --geo-bypass-ip-block
 
 Extractors
@@ -1977,7 +1989,7 @@ version 2018.04.25
 Core
 * [utils] Fix match_str for boolean meta fields
 + [Makefile] Add support for pandoc 2 and disable smart extension (#16251)
-* [YoutubeDL] Fix typo in media extension compatibility checker (#16215)
+* [HaruhiDL] Fix typo in media extension compatibility checker (#16215)
 
 Extractors
 + [openload] Recognize IPv6 stream URLs (#16136, #16137, #16205, #16246,
@@ -2017,7 +2029,7 @@ Extractors
 version 2018.04.09
 
 Core
-* [YoutubeDL] Do not save/restore console title while simulate (#16103)
+* [HaruhiDL] Do not save/restore console title while simulate (#16103)
 * [extractor/common] Relax JSON-LD context check (#16006)
 
 Extractors
@@ -2193,7 +2205,7 @@ Extractors
 version 2018.02.11
 
 Core
-+ [YoutubeDL] Add support for filesize_approx in format selector (#15550)
++ [HaruhiDL] Add support for filesize_approx in format selector (#15550)
 
 Extractors
 + [francetv] Add support for live streams (#13689)
@@ -2333,8 +2345,8 @@ Extractors
 version 2018.01.07
 
 Core
-* [utils] Fix youtube-dl under PyPy3 on Windows
-* [YoutubeDL] Output python implementation in debug header
+* [utils] Fix haruhi-dl under PyPy3 on Windows
+* [HaruhiDL] Output python implementation in debug header
 
 Extractors
 + [jwplatform] Add support for multiple embeds (#15192)
@@ -2397,7 +2409,7 @@ version 2017.12.23
 
 Core
 * [extractor/common] Move X-Forwarded-For setup code into _request_webpage
-+ [YoutubeDL] Add support for playlist_uploader and playlist_uploader_id in
++ [HaruhiDL] Add support for playlist_uploader and playlist_uploader_id in
   output template (#11427, #15018)
 + [extractor/common] Introduce uploader, uploader_id and uploader_url
   meta fields for playlists (#11427, #15018)
@@ -2525,7 +2537,7 @@ version 2017.11.15
 
 Core
 * [common] Skip Apple FairPlay m3u8 manifests (#14741)
-* [YoutubeDL] Fix playlist range optimization for --playlist-items (#14740)
+* [HaruhiDL] Fix playlist range optimization for --playlist-items (#14740)
 
 Extractors
 * [vshare] Capture and output error message
@@ -2641,7 +2653,7 @@ Extractors
 version 2017.10.12
 
 Core
-* [YoutubeDL] Improve _default_format_spec (#14461)
+* [HaruhiDL] Improve _default_format_spec (#14461)
 
 Extractors
 * [steam] Fix extraction (#14067)
@@ -2667,8 +2679,8 @@ Extractors
 version 2017.10.07
 
 Core
-* [YoutubeDL] Ignore duplicates in --playlist-items
-* [YoutubeDL] Fix out of range --playlist-items for iterable playlists and
+* [HaruhiDL] Ignore duplicates in --playlist-items
+* [HaruhiDL] Fix out of range --playlist-items for iterable playlists and
   reduce code duplication (#14425)
 + [utils] Use cache in OnDemandPagedList by default
 * [postprocessor/ffmpeg] Convert to opus using libopus (#14381)
@@ -2691,7 +2703,7 @@ Extractors
 version 2017.10.01
 
 Core
-* [YoutubeDL] Document youtube_include_dash_manifest
+* [HaruhiDL] Document youtube_include_dash_manifest
 
 Extractors
 + [tvp] Add support for new URL schema (#14368)
@@ -2742,7 +2754,7 @@ version 2017.09.15
 Core
 * [downloader/fragment] Restart inconsistent incomplete fragment downloads
   (#13731)
-* [YoutubeDL] Download raw subtitles files (#12909, #14191)
+* [HaruhiDL] Download raw subtitles files (#12909, #14191)
 
 Extractors
 * [condenast] Fix extraction (#14196, #14207)
@@ -2762,7 +2774,7 @@ version 2017.09.10
 
 Core
 + [utils] Introduce bool_or_none
-* [YoutubeDL] Ensure dir existence for each requested format (#14116)
+* [HaruhiDL] Ensure dir existence for each requested format (#14116)
 
 Extractors
 * [fox] Fix extraction (#14147)
@@ -2852,7 +2864,7 @@ Extractors
 version 2017.08.18
 
 Core
-* [YoutubeDL] Sanitize byte string format URLs (#13951)
+* [HaruhiDL] Sanitize byte string format URLs (#13951)
 + [extractor/common] Add support for float durations in _parse_mpd_formats
   (#13919)
 
@@ -2870,7 +2882,7 @@ Extractors
 version 2017.08.13
 
 Core
-* [YoutubeDL] Make sure format id is not empty
+* [HaruhiDL] Make sure format id is not empty
 * [extractor/common] Make _family_friendly_search optional
 * [extractor/common] Respect source's type attribute for HTML5 media (#13892)
 
@@ -2952,8 +2964,8 @@ Extractors
 version 2017.07.23
 
 Core
-* [YoutubeDL] Improve default format specification (#13704)
-* [YoutubeDL] Do not override id, extractor and extractor_key for
+* [HaruhiDL] Improve default format specification (#13704)
+* [HaruhiDL] Do not override id, extractor and extractor_key for
   url_transparent entities
 * [extractor/common] Fix playlist_from_matches
 
@@ -2979,7 +2991,7 @@ Extractors
 version 2017.07.15
 
 Core
-* [YoutubeDL] Don't expand environment variables in meta fields (#13637)
+* [HaruhiDL] Don't expand environment variables in meta fields (#13637)
 
 Extractors
 * [spiegeltv] Delegate extraction to nexx extractor (#13159)
@@ -3052,7 +3064,7 @@ version 2017.06.25
 
 Core
 + [adobepass] Add support for DIRECTV NOW (mso ATTOTT) (#13472)
-* [YoutubeDL] Skip malformed formats for better extraction robustness
+* [HaruhiDL] Skip malformed formats for better extraction robustness
 
 Extractors
 + [wsj] Add support for barrons.com (#13470)
@@ -3118,7 +3130,7 @@ Core
 * [utils] Improve unified_timestamp
 * [extractor/generic] Ensure format id is unicode string
 * [extractor/common] Return unicode string from _match_id
-+ [YoutubeDL] Sanitize more fields (#13313)
++ [HaruhiDL] Sanitize more fields (#13313)
 
 Extractors
 + [xfileshare] Add support for rapidvideo.tv (#13348)
@@ -3146,7 +3158,7 @@ Extractors
 version 2017.06.05
 
 Core
-* [YoutubeDL] Don't emit ANSI escape codes on Windows (#13270)
+* [HaruhiDL] Don't emit ANSI escape codes on Windows (#13270)
 
 Extractors
 + [bandcamp:weekly] Add support for bandcamp weekly (#12758)
@@ -3262,7 +3274,7 @@ Extractors
 version 2017.05.09
 
 Core
-* [YoutubeDL] Force --restrict-filenames when no locale is set on all python
+* [HaruhiDL] Force --restrict-filenames when no locale is set on all python
   versions (#13027)
 
 Extractors
@@ -3364,7 +3376,7 @@ version 2017.04.26
 Core
 * Introduce --keep-fragments for keeping fragments of fragmented download
   on disk after download is finished
-* [YoutubeDL] Fix output template for missing timestamp (#12796)
+* [HaruhiDL] Fix output template for missing timestamp (#12796)
 * [socks] Handle cases where credentials are required but missing
 * [extractor/common] Improve HLS extraction (#12211)
     * Extract m3u8 parsing to separate method
@@ -3419,8 +3431,8 @@ Extractors
 version 2017.04.16
 
 Core
-* [YoutubeDL] Apply expand_path after output template substitution
-+ [YoutubeDL] Propagate overridden meta fields to extraction results of type
+* [HaruhiDL] Apply expand_path after output template substitution
++ [HaruhiDL] Propagate overridden meta fields to extraction results of type
   url (#11163)
 
 Extractors
@@ -3508,7 +3520,7 @@ Extractors
 version 2017.04.02
 
 Core
-* [YoutubeDL] Return early when extraction of url_transparent fails
+* [HaruhiDL] Return early when extraction of url_transparent fails
 
 Extractors
 * [rai] Fix and improve extraction (#11790)
@@ -3573,7 +3585,7 @@ Extractors
 version 2017.03.20
 
 Core
-+ [YoutubeDL] Allow multiple input URLs to be used with stdout (-) as
++ [HaruhiDL] Allow multiple input URLs to be used with stdout (-) as
   output template
 + [adobepass] Detect and output error on authz token extraction (#12472)
 
@@ -3669,7 +3681,7 @@ version 2017.03.02
 
 Core
 + [adobepass] Add support for Charter Spectrum (#11465)
-* [YoutubeDL] Don't sanitize identifiers in output template (#12317)
+* [HaruhiDL] Don't sanitize identifiers in output template (#12317)
 
 Extractors
 * [facebook] Fix extraction (#12323, #12330)
@@ -3736,7 +3748,7 @@ version 2017.02.24
 Core
 * [options] Hide deprecated options from --help
 * [options] Deprecate --autonumber-size
-+ [YoutubeDL] Add support for string formatting operations in output template
++ [HaruhiDL] Add support for string formatting operations in output template
   (#5185, #5748, #6841, #9929, #9966 #9978, #12189)
 
 Extractors
@@ -3782,7 +3794,7 @@ Core
 + Add experimental geo restriction bypass mechanism based on faking
   X-Forwarded-For HTTP header
 + [utils] Introduce GeoRestrictedError for geo restricted videos
-+ [utils] Introduce YoutubeDLError base class for all youtube-dl exceptions
++ [utils] Introduce HaruhiDLError base class for all haruhi-dl exceptions
 
 Extractors
 + [ninecninemedia] Use geo bypass mechanism
@@ -4071,7 +4083,7 @@ version 2017.01.16
 
 Core
 * [options] Apply custom config to final composite configuration (#11741)
-* [YoutubeDL] Improve protocol auto determining (#11720)
+* [HaruhiDL] Improve protocol auto determining (#11720)
 
 Extractors
 * [xiami] Relax URL regular expressions
@@ -4422,7 +4434,7 @@ Extractors
 version 2016.10.25
 
 Core
-* Running youtube-dl in the background is fixed (#10996, #10706, #955)
+* Running haruhi-dl in the background is fixed (#10996, #10706, #955)
 
 Extractors
 + [jamendo] Add support for jamendo.com (#10132, #10736)
