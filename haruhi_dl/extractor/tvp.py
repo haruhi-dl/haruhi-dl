@@ -17,7 +17,7 @@ from ..utils import (
 class TVPIE(InfoExtractor):
     IE_NAME = 'tvp'
     IE_DESC = 'Telewizja Polska'
-    _VALID_URL = r'https?://[^/]+\.tvp\.(?:pl|info)/(?:video/(?:[^,\s]*,)*|(?:(?!\d+/)[^/]+/)*)(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:[^/]+\.)?tvp(?:parlament)?\.(?:pl|info)/(?:video/(?:[^,\s]*,)*|(?:(?!\d+/)[^/]+/)*)(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'https://vod.tvp.pl/video/czas-honoru,i-seria-odc-13,194536',
@@ -66,12 +66,19 @@ class TVPIE(InfoExtractor):
     }, {
         'url': 'http://www.tvp.info/25511919/trwa-rewolucja-wladza-zdecydowala-sie-na-pogwalcenie-konstytucji',
         'only_matching': True,
+    }, {
+        'url': 'https://tvp.info/49193823/teczowe-flagi-na-pomnikach-prokuratura-wszczela-postepowanie-wieszwiecej',
+        'only_matching': True,
+    }, {
+        'url': 'https://www.tvpparlament.pl/retransmisje-vod/inne/wizyta-premiera-mateusza-morawieckiego-w-firmie-berotu-sp-z-oo/48857277',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
         page_id = self._match_id(url)
         webpage = self._download_webpage(url, page_id)
         video_id = self._search_regex([
+            r'<iframe[^>]+src="[^"]*?embed\.php\?(?:[^&]+&)*ID=(\d+)',
             r'<iframe[^>]+src="[^"]*?object_id=(\d+)',
             r"object_id\s*:\s*'(\d+)'",
             r'data-video-id="(\d+)"'], webpage, 'video id', default=page_id)
@@ -89,7 +96,7 @@ class TVPIE(InfoExtractor):
 class TVPEmbedIE(InfoExtractor):
     IE_NAME = 'tvp:embed'
     IE_DESC = 'Telewizja Polska'
-    _VALID_URL = r'(?:tvp:|https?://[^/]+\.tvp\.(?:pl|info)/sess/tvplayer\.php\?.*?object_id=)(?P<id>\d+)'
+    _VALID_URL = r'(?:tvp:|https?://(?:[^/]+\.)?tvp(?:parlament)?\.(?:pl|info)/sess/(?:tvplayer\.php\?.*?object_id|TVPlayer2/embed\.php\?.*ID)=)(?P<id>\d+)'
 
     _TESTS = [{
         'url': 'tvp:194536',
@@ -109,6 +116,10 @@ class TVPEmbedIE(InfoExtractor):
             'title': 'Panorama, 07.12.2015, 15:40',
         },
         'skip': 'Transmisja została zakończona lub materiał niedostępny',
+    }, {
+        # TVPlayer2 (new) URL
+        'url': 'https://tvp.info/sess/TVPlayer2/embed.php?ID=50595757',
+        'only_matching': True,
     }, {
         'url': 'tvp:22670268',
         'only_matching': True,
