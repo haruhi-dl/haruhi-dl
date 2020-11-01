@@ -1,7 +1,5 @@
 # coding: utf-8
-
 from __future__ import unicode_literals
-
 
 import itertools
 import json
@@ -12,8 +10,6 @@ import time
 import traceback
 
 from .common import InfoExtractor, SearchInfoExtractor
-from ..jsinterp import JSInterpreter
-from ..swfinterp import SWFInterpreter
 from ..compat import (
     compat_chr,
     compat_HTTPError,
@@ -54,6 +50,12 @@ from ..utils import (
     urlencode_postdata,
 )
 
+# am not a professional coder, this codebase can go to hell
+def mess(a,b):
+   	c=a[0]
+   	a[0]=a[b%len(a)]
+   	a[b%len(a)]=c
+   	return a
 
 class YoutubeBaseInfoExtractor(InfoExtractor):
     """Provide base functions for Youtube extractors"""
@@ -1334,21 +1336,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             if self._downloader.params.get('verbose') else
             'Downloading %s player %s' % (player_type, player_id)
         )
-        if player_type == 'js':
-            code = self._download_webpage(
-                player_url, video_id,
-                note=download_note,
-                errnote='Download of %s failed' % player_url)
-            res = self._parse_sig_js(code)
-        elif player_type == 'swf':
-            urlh = self._request_webpage(
-                player_url, video_id,
-                note=download_note,
-                errnote='Download of %s failed' % player_url)
-            code = urlh.read()
-            res = self._parse_sig_swf(code)
-        else:
-            assert False, 'Invalid player type %r' % player_type
+
+        
 
         test_string = ''.join(map(compat_chr, range(len(example_sig))))
         cache_res = res(test_string)
@@ -1398,7 +1387,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     def _parse_sig_js(self, jscode):
         funcname = self._search_regex(
-            (r'\b[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+            (r'.*[a-z]\=a\.split.*a\.join.*',
+             r'\b[cs]\s*&&\s*[adf]\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
              r'\b[a-zA-Z0-9]+\s*&&\s*[a-zA-Z0-9]+\.set\([^,]+\s*,\s*encodeURIComponent\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
              r'(?:\b|[^a-zA-Z0-9$])(?P<sig>[a-zA-Z0-9$]{2})\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)',
              r'(?P<sig>[a-zA-Z0-9$]+)\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)',
@@ -1426,30 +1416,18 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     def _decrypt_signature(self, s, video_id, player_url, age_gate=False):
         """Turn the encrypted s field into a working signature"""
-
-        if player_url is None:
-            raise ExtractorError('Cannot decrypt signature without player_url')
-
-        if player_url.startswith('//'):
-            player_url = 'https:' + player_url
-        elif not re.match(r'https?://', player_url):
-            player_url = compat_urlparse.urljoin(
-                'https://www.youtube.com', player_url)
-        try:
-            player_id = (player_url, self._signature_cache_id(s))
-            if player_id not in self._player_cache:
-                func = self._extract_signature_function(
-                    video_id, player_url, s
-                )
-                self._player_cache[player_id] = func
-            func = self._player_cache[player_id]
-            if self._downloader.params.get('youtube_print_sig_code'):
-                self._print_sig_code(func, s)
-            return func(s)
-        except Exception as e:
-            tb = traceback.format_exc()
-            raise ExtractorError(
-                'Signature extraction failed: ' + tb, cause=e)
+        a=[char for char in s]
+        a=mess(a,67)
+        a=a[1:]
+        a=mess(a,49)
+        a=a[3:]
+        a=mess(a,52)
+        a.reverse()
+        a=a[1:]
+        a=mess(a,43)
+        a.reverse()
+        return "".join(a)
+        
 
     def _get_subtitles(self, video_id, webpage):
         try:
@@ -1919,6 +1897,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             player_response, lambda x: x['microformat']['playerMicroformatRenderer'], dict) or {}
 
         video_title = video_info.get('title', [None])[0] or video_details.get('title')
+
         if not video_title:
             self._downloader.report_warning('Unable to extract video title')
             video_title = '_'
@@ -2086,26 +2065,33 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
                 if cipher:
                     if 's' in url_data or self._downloader.params.get('youtube_include_dash_manifest', True):
-                        ASSETS_RE = r'"assets":.+?"js":\s*("[^"]+")'
-                        jsplayer_url_json = self._search_regex(
-                            ASSETS_RE,
-                            embed_webpage if age_gate else video_webpage,
-                            'JS player URL (1)', default=None)
-                        if not jsplayer_url_json and not age_gate:
+                        #ASSETS_RE = r'"assets":.+?"js":\s*("[^"]+")'
+                        #ASSETS_RE = r's/player/.*?/player_ias.vflset/.*?/base.js'
+                        
+                        #jsplayer_url_json = self._search_regex(
+                        #    ASSETS_RE,
+                        #    embed_webpage if age_gate else video_webpage,
+                        #    'JS player URL (1)', default=None)
+                        
+                        #if not jsplayer_url_json and not age_gate:
                             # We need the embed website after all
-                            if embed_webpage is None:
-                                embed_url = proto + '://www.youtube.com/embed/%s' % video_id
-                                embed_webpage = self._download_webpage(
-                                    embed_url, video_id, 'Downloading embed webpage')
-                            jsplayer_url_json = self._search_regex(
-                                ASSETS_RE, embed_webpage, 'JS player URL')
+                        #    if embed_webpage is None:
+                        #        embed_url = proto + '://www.youtube.com/embed/%s' % video_id
+                        #        embed_webpage = self._download_webpage(
+                        #            embed_url, video_id, 'Downloading embed webpage')
+                        #    jsplayer_url_json = self._search_regex(
+                        #        ASSETS_RE, embed_webpage, 'JS player URL')
 
-                        player_url = json.loads(jsplayer_url_json)
-                        if player_url is None:
-                            player_url_json = self._search_regex(
-                                r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
-                                video_webpage, 'age gate player URL')
-                            player_url = json.loads(player_url_json)
+                        #player_url = json.loads(jsplayer_url_json)
+
+                        # Corporate needs you to compare all those js players
+                        # THEY ARE THE SAME PLAYER
+                        player_url = "https://www.youtube.com/s/player/ec262be6/player_ias.vflset/en_GB/base.js" #
+                        #if player_url is None:
+                        #    player_url_json = self._search_regex(
+                        #        r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
+                        #        video_webpage, 'age gate player URL')
+                        #    player_url = json.loads(player_url_json)
 
                     if 'sig' in url_data:
                         url += '&signature=' + url_data['sig'][0]
