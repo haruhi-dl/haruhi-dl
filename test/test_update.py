@@ -26,5 +26,5 @@ class TestUpdate(unittest.TestCase):
             signature, UPDATES_RSA_KEY))
 
 
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+#    unittest.main()
