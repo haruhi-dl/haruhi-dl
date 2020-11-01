@@ -240,12 +240,12 @@ class TestUtil(unittest.TestCase):
         def env(var):
             return '%{0}%'.format(var) if sys.platform == 'win32' else '${0}'.format(var)
 
-        compat_setenv('YOUTUBE_DL_EXPATH_PATH', 'expanded')
-        self.assertEqual(expand_path(env('YOUTUBE_DL_EXPATH_PATH')), 'expanded')
+        compat_setenv('HARUHI_DL_EXPATH_PATH', 'expanded')
+        self.assertEqual(expand_path(env('HARUHI_DL_EXPATH_PATH')), 'expanded')
         self.assertEqual(expand_path(env('HOME')), compat_getenv('HOME'))
         self.assertEqual(expand_path('~'), compat_getenv('HOME'))
         self.assertEqual(
-            expand_path('~/%s' % env('YOUTUBE_DL_EXPATH_PATH')),
+            expand_path('~/%s' % env('HARUHI_DL_EXPATH_PATH')),
             '%s/expanded' % compat_getenv('HOME'))
 
     def test_prepend_extension(self):
@@ -1396,8 +1396,8 @@ Line 1
         self.assertEqual(caesar('ebg', 'acegik', -2), 'abc')
 
     def test_rot47(self):
-        self.assertEqual(rot47('haruhi-dl'), r'J@FEF36\5=')
-        self.assertEqual(rot47('YOUTUBE-DL'), r'*~&%&qt\s{')
+        self.assertEqual(rot47('haruhi-dl'), r'92CF9:\5=')
+        self.assertEqual(rot47('HARUHI-DL'), r'wp#&wx\s{')
 
     def test_urshift(self):
         self.assertEqual(urshift(3, 1), 1)
