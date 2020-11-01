@@ -36,8 +36,8 @@ py2exe_options = {
 exec(compile(open('haruhi_dl/version.py').read(),
              'haruhi_dl/version.py', 'exec'))
 
-DESCRIPTION = 'YouTube video downloader'
-LONG_DESCRIPTION = 'Command-line program to download videos from YouTube.com and other video sites'
+DESCRIPTION = 'Online video downloader'
+LONG_DESCRIPTION = 'Command-line program to download videos from almost any website without DRM'
 
 py2exe_console = [{
     'script': './haruhi_dl/__main__.py',
@@ -83,6 +83,7 @@ else:
     else:
         params['scripts'] = ['bin/haruhi-dl']
 
+
 class build_lazy_extractors(Command):
     description = 'Build the extractor lazy loading module'
     user_options = []
@@ -98,6 +99,7 @@ class build_lazy_extractors(Command):
             [sys.executable, 'devscripts/make_lazy_extractors.py', 'haruhi_dl/extractor/lazy_extractors.py'],
             dry_run=self.dry_run,
         )
+
 
 setup(
     name='haruhi_dl',
