@@ -3,6 +3,7 @@
 *.class
 *~
 *.DS_Store
+.jython_cache/
 wine-py2exe/
 py2exe.log
 *.kate-swp
