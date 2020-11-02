@@ -81,3 +81,28 @@ py3.9-download:
   allow_failure: true
   script:
     - ./devscripts/run_tests.sh
+
+jython-core:
+  image: openjdk:11-slim
+  variables:
+    HDL_TEST_SET: core
+  before_script:
+    - apt-get update
+    - apt-get install -y wget
+    - ./devscripts/install_jython.sh
+    - export PATH="$HOME/jython/bin:$PATH"
+  script:
+    - ./devscripts/run_tests.sh
+
+jython-download:
+  image: openjdk:11-slim
+  variables:
+    HDL_TEST_SET: download
+  allow_failure: true
+  before_script:
+    - apt-get update
+    - apt-get install -y wget
+    - ./devscripts/install_jython.sh
+    - export PATH="$HOME/jython/bin:$PATH"
+  script:
+    - ./devscripts/run_tests.sh
