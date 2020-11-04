@@ -1255,8 +1255,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         a[b%len(a)]=c
         return a
 
-    def _decrypt_signature(self, s, video_id, player_url, age_gate=False):
-        """Turn the encrypted s field into a working signature"""
+    def _decrypt_signature(self, s):
+        """Turn the encrypted s field into a working signature
+           YouTube ignores this? It only matters on protected videos..."""
         a=[char for char in s]
         a=self.mess(a,67)
         a=a[1:]
@@ -1269,6 +1270,16 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         a.reverse()
         return "".join(a)
 
+    def _decrypt_signature_protected(self, s):
+        a=[char for char in s]
+        a=a[1:]
+        a=self.mess(a,50)
+        a.reverse()
+        a=a[3:]
+        a=self.mess(a,34)
+        a.reverse()
+        return "".join(a)
+        
     def _get_subtitles(self, video_id, webpage):
         try:
             subs_doc = self._download_xml(
@@ -1905,33 +1916,26 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
                 if cipher:
                     if 's' in url_data or self._downloader.params.get('youtube_include_dash_manifest', True):
-                        #ASSETS_RE = r'"assets":.+?"js":\s*("[^"]+")'
-                        #ASSETS_RE = r's/player/.*?/player_ias.vflset/.*?/base.js'
+                        ASSETS_RE = r'"jsUrl":"(/s/player/.*?/player_ias.vflset/.*?/base.js)'
                         
-                        #jsplayer_url_json = self._search_regex(
-                        #    ASSETS_RE,
-                        #    embed_webpage if age_gate else video_webpage,
-                        #    'JS player URL (1)', default=None)
-                        
-                        #if not jsplayer_url_json and not age_gate:
+                        player_url = self._search_regex(
+                            ASSETS_RE,
+                            embed_webpage if age_gate else video_webpage, '', default=None)
+                            
+                        if not player_url and not age_gate:
                             # We need the embed website after all
-                        #    if embed_webpage is None:
-                        #        embed_url = proto + '://www.youtube.com/embed/%s' % video_id
-                        #        embed_webpage = self._download_webpage(
-                        #            embed_url, video_id, 'Downloading embed webpage')
-                        #    jsplayer_url_json = self._search_regex(
-                        #        ASSETS_RE, embed_webpage, 'JS player URL')
+                            if embed_webpage is None:
+                                embed_url = proto + '://www.youtube.com/embed/%s' % video_id
+                                embed_webpage = self._download_webpage(
+                                    embed_url, video_id, 'Downloading embed webpage')
+                            player_url = self._search_regex(
+                                ASSETS_RE, embed_webpage, 'JS player URL')
 
-                        #player_url = json.loads(jsplayer_url_json)
-
-                        # Corporate needs you to compare all those js players
-                        # THEY ARE THE SAME PLAYER
-                        player_url = "https://www.youtube.com/s/player/ec262be6/player_ias.vflset/en_GB/base.js" #
-                        #if player_url is None:
-                        #    player_url_json = self._search_regex(
-                        #        r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
-                        #        video_webpage, 'age gate player URL')
-                        #    player_url = json.loads(player_url_json)
+                        if player_url is None:
+                            player_url_json = self._search_regex(
+                                r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
+                                video_webpage, 'age gate player URL')
+                            player_url = json.loads(player_url_json)
 
                     if 'sig' in url_data:
                         url += '&signature=' + url_data['sig'][0]
@@ -1943,13 +1947,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                                 player_desc = 'unknown'
                             else:
                                 player_type, player_version = self._extract_player_info(player_url)
-                                player_desc = '%s player %s' % ('flash' if player_type == 'swf' else 'html5', player_version)
+                                player_desc = 'html5 player %s' % player_version
                             parts_sizes = self._signature_cache_id(encrypted_sig)
                             self.to_screen('{%s} signature length %s, %s' %
                                            (format_id, parts_sizes, player_desc))
 
-                        signature = self._decrypt_signature(
-                            encrypted_sig, video_id, player_url, age_gate)
+                        signature = self._decrypt_signature_protected(encrypted_sig)
+                            
                         sp = try_get(url_data, lambda x: x['sp'][0], compat_str) or 'signature'
                         url += '&%s=%s' % (sp, signature)
                 if 'ratebypass' not in url:
@@ -2276,7 +2280,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 try:
                     def decrypt_sig(mobj):
                         s = mobj.group(1)
-                        dec_s = self._decrypt_signature(s, video_id, player_url, age_gate)
+                        dec_s = self._decrypt_signature_protected(s)
                         return '/signature/%s' % dec_s
 
                     mpd_url = re.sub(r'/s/([a-fA-F0-9\.]+)', decrypt_sig, mpd_url)
