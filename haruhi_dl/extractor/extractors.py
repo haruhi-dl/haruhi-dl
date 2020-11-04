@@ -794,6 +794,10 @@ from .onet import (
     OnetPlIE,
 )
 from .onionstudios import OnionStudiosIE
+from .onnetwork import (
+    OnNetworkLoaderIE,
+    OnNetworkFrameIE,
+)
 from .ooyala import (
     OoyalaIE,
     OoyalaExternalIE,

@@ -119,6 +119,7 @@ from .expressen import ExpressenIE
 from .zype import ZypeIE
 from .odnoklassniki import OdnoklassnikiIE
 from .kinja import KinjaEmbedIE
+from .onnetwork import OnNetworkLoaderIE
 
 
 class GenericIE(InfoExtractor):
@@ -2151,6 +2152,17 @@ class GenericIE(InfoExtractor):
                 'skip_download': True,
             },
         },
+        {
+            # OnNetwork.tv embed
+            'url': 'https://wiadomosci.gazeta.pl/wiadomosci/7,114883,26377890,panstwo-polskie-nie-uznaje-takich-rodzin-jak-nasza-i-krzywdzi.html',
+            'info_dict': {
+                'id': '337382',
+                'title': 'Rodzina+ odc. 1. Karolina i Ania',
+                'ext': 'mp4',
+                'age_limit': 16,
+                'upload_date': '20200929',
+            },
+        },
         # {
         #     # TODO: find another test
         #     # http://schema.org/VideoObject
@@ -3212,6 +3224,11 @@ class GenericIE(InfoExtractor):
         if zype_urls:
             return self.playlist_from_matches(
                 zype_urls, video_id, video_title, ie=ZypeIE.ie_key())
+
+        onn_urls = OnNetworkLoaderIE._extract_urls(webpage)
+        if onn_urls:
+            return self.playlist_from_matches(
+                onn_urls, video_id, video_title, ie=OnNetworkLoaderIE.ie_key())
 
         # Look for HTML5 media
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')
