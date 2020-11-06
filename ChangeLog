@@ -1,6 +1,11 @@
+version 2020.11.06
+Extractors
+* youtube fixes
+* Added onnetwork extractor
+
 version 2020.11.01.01
 Extractors
-* 
+* fixed youtube?
 
 version 2020.11.01
 Core
