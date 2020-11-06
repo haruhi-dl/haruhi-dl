@@ -111,7 +111,7 @@ setup(
     author_email='hdl@haruhi.download',
     maintainer='Dominika Liberda',
     maintainer_email='ja@sdomi.pl',
-    license='Unlicense',
+    license='LGPL-3.0-or-later',
     packages=[
         'haruhi_dl',
         'haruhi_dl.extractor', 'haruhi_dl.downloader',
