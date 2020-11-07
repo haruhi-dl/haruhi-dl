@@ -78,9 +78,11 @@ class PolskieRadioIE(InfoExtractor):
 
         media_urls = set()
 
+        title = self._og_search_title(webpage).strip()
+
         for data_media in re.findall(r'<[^>]+data-media=({[^>]+})', content):
             media = self._parse_json(data_media, playlist_id, fatal=False)
-            if not media.get('file') or not media.get('desc'):
+            if not media.get('file'):
                 continue
             media_url = self._proto_relative_url(media['file'], 'http:')
             if media_url in media_urls:
@@ -89,14 +91,13 @@ class PolskieRadioIE(InfoExtractor):
             entries.append({
                 'id': compat_str(media['id']),
                 'url': media_url,
-                'title': compat_urllib_parse_unquote(media['desc']),
+                'title': compat_urllib_parse_unquote(media['desc']) or title,
                 'duration': int_or_none(media.get('length')),
                 'vcodec': 'none' if media.get('provider') == 'audio' else None,
                 'timestamp': timestamp,
                 'thumbnail': thumbnail_url
             })
 
-        title = self._og_search_title(webpage).strip()
         description = strip_or_none(self._og_search_description(webpage))
 
         return self.playlist_result(entries, playlist_id, title, description)

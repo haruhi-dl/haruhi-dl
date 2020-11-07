@@ -1680,8 +1680,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             data = compat_urllib_parse_urlencode({
                 'video_id': video_id,
                 'eurl': 'https://youtube.googleapis.com/v/' + video_id,
-                'sts': self._search_regex(
-                    r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default=''),
+#                'sts': self._search_regex(
+ #                   r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default=''),
             })
             video_info_url = proto + '://www.youtube.com/get_video_info?' + data
             try:
@@ -1931,11 +1931,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             player_url = self._search_regex(
                                 ASSETS_RE, embed_webpage, 'JS player URL')
 
-                        if player_url is None:
-                            player_url_json = self._search_regex(
-                                r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
-                                video_webpage, 'age gate player URL')
-                            player_url = json.loads(player_url_json)
+                        #if player_url is None:
+                        #    player_url_json = self._search_regex(
+                        #        r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
+                        #        video_webpage, 'age gate player URL')
+                        #    player_url = json.loads(player_url_json)
 
                     if 'sig' in url_data:
                         url += '&signature=' + url_data['sig'][0]
