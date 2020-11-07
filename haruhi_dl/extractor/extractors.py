@@ -42,7 +42,10 @@ from .animeondemand import AnimeOnDemandIE
 from .anvato import AnvatoIE
 from .aol import AolIE
 from .allocine import AllocineIE
-from .aliexpress import AliExpressLiveIE
+from .aliexpress import (
+    AliExpressLiveIE,
+    AliExpressProductIE,
+)
 from .apa import APAIE
 from .aparat import AparatIE
 from .appleconnect import AppleConnectIE
