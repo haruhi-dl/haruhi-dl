@@ -157,7 +157,7 @@ class TikTokIE(TikTokBaseIE):
 class TikTokUserIE(TikTokBaseIE):
     _WORKING = False
     IE_NAME = 'tiktok:user'
-    _VALID_URL = r'https?://(?:www\.)?tiktok\.com/@(?P<id>[\w.]+)'
+    _VALID_URL = r'https?://(?:www\.)?tiktok\.com/@(?P<id>[\w.]+)/?(?:\?.+)?$'
     _TESTS = [{
         'url': 'https://www.tiktok.com/@puczirajot',
         'info_dict': {
