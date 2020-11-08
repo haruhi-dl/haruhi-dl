@@ -1423,6 +1423,7 @@ from .wsj import (
     WSJArticleIE,
 )
 from .wwe import WWEIE
+from .wykop import WykopIE
 from .xbef import XBefIE
 from .xboxclips import XboxClipsIE
 from .xfileshare import XFileShareIE

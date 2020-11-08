@@ -1593,6 +1593,9 @@ class GenericIE(InfoExtractor):
                 'uploader': 'Lake8737',
             },
             'add_ie': [LiveLeakIE.ie_key()],
+            'params': {
+                'force_generic_extractor': True,
+            },
         },
         # Another LiveLeak embed pattern (#13336)
         {
