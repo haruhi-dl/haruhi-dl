@@ -7,7 +7,6 @@ import os.path
 import random
 import re
 import time
-import traceback
 
 from .common import InfoExtractor, SearchInfoExtractor
 from ..compat import (
@@ -49,6 +48,7 @@ from ..utils import (
     url_or_none,
     urlencode_postdata,
 )
+
 
 class YoutubeBaseInfoExtractor(InfoExtractor):
     """Provide base functions for Youtube extractors"""
@@ -1149,6 +1149,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         },
     ]
 
+    _VALID_SIG_VALUE_RE = r'^AO[a-zA-Z0-9_-]+=*$'
+
     def __init__(self, *args, **kwargs):
         super(YoutubeIE, self).__init__(*args, **kwargs)
         self._player_cache = {}
@@ -1181,34 +1183,81 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 break
         else:
             raise ExtractorError('Cannot identify player %r' % player_url)
-        return id_m.group('ext'), id_m.group('id')
+        return id_m.group('id')
 
     def _extract_signature_function(self, video_id, player_url, example_sig):
-        player_type, player_id = self._extract_player_info(player_url)
+        player_id = self._extract_player_info(player_url)
 
         # Read from filesystem cache
-        func_id = '%s_%s_%s' % (
-            player_type, player_id, self._signature_cache_id(example_sig))
+        func_id = '%s_%s' % (
+            player_id, self._signature_cache_id(example_sig))
         assert os.path.basename(func_id) == func_id
 
+        """
         cache_spec = self._downloader.cache.load('youtube-sigfuncs', func_id)
         if cache_spec is not None:
             return lambda s: ''.join(s[i] for i in cache_spec)
+        """
 
+        if not player_url.startswith('http'):
+            player_url = 'https://www.youtube.com' + player_url
         download_note = (
             'Downloading player %s' % player_url
             if self._downloader.params.get('verbose') else
-            'Downloading %s player %s' % (player_type, player_id)
+            'Downloading js player %s' % player_id
         )
+        code = self._download_webpage(
+            player_url, video_id,
+            note=download_note,
+            errnote='Download of js player %s failed' % player_url)
+        res = self._parse_sig_js(code)
 
-        
-
+        """
         test_string = ''.join(map(compat_chr, range(len(example_sig))))
-        cache_res = res(test_string)
+        cache_res = self._do_decrypt_signature(test_string, res)
         cache_spec = [ord(c) for c in cache_res]
 
         self._downloader.cache.store('youtube-sigfuncs', func_id, cache_spec)
+        """
         return res
+
+    def _parse_sig_js(self, js_player):
+        shit_parser = re.search(r'[a-z]\=a\.split\((?:""|\'\')\);(([a-zA-Z]+).*);return a\.join', js_player)
+        if not shit_parser:
+            raise ExtractorError('Signature decryption code not found')
+        func, obfuscated_name = shit_parser.group(1, 2)
+        obfuscated_func = re.search(r'%s\s*=\s*{([\s\w(){}[\].,:;=%s]*?})};' % (re.escape(obfuscated_name), '%'),
+                                    js_player)
+        if not obfuscated_func:
+            raise ExtractorError('Signature decrypting deobfuscated functions not found')
+        obfuscated_stack = obfuscated_func.group(1)
+        obf_map = {}
+        for obffun in re.finditer(r'([a-zA-Z]{2}):function\(a(?:,b)?\){(.*?)}', obfuscated_stack):
+            obfname, obfval = obffun.group(1, 2)
+            if obfval == 'a.splice(0,b)':
+                obf_map[obfname] = 'splice'
+            elif obfval == 'a.reverse()':
+                obf_map[obfname] = 'reverse'
+            elif obfval == 'var c=a[0];a[0]=a[b%a.length];a[b%a.length]=c':
+                obf_map[obfname] = 'mess'
+        decryptor_stack = []
+        for instruction in re.finditer(r'%s\.([a-zA-Z]{2})\(a,(\d+)\);' % re.escape(obfuscated_name),
+                                       func):
+            obf_name, obf_arg = instruction.group(1, 2)
+            inst = obf_map.get(obf_name)
+            if inst == 'splice':
+                decryptor_stack.append(lambda a: a[:int(obf_arg)])
+            elif inst == 'reverse':
+                decryptor_stack.append(lambda a: reversed(a))
+            elif inst == 'mess':
+                decryptor_stack.append(lambda a: self.mess(a, int(obf_arg)))
+        return decryptor_stack
+
+    def _do_decrypt_signature(self, sig, stack):
+        a = list(sig)
+        for fun in stack:
+            a = fun(a)
+        return ''.join(a)
 
     def _print_sig_code(self, func, example_sig):
         def gen_sig_code(idxs):
@@ -1249,37 +1298,22 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 '    return %s\n') % (signature_id_tuple, expr_code)
         self.to_screen('Extracted signature function:\n' + code)
 
-    def mess(self,a,b):
-        c=a[0]
-        a[0]=a[b%len(a)]
-        a[b%len(a)]=c
+    def mess(self, a, b):
+        c = a[0]
+        a[0] = a[b % len(a)]
+        a[b % len(a)] = c
         return a
 
-    def _decrypt_signature(self, s):
-        """Turn the encrypted s field into a working signature
-           YouTube ignores this? It only matters on protected videos..."""
-        a=[char for char in s]
-        a=self.mess(a,67)
-        a=a[1:]
-        a=self.mess(a,49)
-        a=a[3:]
-        a=self.mess(a,52)
+    def _decrypt_signature_protected(self, s):
+        a = list(s)
+        a = self.mess(a, 64)
+        a = self.mess(a, 1)
+        a = self.mess(a, 25)
+        a = self.mess(a, 70)
         a.reverse()
-        a=a[1:]
-        a=self.mess(a,43)
-        a.reverse()
+        a = a[2:]
         return "".join(a)
 
-    def _decrypt_signature_protected(self, s):
-        a=[char for char in s]
-        a=self.mess(a,64)
-        a=self.mess(a,1)
-        a=self.mess(a,25)
-        a=self.mess(a,70)
-        a.reverse()
-        a=a[2:]
-        return "".join(a)
-        
     def _get_subtitles(self, video_id, webpage):
         try:
             subs_doc = self._download_xml(
@@ -1680,8 +1714,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             data = compat_urllib_parse_urlencode({
                 'video_id': video_id,
                 'eurl': 'https://youtube.googleapis.com/v/' + video_id,
-#                'sts': self._search_regex(
- #                   r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default=''),
+                #                'sts': self._search_regex(
+                #                   r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default=''),
             })
             video_info_url = proto + '://www.youtube.com/get_video_info?' + data
             try:
@@ -1887,6 +1921,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     'width': int_or_none(fmt.get('width')),
                 }
 
+            sig_decrypt_stack = None
             for fmt in streaming_formats:
                 if fmt.get('drmFamilies') or fmt.get('drm_families'):
                     continue
@@ -1917,11 +1952,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 if cipher:
                     if 's' in url_data or self._downloader.params.get('youtube_include_dash_manifest', True):
                         ASSETS_RE = r'"jsUrl":"(/s/player/.*?/player_ias.vflset/.*?/base.js)'
-                        
+
                         player_url = self._search_regex(
                             ASSETS_RE,
                             embed_webpage if age_gate else video_webpage, '', default=None)
-                            
+
                         if not player_url and not age_gate:
                             # We need the embed website after all
                             if embed_webpage is None:
@@ -1931,7 +1966,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             player_url = self._search_regex(
                                 ASSETS_RE, embed_webpage, 'JS player URL')
 
-                        #if player_url is None:
+                        # if player_url is None:
                         #    player_url_json = self._search_regex(
                         #        r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
                         #        video_webpage, 'age gate player URL')
@@ -1946,14 +1981,20 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             if player_url is None:
                                 player_desc = 'unknown'
                             else:
-                                player_type, player_version = self._extract_player_info(player_url)
+                                player_version = self._extract_player_info(player_url)
                                 player_desc = 'html5 player %s' % player_version
                             parts_sizes = self._signature_cache_id(encrypted_sig)
                             self.to_screen('{%s} signature length %s, %s' %
                                            (format_id, parts_sizes, player_desc))
 
                         signature = self._decrypt_signature_protected(encrypted_sig)
-                            
+                        if not re.match(self._VALID_SIG_VALUE_RE, signature):
+                            if self._downloader.params.get('verbose'):
+                                self.to_screen("Built-in signature decryption failed")
+                            if not sig_decrypt_stack:
+                                sig_decrypt_stack = self._extract_signature_function(video_id, player_url, encrypted_sig)
+                            signature = self._do_decrypt_signature(encrypted_sig, sig_decrypt_stack)
+
                         sp = try_get(url_data, lambda x: x['sp'][0], compat_str) or 'signature'
                         url += '&%s=%s' % (sp, signature)
                 if 'ratebypass' not in url:

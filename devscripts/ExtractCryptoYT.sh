@@ -19,11 +19,11 @@ IFS=';'
 for i in $code; do
 	num="$(echo "$i" | grep -Poh ',[0-9]+' | grep -Poh '[0-9]+')"
 	if [[ "$i" == *"$splice"* ]]; then
-		echo "a=a[$num:]"
+		echo "a = a[$num:]"
 	elif [[ "$i" == *"$rev"* ]]; then
 		echo "a.reverse()"
 	elif [[ "$i" == *"$mess"* ]]; then
-		echo "a=self.mess(a,$num)"
+		echo "a = self.mess(a, $num)"
 	else 
 		echo "UNKNOWN????"
 	fi
