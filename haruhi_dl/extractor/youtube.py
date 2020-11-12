@@ -1247,23 +1247,25 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                                        func):
             obf_name, obf_arg = instruction.group(1, 2)
             inst = obf_map.get(obf_name)
-            self.to_screen('%s %s %s' % (obf_name, inst, obf_arg))
-            if not inst:
-                raise ExtractorError('Unknown obfuscation function: %s.%s (1)' % (obfuscated_name, obf_name))
-            elif inst == 'splice':
-                decryptor_stack.append(lambda a: a[int(obf_arg):])
-            elif inst == 'reverse':
-                decryptor_stack.append(lambda a: reversed(a))
-            elif inst == 'mess':
-                decryptor_stack.append(lambda a: self.mess(a, int(obf_arg)))
+            if self._downloader.params.get('verbose', True):
+                self.to_screen('sig %s %s %s' % (obf_name, inst, obf_arg))
+            if inst:
+                decryptor_stack.append((inst, int(obf_arg) if inst != 'reverse' else None))
             else:
-                raise ExtractorError('Unknown obfuscation function: %s.%s (2)' % (obfuscated_name, obf_name))
+                raise ExtractorError('Unknown obfuscation function: %s.%s' % (obfuscated_name, obf_name))
         return decryptor_stack
 
     def _do_decrypt_signature(self, sig, stack):
         a = list(sig)
         for fun in stack:
-            a = list(fun(a))
+            if fun[0] == 'splice':
+                a = a[fun[1]:]
+            elif fun[0] == 'reverse':
+                a.reverse()
+            elif fun[0] == 'mess':
+                a = self.mess(a, fun[1])
+            else:
+                raise ExtractorError('Unknown stack action: %s' % (fun[0]))
         return ''.join(a)
 
     def _print_sig_code(self, func, example_sig):
@@ -1996,9 +1998,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
                         signature = self._decrypt_signature_protected(encrypted_sig)
                         if not re.match(self._VALID_SIG_VALUE_RE, signature):
-                            if self._downloader.params.get('verbose'):
-                                self.to_screen("Built-in signature decryption failed")
                             if not sig_decrypt_stack:
+                                if self._downloader.params.get('verbose'):
+                                    self.to_screen("Built-in signature decryption failed, trying dynamic")
                                 sig_decrypt_stack = self._extract_signature_function(video_id, player_url, encrypted_sig)
                             signature = self._do_decrypt_signature(encrypted_sig, sig_decrypt_stack)
 
