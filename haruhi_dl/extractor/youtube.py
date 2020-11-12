@@ -1222,7 +1222,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         return res
 
     def _parse_sig_js(self, js_player):
-        shit_parser = re.search(r'[a-z]\=a\.split\((?:""|\'\')\);(([a-zA-Z]+).*);return a\.join', js_player)
+        shit_parser = re.search(r'[a-z]\=a\.split\((?:""|\'\')\);(([a-zA-Z_][a-zA-Z\d_]+).*);return a\.join', js_player)
         if not shit_parser:
             raise ExtractorError('Signature decryption code not found')
         func, obfuscated_name = shit_parser.group(1, 2)
@@ -1232,31 +1232,38 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             raise ExtractorError('Signature decrypting deobfuscated functions not found')
         obfuscated_stack = obfuscated_func.group(1)
         obf_map = {}
-        for obffun in re.finditer(r'([a-zA-Z]{2}):function\(a(?:,b)?\){(.*?)}', obfuscated_stack):
+        for obffun in re.finditer(r'([a-zA-Z_][a-zA-Z\d_]+):function\(a(?:,b)?\){(.*?)}', obfuscated_stack):
             obfname, obfval = obffun.group(1, 2)
-            if obfval == 'a.splice(0,b)':
+            if 'splice' in obfval:
                 obf_map[obfname] = 'splice'
-            elif obfval == 'a.reverse()':
+            elif 'reverse' in obfval:
                 obf_map[obfname] = 'reverse'
-            elif obfval == 'var c=a[0];a[0]=a[b%a.length];a[b%a.length]=c':
+            elif 'var' in obfval and 'length' in obfval:
                 obf_map[obfname] = 'mess'
+            else:
+                raise ExtractorError('Unknown obfuscation function type: %s.%s' % (obfuscated_name, obfname))
         decryptor_stack = []
-        for instruction in re.finditer(r'%s\.([a-zA-Z]{2})\(a,(\d+)\);' % re.escape(obfuscated_name),
+        for instruction in re.finditer(r'%s\.([a-zA-Z_][a-zA-Z\d_]+)\(a,(\d+)\);?' % re.escape(obfuscated_name),
                                        func):
             obf_name, obf_arg = instruction.group(1, 2)
             inst = obf_map.get(obf_name)
-            if inst == 'splice':
-                decryptor_stack.append(lambda a: a[:int(obf_arg)])
+            self.to_screen('%s %s %s' % (obf_name, inst, obf_arg))
+            if not inst:
+                raise ExtractorError('Unknown obfuscation function: %s.%s (1)' % (obfuscated_name, obf_name))
+            elif inst == 'splice':
+                decryptor_stack.append(lambda a: a[int(obf_arg):])
             elif inst == 'reverse':
                 decryptor_stack.append(lambda a: reversed(a))
             elif inst == 'mess':
                 decryptor_stack.append(lambda a: self.mess(a, int(obf_arg)))
+            else:
+                raise ExtractorError('Unknown obfuscation function: %s.%s (2)' % (obfuscated_name, obf_name))
         return decryptor_stack
 
     def _do_decrypt_signature(self, sig, stack):
         a = list(sig)
         for fun in stack:
-            a = fun(a)
+            a = list(fun(a))
         return ''.join(a)
 
     def _print_sig_code(self, func, example_sig):
