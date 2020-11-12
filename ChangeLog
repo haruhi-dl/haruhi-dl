@@ -1,9 +1,14 @@
+version 2020.11.12
+Extractor
+* [tiktok] fixed extractor
+* [wykop] added extractor
+* [youtube] fixed crypto
+
 version 2020.11.08
 Extractors
 * [youtube] age-gate fixes
 * [aliexpress] Added extractor
 * [polskieradio] Fixed title extraction
-* [tiktok] Added extractor
 
 version 2020.11.06
 Extractors

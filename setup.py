@@ -107,7 +107,7 @@ setup(
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     url='https://git.sakamoto.pl/laudom/haruhi-dl',
-    author='Ricardo Garcia',
+    author='Laura Liberda | Dominika Liberda',
     author_email='hdl@haruhi.download',
     maintainer='Dominika Liberda',
     maintainer_email='ja@sdomi.pl',
