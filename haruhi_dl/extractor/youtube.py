@@ -2352,57 +2352,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         }
 
 
-class YoutubeLiveIE(YoutubeBaseInfoExtractor):
-    IE_DESC = 'YouTube.com live streams'
-    _VALID_URL = r'(?P<base_url>https?://(?:\w+\.)?youtube\.com/(?:(?:user|channel|c)/)?(?P<id>[^/]+))/live'
-    IE_NAME = 'youtube:live'
-
-    _TESTS = [{
-        'url': 'https://www.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow/live',
-        'info_dict': {
-            'id': 'DWcJFNfaw9c',
-            'ext': 'mp4',
-            'title': 'lofi hip hop radio - beats to sleep/chill to',
-            'uploader': 'ChilledCow',
-            'uploader_id': 'ChilledCow',
-            'uploader_url': r're:https?://(?:www\.)?youtube\.com/channel/UCSJ4gkVC6NrvII8umztf0Ow',
-            'upload_date': '20200225',
-            'description': 'md5:438179573adcdff3c97ebb1ee632b891',
-            'categories': ['News & Politics'],
-            'tags': ['Cenk Uygur (TV Program Creator)', 'The Young Turks (Award-Winning Work)', 'Talk Show (TV Genre)'],
-            'like_count': int,
-            'dislike_count': int,
-        },
-        'params': {
-            'skip_download': True,
-        },
-    }, {
-        'url': 'https://www.youtube.com/channel/UC1yBKRuGpC1tSM73A0ZjYjQ/live',
-        'only_matching': True,
-    }, {
-        'url': 'https://www.youtube.com/c/CommanderVideoHq/live',
-        'only_matching': True,
-    }, {
-        'url': 'https://www.youtube.com/TheYoungTurks/live',
-        'only_matching': True,
-    }]
-
-    def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        channel_id = mobj.group('id')
-        base_url = mobj.group('base_url')
-        webpage = self._download_webpage(url, channel_id, fatal=False)
-        if webpage:
-            page_type = self._og_search_property(
-                'type', webpage, 'page type', default='')
-            video_id = self._html_search_meta(
-                'videoId', webpage, 'video id', default=None)
-            if page_type.startswith('video') and video_id and re.match(
-                    r'^[0-9A-Za-z_-]{11}$', video_id):
-                return self.url_result(video_id, YoutubeIE.ie_key())
-        return self.url_result(base_url)
-
-
 class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
     _ENTRY_URL_TPL = 'https://www.youtube.com/watch?v=%s'
     _ENTRY_IE_KEY = 'Youtube'
@@ -2515,7 +2464,7 @@ class YoutubeAjaxListInfoExtractor(YoutubeBaseListInfoExtractor):
 
 class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
     IE_NAME = 'youtube:channel'
-    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/(?!watch|playlist|v|e|embed)(?:(?P<type>user|channel|c)/)?(?P<id>\w+)(?!/live)'
+    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/(?!watch|playlist|v|e|embed|shared)(?:(?P<type>user|channel|c)/)?(?P<id>\w+)(?!/live)'
     _LIST_NAME = 'channel'
 
     _TESTS = [{
@@ -2564,7 +2513,7 @@ class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
 
 class YoutubePlaylistIE(YoutubeAjaxListInfoExtractor):
     IE_NAME = 'youtube:playlist'
-    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/playlist\?(?:[^&;]+[&;])*list=(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
+    _VALID_URL = r'(?:https?://(?:\w+\.)?youtube\.com/(?:playlist\?(?:[^&;]+[&;])*|watch\?(?:[^&;]+[&;])*playnext=1&(?:[^&;]+[&;])*)list=|ytplaylist:)?(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
     _LIST_NAME = 'playlist'
 
     _TESTS = [{

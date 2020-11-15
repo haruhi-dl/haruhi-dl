@@ -1483,7 +1483,6 @@ from .yourupload import YourUploadIE
 from .youtube import (
     YoutubeIE,
     YoutubeChannelIE,
-    YoutubeLiveIE,
     YoutubePlaylistIE,
     YoutubeTruncatedIDIE,
     YoutubeTruncatedURLIE,

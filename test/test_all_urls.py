@@ -35,12 +35,12 @@ class TestAllURLsMatching(unittest.TestCase):
         assertPlaylist('UUBABnxM4Ar9ten8Mdjj1j0Q')  # 585
         assertPlaylist('PL63F0C78739B09958')
         assertPlaylist('https://www.youtube.com/playlist?list=UUBABnxM4Ar9ten8Mdjj1j0Q')
-        assertPlaylist('https://www.youtube.com/course?list=ECUl4u3cNGP61MdtwGTqZA0MreSaDybji8')
+        # assertPlaylist('https://www.youtube.com/course?list=ECUl4u3cNGP61MdtwGTqZA0MreSaDybji8')
         assertPlaylist('https://www.youtube.com/playlist?list=PLwP_SiAcdui0KVebT0mU9Apz359a4ubsC')
         assertPlaylist('https://www.youtube.com/watch?v=AV6J6_AeFEQ&playnext=1&list=PL4023E734DA416012')  # 668
         self.assertFalse('youtube:playlist' in self.matching_ies('PLtS2H6bU1M'))
         # Top tracks
-        assertPlaylist('https://www.youtube.com/playlist?list=MCUS.20142101')
+        # assertPlaylist('https://www.youtube.com/playlist?list=MCUS.20142101')
 
     def test_youtube_matching(self):
         self.assertTrue(YoutubeIE.suitable('PLtS2H6bU1M'))
@@ -55,22 +55,17 @@ class TestAllURLsMatching(unittest.TestCase):
         assertChannel('https://www.youtube.com/channel/HCtnHdj3df7iM')
         assertChannel('https://www.youtube.com/channel/HCtnHdj3df7iM?feature=gb_ch_rec')
         assertChannel('https://www.youtube.com/channel/HCtnHdj3df7iM/videos')
+        assertChannel('http://www.youtube.com/NASAgovVideo/videos')
 
-    def test_youtube_user_matching(self):
-        self.assertMatch('http://www.youtube.com/NASAgovVideo/videos', ['youtube:user'])
+    # def test_youtube_feeds(self):
+    #    self.assertMatch('https://www.youtube.com/feed/watch_later', ['youtube:watchlater'])
+    #    self.assertMatch('https://www.youtube.com/feed/subscriptions', ['youtube:subscriptions'])
+    #    self.assertMatch('https://www.youtube.com/feed/recommended', ['youtube:recommended'])
+    #    self.assertMatch('https://www.youtube.com/my_favorites', ['youtube:favorites'])
 
-    def test_youtube_feeds(self):
-        self.assertMatch('https://www.youtube.com/feed/watch_later', ['youtube:watchlater'])
-        self.assertMatch('https://www.youtube.com/feed/subscriptions', ['youtube:subscriptions'])
-        self.assertMatch('https://www.youtube.com/feed/recommended', ['youtube:recommended'])
-        self.assertMatch('https://www.youtube.com/my_favorites', ['youtube:favorites'])
-
-    def test_youtube_show_matching(self):
-        self.assertMatch('http://www.youtube.com/show/airdisasters', ['youtube:show'])
-
-    def test_youtube_search_matching(self):
-        self.assertMatch('http://www.youtube.com/results?search_query=making+mustard', ['youtube:search_url'])
-        self.assertMatch('https://www.youtube.com/results?baz=bar&search_query=haruhi-dl+test+video&filters=video&lclk=video', ['youtube:search_url'])
+    # def test_youtube_search_matching(self):
+    #    self.assertMatch('http://www.youtube.com/results?search_query=making+mustard', ['youtube:search_url'])
+    #    self.assertMatch('https://www.youtube.com/results?baz=bar&search_query=haruhi-dl+test+video&filters=video&lclk=video', ['youtube:search_url'])
 
     def test_youtube_extract(self):
         assertExtractId = lambda url, id: self.assertEqual(YoutubeIE.extract_id(url), id)
@@ -100,10 +95,10 @@ class TestAllURLsMatching(unittest.TestCase):
                         ie.suitable(url),
                         '%s should not match URL %r . That URL belongs to %s.' % (type(ie).__name__, url, tc['name']))
 
-    def test_keywords(self):
-        self.assertMatch(':ytsubs', ['youtube:subscriptions'])
-        self.assertMatch(':ytsubscriptions', ['youtube:subscriptions'])
-        self.assertMatch(':ythistory', ['youtube:history'])
+    # def test_keywords(self):
+    #    self.assertMatch(':ytsubs', ['youtube:subscriptions'])
+    #    self.assertMatch(':ytsubscriptions', ['youtube:subscriptions'])
+    #    self.assertMatch(':ythistory', ['youtube:history'])
 
     def test_vimeo_matching(self):
         self.assertMatch('https://vimeo.com/channels/tributes', ['vimeo:channel'])
