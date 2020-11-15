@@ -7,7 +7,7 @@ import random
 import re
 import time
 
-from .common import InfoExtractor
+from .common import InfoExtractor, SearchInfoExtractor
 from ..compat import (
     compat_chr,
     compat_kwargs,
@@ -64,6 +64,8 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
         'x-youtube-client-name': '1',
         'x-youtube-client-version': '2.20201112.04.01',
     }
+
+    _YOUTUBE_API_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8'
 
     def _set_language(self):
         self._set_cookie(
@@ -2396,6 +2398,7 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
             ], expected_type=compat_str),
             'channel_url': try_get(entry, [
                 lambda x: 'https://www.youtube.com' + x['shortBylineText']['runs'][0]['navigationEndpoint']['browseEndpoint']['canonicalBaseUrl'],
+                lambda x: 'https://www.youtube.com/channel/' + x['shortBylineText']['runs'][0]['navigationEndpoint']['browseEndpoint']['browseId'],
             ], expected_type=compat_str) or try_get(full_data, [
                 lambda x: x['metadata']['channelMetadataRenderer']['ownerUrls'][0],
                 lambda x: x['metadata']['channelMetadataRenderer']['vanityChannelUrl'],
@@ -2403,22 +2406,26 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
             ]),
         }
 
-    def _real_extract(self, url):
-        list_id = self._match_id(url)
-        if self._handle_url:
-            url = self._handle_url(url)
+    def _download_first_data(self, url, list_id, query=None):
         webpage = self._download_webpage(url, list_id,
                                          note='Downloading %s page #1 (webpage)' % (self._LIST_NAME))
-        data = self._parse_json(
+        return self._parse_json(
             self._search_regex(
                 r'(?:window(?:\["|\.)|var )ytInitialData(?:"])?\s*=\s*({.+});',
-                webpage, 'initial data JSON'), 'initial data JSON')
+                webpage, 'initial data JSON'), 'initial data JSON'), webpage
+
+    def _real_extract(self, url, results=None, query=None):
+        is_search = True if query else False
+        list_id = query or self._match_id(url)
+        if self._handle_url:
+            url = self._handle_url(url)
+        data, webpage = self._download_first_data(url, list_id, query=query)
         videos = self._parse_init_video_list(data)
         entries = videos['entries']
         continuation_token = videos['continuation']
-        if continuation_token:
+        if continuation_token and (not is_search or results):
             page_no = 2
-            while continuation_token is not None:
+            while continuation_token is not None and (len(entries) < results if results else True):
                 cont_res = self._download_continuation(continuation_token, list_id, page_no)
                 cont_parser = self._parse_continuation_video_list
                 if not cont_parser:
@@ -2437,7 +2444,10 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
         if 'info_dict' in videos:
             info_dict.update(videos['info_dict'])
         if 'title' not in info_dict:
-            info_dict['title'] = self._og_search_title(webpage)
+            if is_search:
+                info_dict['title'] = list_id
+            else:
+                info_dict['title'] = self._og_search_title(webpage)
 
         info_dict['entries'] = []
         for _entry in entries:
@@ -2449,6 +2459,8 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
                 }
                 entry.update(_entry)
                 info_dict['entries'].append(entry)
+                if results and len(info_dict['entries']) >= results:
+                    break
 
         return info_dict
 
@@ -2460,6 +2472,30 @@ class YoutubeAjaxListInfoExtractor(YoutubeBaseListInfoExtractor):
                                    headers=self._YOUTUBE_CLIENT_HEADERS, query={
                                        'continuation': continuation,
                                    })
+
+
+class YoutubeYti1ListInfoExtractor(YoutubeBaseListInfoExtractor):
+    # /youtubei/v1/[action]
+    _ACTION_URL = 'https://www.youtube.com/youtubei/v1/%s?key=%s' % ('%s', YoutubeBaseInfoExtractor._YOUTUBE_API_KEY)
+    _ACTION_NAME = 'browse'
+
+    _YTI_CONTEXT = {
+        "client": {
+            "hl": "en-US",
+            "clientName": "WEB",
+            "clientVersion": "2.20201112.04.01",
+        },
+    }
+
+    def _download_continuation(self, continuation, list_id, page_no):
+        return self._download_json(self._ACTION_URL % (self._ACTION_NAME), list_id,
+                                   note='Downloading %s page #%d (yti1)' % (self._LIST_NAME, page_no),
+                                   headers={
+                                       'Content-Type': 'application/json',
+        }, data=bytes(json.dumps({
+            'context': self._YTI_CONTEXT,
+            'continuation': continuation,
+        }), encoding='utf-8'))
 
 
 class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
@@ -2575,6 +2611,56 @@ class YoutubePlaylistIE(YoutubeAjaxListInfoExtractor):
                                       expected_type=compat_str),
             },
         }
+
+
+class YoutubeSearchIE(SearchInfoExtractor, YoutubeYti1ListInfoExtractor):
+    IE_NAME = 'youtube:search'
+    _SEARCH_KEY = 'ytsearch'
+    _MAX_RESULTS = float('inf')
+    _ACTION_NAME = 'search'
+    _LIST_NAME = 'search results'
+    _searcher = YoutubeBaseListInfoExtractor._real_extract
+
+    def _download_first_data(self, url, list_id, query=''):
+        return self._download_json(self._ACTION_URL % (self._ACTION_NAME), list_id,
+                                   note='Downloading %s page #1 (yti1)' % (self._LIST_NAME),
+                                   headers={
+                                       'Content-Type': 'application/json',
+        }, data=bytes(json.dumps({
+            'context': self._YTI_CONTEXT,
+            'query': query,
+        }), encoding='utf-8')), ''
+
+    def _parse_init_video_list(self, data):
+        renderer = try_get(data, [
+            # initial
+            lambda x: x['contents']['twoColumnSearchResultsRenderer']['primaryContents']['sectionListRenderer']['contents'][0]['itemSectionRenderer'],
+            # continuation
+            lambda x: x['onResponseReceivedCommands'][0]['appendContinuationItemsAction']['continuationItems'][0]['itemSectionRenderer'],
+        ])
+        if not renderer:
+            raise ExtractorError('Could not extract %s item list renderer' % self._LIST_NAME)
+        rend_items = try_get(renderer, [
+            lambda x: x['contents'],
+        ])
+        if not rend_items:
+            raise ExtractorError('Could not extract %s renderer item list' % self._LIST_NAME)
+        entries = []
+        for item in rend_items:
+            entries.append(self._parse_video(item, entry_key='videoRenderer'))
+        return {
+            'entries': entries,
+            'continuation': try_get(data, [
+                # initial
+                lambda x: x['contents']['twoColumnSearchResultsRenderer']['primaryContents']['sectionListRenderer']['contents'][-1]['continuationItemRenderer']['continuationEndpoint']['continuationCommand']['token'],
+                # continuation
+                lambda x: x['onResponseReceivedCommands'][0]['appendContinuationItemsAction']['continuationItems'][-1]['continuationItemRenderer']['continuationEndpoint']['continuationCommand']['token'],
+            ], expected_type=compat_str),
+            'info_dict': {},
+        }
+
+    def _get_n_results(self, query, n):
+        return self._searcher('ytsearch', results=n, query=query)
 
 
 class YoutubeTruncatedURLIE(InfoExtractor):

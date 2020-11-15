@@ -1484,6 +1484,7 @@ from .youtube import (
     YoutubeIE,
     YoutubeChannelIE,
     YoutubePlaylistIE,
+    YoutubeSearchIE,
     YoutubeTruncatedIDIE,
     YoutubeTruncatedURLIE,
 )
