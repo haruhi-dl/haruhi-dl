@@ -1483,21 +1483,10 @@ from .yourupload import YourUploadIE
 from .youtube import (
     YoutubeIE,
     YoutubeChannelIE,
-    YoutubeFavouritesIE,
-    YoutubeHistoryIE,
     YoutubeLiveIE,
     YoutubePlaylistIE,
-    YoutubePlaylistsIE,
-    YoutubeRecommendedIE,
-    YoutubeSearchDateIE,
-    YoutubeSearchIE,
-    YoutubeSearchURLIE,
-    YoutubeShowIE,
-    YoutubeSubscriptionsIE,
     YoutubeTruncatedIDIE,
     YoutubeTruncatedURLIE,
-    YoutubeUserIE,
-    YoutubeWatchLaterIE,
 )
 from .zapiks import ZapiksIE
 from .zaq1 import Zaq1IE
