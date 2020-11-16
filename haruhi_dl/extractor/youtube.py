@@ -2267,7 +2267,7 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
                 lambda x: parse_duration(x['thumbnailOverlays'][0]['thumbnailOverlayTimeStatusRenderer']['text']['simpleText']),
             ], expected_type=float),
             'view_count': try_get(entry, [
-                lambda x: int(x['viewCountText']['simpleText'][:-len(' views')].replace(",", "")),
+                lambda x: int_or_none(x['viewCountText']['simpleText'][:-len(' views')].replace(',', '').replace('No', '0')),
             ], expected_type=int),
             'channel': try_get(entry, [
                 lambda x: x['shortBylineText']['runs'][0]['text'],
