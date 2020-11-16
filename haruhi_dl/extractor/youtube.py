@@ -2383,7 +2383,7 @@ class YoutubeYti1ListInfoExtractor(YoutubeBaseListInfoExtractor):
 
 class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
     IE_NAME = 'youtube:channel'
-    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/(?!watch|playlist|v|e|embed|shared)(?:(?P<type>user|channel|c)/)?(?P<id>\w+)(?!/live)'
+    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/(?!watch|playlist|v|e|embed|shared)(?:(?P<type>user|channel|c)/)?(?P<id>[\w-]+)(?!/live)'
     _LIST_NAME = 'channel'
 
     _TESTS = [{
