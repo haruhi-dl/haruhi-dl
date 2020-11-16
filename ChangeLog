@@ -1,3 +1,12 @@
+version 2020.11.16
+Extractor
+* [youtube] fixed channel, playlist, search
+
+version 2020.11.14
+Extractor
+* [youtube] fixed static crypto
+* [youtube] new *tiny* crypto extracting system rewritten from bash by @selfisekai
+
 version 2020.11.12
 Extractor
 * [tiktok] fixed extractor

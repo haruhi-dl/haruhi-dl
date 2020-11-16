@@ -1,10 +1,11 @@
 #!/bin/bash
-func="$(cat $1 | grep -P '[a-z]\=a\.split.*a\.join')"
+data="$(curl -s "https://www.youtube.com/s/player/$1/player_ias.vflset/en_GB/base.js")"
+func="$(echo "$data" | grep -P '[a-z]\=a\.split.*a\.join')"
 echo $func
 
 obfuscatedName="$(echo $func | grep -Poh '\(""\);[A-Za-z]+' | sed -s 's/("");//')"
 
-obfuscatedFunc=$(cat "$1" | tr -d '\n' | grep -Poh "$obfuscatedName\=.*?}}")
+obfuscatedFunc=$(echo "$data" | tr -d '\n' | grep -Poh "$obfuscatedName\=.*?}}")
 mess="$(echo "$obfuscatedFunc" | grep -Poh "..:function\([a-z]+,[a-z]+\){var" | grep -Poh "^..")"
 rev="$(echo "$obfuscatedFunc" |  grep -Poh "..:function\([a-z]+\){[a-z]+.rev" | grep -Poh "^..")"
 splice="$(echo "$obfuscatedFunc" | grep -Poh "..:function\([a-z]+\,[a-z]+\){[a-z]+\." | grep -Poh "^..")"
