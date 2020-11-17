@@ -311,7 +311,7 @@ class TestFormatSelection(unittest.TestCase):
 
     def test_youtube_format_selection(self):
         order = [
-            '38', '37', '46', '22', '45', '35', '44', '18', '34', '43', '6', '5', '17', '36', '13',
+            '18',
             # Apple HTTP Live Streaming
             '96', '95', '94', '93', '92', '132', '151',
             # 3D
@@ -356,7 +356,7 @@ class TestFormatSelection(unittest.TestCase):
         yie._sort_formats(info_dict['formats'])
         hdl.process_ie_result(info_dict)
         downloaded = hdl.downloaded_info_dicts[0]
-        self.assertEqual(downloaded['format_id'], '38')
+        self.assertEqual(downloaded['format_id'], '18')
 
         info_dict = _make_result(list(formats_order), extractor='youtube')
         hdl = HDL({'format': 'bestvideo/best,bestaudio'})
