@@ -346,24 +346,24 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         r'\b(?P<id>vfl[a-zA-Z0-9_-]+)\b.*?\.(?P<ext>[a-z]+)$',
     )
     _formats = {
-        '5': {'ext': 'flv', 'width': 400, 'height': 240, 'acodec': 'mp3', 'abr': 64, 'vcodec': 'h263'},
-        '6': {'ext': 'flv', 'width': 450, 'height': 270, 'acodec': 'mp3', 'abr': 64, 'vcodec': 'h263'},
-        '13': {'ext': '3gp', 'acodec': 'aac', 'vcodec': 'mp4v'},
-        '17': {'ext': '3gp', 'width': 176, 'height': 144, 'acodec': 'aac', 'abr': 24, 'vcodec': 'mp4v'},
+        # '5': {'ext': 'flv', 'width': 400, 'height': 240, 'acodec': 'mp3', 'abr': 64, 'vcodec': 'h263'},
+        # '6': {'ext': 'flv', 'width': 450, 'height': 270, 'acodec': 'mp3', 'abr': 64, 'vcodec': 'h263'},
+        # '13': {'ext': '3gp', 'acodec': 'aac', 'vcodec': 'mp4v'},
+        # '17': {'ext': '3gp', 'width': 176, 'height': 144, 'acodec': 'aac', 'abr': 24, 'vcodec': 'mp4v'},
         '18': {'ext': 'mp4', 'width': 640, 'height': 360, 'acodec': 'aac', 'abr': 96, 'vcodec': 'h264'},
-        '22': {'ext': 'mp4', 'width': 1280, 'height': 720, 'acodec': 'aac', 'abr': 192, 'vcodec': 'h264'},
-        '34': {'ext': 'flv', 'width': 640, 'height': 360, 'acodec': 'aac', 'abr': 128, 'vcodec': 'h264'},
-        '35': {'ext': 'flv', 'width': 854, 'height': 480, 'acodec': 'aac', 'abr': 128, 'vcodec': 'h264'},
+        # '22': {'ext': 'mp4', 'width': 1280, 'height': 720, 'acodec': 'aac', 'abr': 192, 'vcodec': 'h264'},
+        #'34': {'ext': 'flv', 'width': 640, 'height': 360, 'acodec': 'aac', 'abr': 128, 'vcodec': 'h264'},
+        #'35': {'ext': 'flv', 'width': 854, 'height': 480, 'acodec': 'aac', 'abr': 128, 'vcodec': 'h264'},
         # itag 36 videos are either 320x180 (BaW_jenozKc) or 320x240 (__2ABJjxzNo), abr varies as well
-        '36': {'ext': '3gp', 'width': 320, 'acodec': 'aac', 'vcodec': 'mp4v'},
-        '37': {'ext': 'mp4', 'width': 1920, 'height': 1080, 'acodec': 'aac', 'abr': 192, 'vcodec': 'h264'},
-        '38': {'ext': 'mp4', 'width': 4096, 'height': 3072, 'acodec': 'aac', 'abr': 192, 'vcodec': 'h264'},
-        '43': {'ext': 'webm', 'width': 640, 'height': 360, 'acodec': 'vorbis', 'abr': 128, 'vcodec': 'vp8'},
-        '44': {'ext': 'webm', 'width': 854, 'height': 480, 'acodec': 'vorbis', 'abr': 128, 'vcodec': 'vp8'},
-        '45': {'ext': 'webm', 'width': 1280, 'height': 720, 'acodec': 'vorbis', 'abr': 192, 'vcodec': 'vp8'},
-        '46': {'ext': 'webm', 'width': 1920, 'height': 1080, 'acodec': 'vorbis', 'abr': 192, 'vcodec': 'vp8'},
-        '59': {'ext': 'mp4', 'width': 854, 'height': 480, 'acodec': 'aac', 'abr': 128, 'vcodec': 'h264'},
-        '78': {'ext': 'mp4', 'width': 854, 'height': 480, 'acodec': 'aac', 'abr': 128, 'vcodec': 'h264'},
+        # '36': {'ext': '3gp', 'width': 320, 'acodec': 'aac', 'vcodec': 'mp4v'},
+        # '37': {'ext': 'mp4', 'width': 1920, 'height': 1080, 'acodec': 'aac', 'abr': 192, 'vcodec': 'h264'},
+        # '38': {'ext': 'mp4', 'width': 4096, 'height': 3072, 'acodec': 'aac', 'abr': 192, 'vcodec': 'h264'},
+        # '43': {'ext': 'webm', 'width': 640, 'height': 360, 'acodec': 'vorbis', 'abr': 128, 'vcodec': 'vp8'},
+        # '44': {'ext': 'webm', 'width': 854, 'height': 480, 'acodec': 'vorbis', 'abr': 128, 'vcodec': 'vp8'},
+        # '45': {'ext': 'webm', 'width': 1280, 'height': 720, 'acodec': 'vorbis', 'abr': 192, 'vcodec': 'vp8'},
+        # '46': {'ext': 'webm', 'width': 1920, 'height': 1080, 'acodec': 'vorbis', 'abr': 192, 'vcodec': 'vp8'},
+        # '59': {'ext': 'mp4', 'width': 854, 'height': 480, 'acodec': 'aac', 'abr': 128, 'vcodec': 'h264'},
+        # '78': {'ext': 'mp4', 'width': 854, 'height': 480, 'acodec': 'aac', 'abr': 128, 'vcodec': 'h264'},
 
 
         # 3D videos
@@ -442,7 +442,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         '251': {'ext': 'webm', 'format_note': 'DASH audio', 'acodec': 'opus', 'abr': 160},
 
         # RTMP (unnamed)
-        '_rtmp': {'protocol': 'rtmp'},
+        # '_rtmp': {'protocol': 'rtmp'},
 
         # av01 video only formats sometimes served with "unknown" codecs
         '394': {'acodec': 'none', 'vcodec': 'av01.0.05M.08'},
@@ -955,11 +955,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
     def report_unavailable_format(self, video_id, format):
         """Report extracted video URL."""
         self.to_screen('%s: Format %s not available' % (video_id, format))
-
-    def report_rtmp_download(self):
-        """Indicate the download will use the RTMP protocol."""
-        self.to_screen('RTMP download detected')
-
+        
     def _signature_cache_id(self, example_sig):
         """ Return a string representation of a signature """
         return '.'.join(compat_str(len(part)) for part in example_sig.split('.'))
@@ -1463,13 +1459,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         qs = compat_parse_qs(compat_urllib_parse_urlparse(urlh.geturl()).query)
         video_id = qs.get('v', [None])[0] or video_id
 
-        # Attempt to extract SWF player URL
-        mobj = re.search(r'swfConfig.*?"(https?:\\/\\/.*?watch.*?-.*?\.swf)"', video_webpage)
-        if mobj is not None:
-            player_url = re.sub(r'\\(.)', r'\1', mobj.group(1))
-        else:
-            player_url = None
-
         dash_mpds = []
 
         def add_dash_mpd(video_info):
@@ -1683,18 +1672,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         streaming_formats = try_get(player_response, lambda x: x['streamingData']['formats'], list) or []
         streaming_formats.extend(try_get(player_response, lambda x: x['streamingData']['adaptiveFormats'], list) or [])
 
-        if 'conn' in video_info and video_info['conn'][0].startswith('rtmp'):
-            self.report_rtmp_download()
-            formats = [{
-                'format_id': '_rtmp',
-                'protocol': 'rtmp',
-                'url': video_info['conn'][0],
-                'player_url': player_url,
-            }]
-        elif not is_live and (streaming_formats or len(video_info.get('url_encoded_fmt_stream_map', [''])[0]) >= 1 or len(video_info.get('adaptive_fmts', [''])[0]) >= 1):
+        if not is_live and (streaming_formats or len(video_info.get('url_encoded_fmt_stream_map', [''])[0]) >= 1 or len(video_info.get('adaptive_fmts', [''])[0]) >= 1):
             encoded_url_map = video_info.get('url_encoded_fmt_stream_map', [''])[0] + ',' + video_info.get('adaptive_fmts', [''])[0]
-            if 'rtmpe%3Dyes' in encoded_url_map:
-                raise ExtractorError('rtmpe downloads are not supported, see https://web.archive.org/web/20200923164854/https://github.com/ytdl-org/youtube-dl/issues/343 for more information.', expected=True)
             formats = []
             formats_spec = {}
             fmt_list = video_info.get('fmt_list', [''])[0]

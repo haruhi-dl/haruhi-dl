@@ -86,8 +86,6 @@ class TestPlayerInfo(unittest.TestCase):
             ('https://www.youtube.com/yts/jsbin/player-en_US-vflaxXRn1/base.js', 'vflaxXRn1'),
             ('https://s.ytimg.com/yts/jsbin/html5player-en_US-vflXGBaUN.js', 'vflXGBaUN'),
             ('https://s.ytimg.com/yts/jsbin/html5player-en_US-vflKjOTVq/html5player.js', 'vflKjOTVq'),
-            ('http://s.ytimg.com/yt/swfbin/watch_as3-vflrEm9Nq.swf', 'vflrEm9Nq'),
-            ('https://s.ytimg.com/yts/swfbin/player-vflenCdZL/watch_as3.swf', 'vflenCdZL'),
         )
         for player_url, expected_player_id in PLAYER_URLS:
             expected_player_type = player_url.split('.')[-1]
@@ -118,15 +116,9 @@ def make_tfunc(url, stype, sig_input, expected_sig):
 
         hdl = FakeHDL()
         ie = YoutubeIE(hdl)
-        if stype == 'js':
-            with io.open(fn, encoding='utf-8') as testf:
-                jscode = testf.read()
-            func = ie._parse_sig_js(jscode)
-        else:
-            assert stype == 'swf'
-            with open(fn, 'rb') as testf:
-                swfcode = testf.read()
-            func = ie._parse_sig_swf(swfcode)
+        with io.open(fn, encoding='utf-8') as testf:
+            jscode = testf.read()
+        func = ie._parse_sig_js(jscode)
         src_sig = (
             compat_str(string.printable[:sig_input])
             if isinstance(sig_input, int) else sig_input)
