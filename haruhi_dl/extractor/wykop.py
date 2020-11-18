@@ -90,7 +90,6 @@ class WykopIE(InfoExtractor):
             raise ExtractorError('Wykop.pl said: "%s" (%d)' % (error['message_en'], error['code']))
 
         data = meta['data']
-        self.to_screen(data)
 
         uploader = uploader_url = alt_title = upload_date = None
         # author can be null, just wypiek api things - https://www.wykop.pl/wpis/36527259/
