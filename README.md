@@ -1,12 +1,14 @@
 # Haruhi-DL
 
-![build status](https://img.shields.io/gitlab/pipeline/laudom/haruhi-dl/master?gitlab_url=https%3A%2F%2Fgit.sakamoto.pl)
+[![build status](https://img.shields.io/gitlab/pipeline/laudom/haruhi-dl/master?gitlab_url=https%3A%2F%2Fgit.sakamoto.pl&style=flat-square)](https://git.sakamoto.pl/laudom/haruhi-dl/-/pipelines)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/haruhi-dl?style=flat-square)](https://pypi.org/project/haruhi-dl/)
+[![License: LGPL 3.0 or later](https://img.shields.io/pypi/l/haruhi-dl?style=flat-square)](https://git.sakamoto.pl/laudom/haruhi-dl/-/blob/master/README.md)
 
 This is a fork of [youtube-dl](https://yt-dl.org/), focused on bringing a fast, steady stream of updates. We'll do our best to merge patches to any site, not only youtube.
 
 ## Installing
 
-haruhi-dl is available on PyPI: [![version on PyPI](https://img.shields.io/pypi/v/haruhi-dl.svg)](https://pypi.org/project/haruhi-dl/)
+haruhi-dl is available on PyPI: [![version on PyPI](https://img.shields.io/pypi/v/haruhi-dl?style=flat-square)](https://pypi.org/project/haruhi-dl/)
 
 Install release from PyPI on Python 3.x:
 ```sh
@@ -26,6 +28,17 @@ Install from master (unstable) on Python 2.x:
 $ python2 -m pip install --upgrade git+https://git.sakamoto.pl/laudom/haruhi-dl.git
 ```
 
+## Usage
+
+```sh
+$ haruhi-dl "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+That's it! You just got rickrolled!
+
+Full manual with all options:
+```sh
+$ haruhi-dl --help
+```
 ## Contributing
 
 If you want to contribute, send us a diff to <contribute@haruhi.download>.
