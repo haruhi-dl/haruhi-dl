@@ -39,6 +39,7 @@ updates_key.pem
 *.part
 *.ytdl
 *.swp
+*.webm
 test/local_parameters.json
 .tox
 youtube-dl.zsh
