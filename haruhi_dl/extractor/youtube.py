@@ -1671,6 +1671,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         streaming_formats = try_get(player_response, lambda x: x['streamingData']['formats'], list) or []
         streaming_formats.extend(try_get(player_response, lambda x: x['streamingData']['adaptiveFormats'], list) or [])
 
+        player_url = None
         if not is_live and (streaming_formats or len(video_info.get('url_encoded_fmt_stream_map', [''])[0]) >= 1 or len(video_info.get('adaptive_fmts', [''])[0]) >= 1):
             formats = []
             formats_spec = {}
@@ -1731,14 +1732,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     continue
                 format_id = compat_str(format_id)
 
-                player_url = None
                 if cipher:
                     if 's' in url_data or self._downloader.params.get('youtube_include_dash_manifest', True):
                         ASSETS_RE = r'"jsUrl":"(/s/player/.*?/player_ias.vflset/.*?/base.js)'
 
                         player_url = self._search_regex(
                             ASSETS_RE,
-                            embed_webpage if age_gate else video_webpage, '', default=None)
+                            embed_webpage if age_gate else video_webpage, '', default=player_url)
 
                         if not player_url and not age_gate:
                             # We need the embed website after all
