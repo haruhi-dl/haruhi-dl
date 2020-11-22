@@ -806,6 +806,7 @@ from .ooyala import (
     OoyalaIE,
     OoyalaExternalIE,
 )
+from .openfm import OpenFMIE
 from .ora import OraTVIE
 from .orf import (
     ORFTVthekIE,
