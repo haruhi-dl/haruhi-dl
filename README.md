@@ -3,6 +3,8 @@
 [![build status](https://img.shields.io/gitlab/pipeline/laudom/haruhi-dl/master?gitlab_url=https%3A%2F%2Fgit.sakamoto.pl&style=flat-square)](https://git.sakamoto.pl/laudom/haruhi-dl/-/pipelines)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/haruhi-dl?style=flat-square)](https://pypi.org/project/haruhi-dl/)
 [![License: LGPL 3.0 or later](https://img.shields.io/pypi/l/haruhi-dl?style=flat-square)](https://git.sakamoto.pl/laudom/haruhi-dl/-/blob/master/README.md)
+[![Sasin stole 70 million PLN](https://img.shields.io/badge/Sasin-stole%2070%20million%20PLN-orange?style=flat-square)](https://www.planeta.pl/Wiadomosci/Polityka/Ile-kosztowaly-karty-wyborcze-Sasin-do-wiezienia-Wybory-odwolane)
+![Trans rights!](https://img.shields.io/badge/Trans-rights!-5BCEFA?style=flat-square)
 
 This is a fork of [youtube-dl](https://yt-dl.org/), focused on bringing a fast, steady stream of updates. We'll do our best to merge patches to any site, not only youtube.
 
