@@ -1,7 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+from datetime import datetime
 import json
+import hashlib
 import os.path
 import random
 import re
@@ -58,7 +60,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     # If True it will raise an error if no login info is provided
     _LOGIN_REQUIRED = False
 
-    _PLAYLIST_ID_RE = r'(?:PL|LL|EC|UU|FL|RD|UL|TL|PU|OLAK5uy_)[0-9A-Za-z-_]{10,}'
+    _PLAYLIST_ID_RE = r'(?:LL|WL|(?:PL|EC|UU|FL|RD|UL|TL|PU|OLAK5uy_)[0-9A-Za-z-_]{10,})'
 
     _YOUTUBE_CLIENT_HEADERS = {
         'x-youtube-client-name': '1',
@@ -2285,9 +2287,11 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
         entries = videos['entries']
         continuation_token = videos['continuation']
         if continuation_token and (not is_search or results):
+            session_id = self._search_regex(r'ytcfg\.set\({.*?"DELEGATED_SESSION_ID":"(\d+)"',
+                                            webpage, 'session id', fatal=False)
             page_no = 2
             while continuation_token is not None and (len(entries) < results if results else True):
-                cont_res = self._download_continuation(continuation_token, list_id, page_no)
+                cont_res = self._download_continuation(continuation_token, list_id, page_no, session_id=session_id)
                 cont_parser = self._parse_continuation_video_list
                 if not cont_parser:
                     cont_parser = self._parse_init_video_list
@@ -2348,15 +2352,29 @@ class YoutubeYti1ListInfoExtractor(YoutubeBaseListInfoExtractor):
         },
     }
 
-    def _download_continuation(self, continuation, list_id, page_no):
-        return self._download_json(self._ACTION_URL % (self._ACTION_NAME), list_id,
-                                   note='Downloading %s page #%d (yti1)' % (self._LIST_NAME, page_no),
-                                   headers={
-                                       'Content-Type': 'application/json',
-        }, data=bytes(json.dumps({
+    def _download_continuation(self, continuation, list_id, page_no, session_id=None):
+        data = {
             'context': self._YTI_CONTEXT,
             'continuation': continuation,
-        }), encoding='utf-8'))
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Origin': 'https://www.youtube.com',
+        }
+        if session_id:
+            data['context'].setdefault('user', {})['onBehalfOfUser'] = session_id
+            sapisid = self._get_cookies('https://www.youtube.com').get('SAPISID').value
+            if sapisid:
+                timestamp = str(int(datetime.now().timestamp()))
+                sapisidhash = '%s_%s' % (
+                    timestamp,
+                    hashlib.sha1(' '.join((timestamp, sapisid, 'https://www.youtube.com')).encode('utf-8')).hexdigest(),
+                )
+                headers['Authorization'] = 'SAPISIDHASH %s' % sapisidhash
+        return self._download_json(self._ACTION_URL % (self._ACTION_NAME), list_id,
+                                   note='Downloading %s page #%d (yti1)' % (self._LIST_NAME, page_no),
+                                   headers=headers,
+                                   data=bytes(json.dumps(data), encoding='utf-8'))
 
 
 class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
@@ -2408,7 +2426,7 @@ class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
         }
 
 
-class YoutubePlaylistIE(YoutubeAjaxListInfoExtractor):
+class YoutubePlaylistIE(YoutubeYti1ListInfoExtractor):
     IE_NAME = 'youtube:playlist'
     _VALID_URL = r'(?:https?://(?:\w+\.)?youtube\.com/(?:playlist\?(?:[^&;]+[&;])*|watch\?(?:[^&;]+[&;])*playnext=1&(?:[^&;]+[&;])*)list=|ytplaylist:)?(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
     _LIST_NAME = 'playlist'
@@ -2434,12 +2452,15 @@ class YoutubePlaylistIE(YoutubeAjaxListInfoExtractor):
         }
     }]
 
+    def _handle_url(self, url):
+        return 'https://www.youtube.com/playlist?list=%s' % self._match_id(url)
+
     def _parse_init_video_list(self, data):
         renderer = try_get(data, [
             # initial
             lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents'][0]['playlistVideoListRenderer'],
-            # continuation ajax
-            lambda x: x[1]['response']['onResponseReceivedActions'][0]['appendContinuationItemsAction'],
+            # continuation yti1
+            lambda x: x['onResponseReceivedActions'][0]['appendContinuationItemsAction'],
         ])
         if not renderer:
             raise ExtractorError('Could not extract %s item list renderer' % self._LIST_NAME)
@@ -2522,6 +2543,30 @@ class YoutubeSearchIE(SearchInfoExtractor, YoutubeYti1ListInfoExtractor):
 
     def _get_n_results(self, query, n):
         return self._searcher('ytsearch', results=n, query=query)
+
+
+class YoutubeLikedIE(InfoExtractor):
+    _VALID_URL = r':yt(?:fav(?:ourites)?|liked)'
+    _LOGIN_REQUIRED = True
+
+    def _real_extract(self, url):
+        return {
+            '_type': 'url',
+            'url': 'ytplaylist:LL',
+            'ie_key': 'YoutubePlaylist',
+        }
+
+
+class YoutubeWatchLaterIE(InfoExtractor):
+    _VALID_URL = r':ytw(?:atchlater|l)'
+    _LOGIN_REQUIRED = True
+
+    def _real_extract(self, url):
+        return {
+            '_type': 'url',
+            'url': 'ytplaylist:WL',
+            'ie_key': 'YoutubePlaylist',
+        }
 
 
 class YoutubeTruncatedURLIE(InfoExtractor):
