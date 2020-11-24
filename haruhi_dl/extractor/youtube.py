@@ -2305,6 +2305,7 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
         info_dict = {
             '_type': 'playlist',
             'id': list_id,
+            'entries': [],
         }
         if 'info_dict' in videos:
             info_dict.update(videos['info_dict'])
@@ -2314,7 +2315,6 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
             else:
                 info_dict['title'] = self._og_search_title(webpage)
 
-        info_dict['entries'] = []
         for _entry in entries:
             if _entry:
                 entry = {
@@ -2566,6 +2566,89 @@ class YoutubeWatchLaterIE(InfoExtractor):
             '_type': 'url',
             'url': 'ytplaylist:WL',
             'ie_key': 'YoutubePlaylist',
+        }
+
+
+class YoutubeBaseShelfInfoExtractor(YoutubeYti1ListInfoExtractor):
+    def _parse_init_video_list(self, data):
+        shelf_renderer = try_get(data, [
+            # initial subscriptions
+            lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents'][0]['shelfRenderer'],
+            # initial history
+            lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents'][0]['itemSectionRenderer'],
+            # continuation yti1
+            lambda x: x['continuationContents']['sectionListContinuation']['contents'][0]['itemSectionRenderer']['contents'][0]['shelfRenderer'],
+        ])
+        if not shelf_renderer:
+            raise ExtractorError('Could not extract %s shelf list renderer' % self._LIST_NAME)
+        entries = []
+        for shelf in shelf_renderer:
+            rend_items = try_get(shelf_renderer['content']['gridRenderer'], [
+                # initial subscriptions
+                lambda x: x['items'],
+                # continuation ajax
+                lambda x: x['continuationItems'],
+            ])
+            if not rend_items:
+                raise ExtractorError('Could not extract %s renderer item list' % self._LIST_NAME)
+            for item in rend_items:
+                entries.append(self._parse_video(item, entry_key='gridVideoRenderer'))
+        return {
+            'entries': entries,
+            'continuation': try_get(data, [
+                # initial
+                lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['continuations'][0]['nextContinuationData']['continuation'],
+                # continuation yti1
+                lambda x: x['continuationContents']['sectionListContinuation']['continuations'][0]['nextContinuationData']['continuation']
+            ], expected_type=compat_str),
+            'info_dict': {
+                'title': self._LIST_NAME,
+            },
+        }
+
+
+class YoutubeSubscriptionsIE(YoutubeBaseShelfInfoExtractor):
+    _VALID_URL = r'(?:https?://(?:www\.)youtube\.com/feed/|:yt)(?P<id>subs(?:criptions)?)'
+    IE_NAME = 'youtube:subscriptions'
+    _LIST_NAME = 'subscriptions'
+    _LOGIN_REQUIRED = True
+
+    def _handle_url(self, url):
+        return 'https://www.youtube.com/feed/subscriptions'
+
+
+class YoutubeHistoryIE(YoutubeYti1ListInfoExtractor):
+    _VALID_URL = r'(?:https?://(?:www\.)youtube\.com/feed/|:yt)(?P<id>history)'
+    IE_NAME = 'youtube:history'
+    _LIST_NAME = 'history'
+    _LOGIN_REQUIRED = True
+
+    def _handle_url(self, url):
+        return 'https://www.youtube.com/feed/history'
+
+    def _parse_init_video_list(self, data):
+        rend_items = try_get(data, [
+            # initial
+            lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents'],
+            # continuation yti1
+            lambda x: x['onResponseReceivedActions'][0]['appendContinuationItemsAction']['continuationItems'][0]['itemSectionRenderer']['contents'],
+        ])
+        if not rend_items:
+            raise ExtractorError('Could not extract %s renderer item list' % self._LIST_NAME)
+        entries = []
+        for item in rend_items:
+            entries.append(self._parse_video(item, entry_key='videoRenderer'))
+        return {
+            'entries': entries,
+            'continuation': try_get(data, [
+                # initial
+                lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['contents'][-1]['continuationItemRenderer']['continuationEndpoint']['continuationCommand']['token'],
+                # continuation yti1
+                lambda x: x['onResponseReceivedActions'][0]['appendContinuationItemsAction']['continuationItems'][-1]['continuationItemRenderer']['continuationEndpoint']['continuationCommand']['token'],
+            ], expected_type=compat_str),
+            'info_dict': {
+                'title': self._LIST_NAME,
+            },
         }
 
 
