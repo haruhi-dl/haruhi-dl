@@ -1,3 +1,10 @@
+version 2020.11.27
+Extractor
+* [youtube] support for liked videos, watch later, video history,
+  subscriptions feed, fixed crash if no cipher on video
+* [ninateka] added extractor
+* [openfm] added extractor
+
 version 2020.11.16
 Extractor
 * [youtube] fixed channel, playlist, search
