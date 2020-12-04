@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 
-__license__ = 'Public Domain'
+__license__ = 'LGPL-3.0-or-later'
 
 import codecs
 import io
