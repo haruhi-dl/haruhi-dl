@@ -14,6 +14,7 @@ from ..utils import (
     extract_attributes,
     int_or_none,
     strip_or_none,
+    unescapeHTML,
     unified_timestamp,
 )
 
@@ -21,6 +22,7 @@ from ..utils import (
 class PolskieRadioIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www\.)?polskieradio(?:24)?\.pl/\d+/\d+/Artykul/(?P<id>[0-9]+)'
     _TESTS = [{
+        # like data-media={"type":"muzyka"}
         'url': 'http://www.polskieradio.pl/7/5102/Artykul/1587943,Prof-Andrzej-Nowak-o-historii-nie-da-sie-myslec-beznamietnie',
         'info_dict': {
             'id': '1587943',
@@ -40,13 +42,22 @@ class PolskieRadioIE(InfoExtractor):
             },
         }],
     }, {
-        'url': 'http://www.polskieradio.pl/265/5217/Artykul/1635803,Euro-2016-nie-ma-miejsca-na-blad-Polacy-graja-ze-Szwajcaria-o-cwiercfinal',
+        # like data-media="{&quot;type&quot;:&quot;muzyka&quot;}"
+        'url': 'https://www.polskieradio.pl/7/178/Artykul/2621155,Premiera-na-kanale-Radiobook-Krzyzacy-Henryka-Sienkiewicza',
         'info_dict': {
-            'id': '1635803',
-            'title': 'Euro 2016: nie ma miejsca na błąd. Polacy grają ze Szwajcarią o ćwierćfinał',
-            'description': 'md5:01cb7d0cad58664095d72b51a1ebada2',
+            'id': '2621155',
+            'title': 'Premiera na kanale "Radiobook"! "Krzyżacy" Henryka Sienkiewicza',
+            'description': 'md5:428acedfdafb09ce2a2665e0662d0771',
         },
-        'playlist_mincount': 12,
+        'playlist': [{
+            'info_dict': {
+                'id': '2611641',
+                'ext': 'mp3',
+                'title': 'Premiera na kanale "Radiobook": "Krzyżacy" Henryka Sienkiewicza (Kulturalna Jedynka)',
+                'timestamp': 1605513000,
+                'upload_date': '20201116',
+            },
+        }]
     }, {
         'url': 'http://polskieradio.pl/9/305/Artykul/1632955,Bardzo-popularne-slowo-remis',
         'only_matching': True,
@@ -83,8 +94,8 @@ class PolskieRadioIE(InfoExtractor):
 
         title = self._og_search_title(webpage).strip()
 
-        for data_media in re.findall(r'<[^>]+data-media=({[^>]+})', content):
-            media = self._parse_json(data_media, playlist_id, fatal=False)
+        for data_media in re.findall(r'<[^>]+data-media=(["\']?)({[^>]+})\1', content):
+            media = self._parse_json(unescapeHTML(data_media[1]), playlist_id, fatal=False)
             if not media.get('file'):
                 continue
             media_url = self._proto_relative_url(media['file'], 'http:')
