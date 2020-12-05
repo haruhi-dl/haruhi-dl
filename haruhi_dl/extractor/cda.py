@@ -129,9 +129,20 @@ class CDAIE(InfoExtractor):
             video['file'] = rot47(compat_urllib_parse_unquote_plus(video['file']))
             if not video['file'].startswith('http'):
                 video['file'] = 'https://' + video['file']
-            video['file'] = video['file'].replace('.3cda.pl', '.cda.pl')
-            if video['file'].endswith('adc.mp4'):
-                video['file'] = video['file'].replace('adc.mp4', '.mp4')
+            # https://www.cda.pl/js/player.js as of 2020-12-05
+            video['file'] = video['file'] \
+                .replace('.cda.mp4', '') \
+                .replace('.2cda.pl', '.cda.pl') \
+                .replace('.3cda.pl', '.cda.pl') \
+                .replace('adc.mp4', '.mp4') \
+                .replace('/upstream', '.mp4/upstream') \
+                .replace('_XDDD', '') \
+                .replace('_CDA', '') \
+                .replace('_ADC', '') \
+                .replace('_CXD', '') \
+                .replace('_QWE', '') \
+                .replace('_Q5', '') \
+                .replace('_IKSDE', '')
             if not video['file'].endswith('.mp4'):
                 video['file'] = video['file'][:-3] + '.mp4'
             f = {
