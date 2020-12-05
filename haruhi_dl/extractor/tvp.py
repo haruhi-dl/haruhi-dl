@@ -96,6 +96,57 @@ class TVPIE(InfoExtractor):
         }
 
 
+class TVPStreamIE(InfoExtractor):
+    IE_NAME = 'tvp:stream'
+    _VALID_URL = r'(?:tvpstream:|https?://tvpstream\.vod\.tvp\.pl/(?:\?(?:[^&]+[&;])*channel_id=)?)(?P<id>\d*)'
+    _TESTS = [{
+        # untestable as "video" id changes many times across a day
+        'url': 'https://tvpstream.vod.tvp.pl/?channel_id=1455',
+        'only_matching': True,
+    }, {
+        'url': 'tvpstream:39821455',
+        'only_matching': True,
+    }, {
+        # the default stream when you provide no channel_id, most probably TVP Info
+        'url': 'tvpstream:',
+        'only_matching': True,
+    }, {
+        'url': 'https://tvpstream.vod.tvp.pl/',
+        'only_matching': True,
+    }]
+
+    _PLAYER_BOX_RE = r'<div\s[^>]*id\s*=\s*["\']?tvp_player_box["\']?[^>]+data-%s-id\s*=\s*["\']?(\d+)'
+    _BUTTON_RE = r'<div\s[^>]*data-channel-id=["\']?%s["\']?[^>]*\sdata-title=(?:"([^"]*)"|\'([^\']*)\')[^>]*\sdata-stationname=(?:"([^"]*)"|\'([^\']*)\')'
+
+    def _real_extract(self, url):
+        mobj = re.match(self._VALID_URL, url)
+        channel_id = mobj.group('id')
+        channel_url = 'http%s://tvpstream.vod.tvp.pl/?channel_id=%s' % (
+            '' if self._downloader.params.get('prefer_insecure', False) else 's',
+            channel_id or 'default')
+        webpage = self._download_webpage(channel_url, channel_id, 'Downloading channel webpage')
+        if not channel_id:
+            channel_id = self._search_regex(self._PLAYER_BOX_RE % 'channel',
+                                            webpage, 'default channel id')
+        video_id = self._search_regex(self._PLAYER_BOX_RE % 'video',
+                                      webpage, 'video id')
+        mobj = re.search(self._BUTTON_RE % (re.escape(channel_id)), webpage)
+        if mobj:
+            audition_title, station_name = mobj.group(1, 2)
+        else:
+            self.report_warning('Could not extract audition title and station name')
+            audition_title = station_name = ''
+        return {
+            '_type': 'url_transparent',
+            'id': channel_id,
+            'url': 'tvp:%s' % video_id,
+            'title': audition_title,
+            'alt_title': station_name,
+            'is_live': True,
+            'ie_key': 'TVPEmbed',
+        }
+
+
 class TVPEmbedIE(InfoExtractor):
     IE_NAME = 'tvp:embed'
     IE_DESC = 'Telewizja Polska'
