@@ -19,7 +19,7 @@ from ..utils import (
 
 
 class PolskieRadioIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?polskieradio\.pl/\d+/\d+/Artykul/(?P<id>[0-9]+)'
+    _VALID_URL = r'https?://(?:www\.)?polskieradio(?:24)?\.pl/\d+/\d+/Artykul/(?P<id>[0-9]+)'
     _TESTS = [{
         'url': 'http://www.polskieradio.pl/7/5102/Artykul/1587943,Prof-Andrzej-Nowak-o-historii-nie-da-sie-myslec-beznamietnie',
         'info_dict': {
@@ -56,6 +56,9 @@ class PolskieRadioIE(InfoExtractor):
     }, {
         # with mp4 video
         'url': 'http://www.polskieradio.pl/9/299/Artykul/1634903,Brexit-Leszek-Miller-swiat-sie-nie-zawali-Europa-bedzie-trwac-dalej',
+        'only_matching': True,
+    }, {
+        'url': 'https://polskieradio24.pl/130/4503/Artykul/2621876,Narusza-nasza-suwerennosc-Publicysci-o-uzaleznieniu-funduszy-UE-od-praworzadnosci',
         'only_matching': True,
     }]
 
