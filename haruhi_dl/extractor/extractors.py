@@ -871,6 +871,7 @@ from .pokemon import PokemonIE
 from .polskieradio import (
     PolskieRadioIE,
     PolskieRadioCategoryIE,
+    PolskieRadioPlayerIE,
 )
 from .popcorntimes import PopcorntimesIE
 from .popcorntv import PopcornTVIE

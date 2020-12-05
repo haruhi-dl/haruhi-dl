@@ -12,6 +12,7 @@ from ..compat import (
 )
 from ..utils import (
     extract_attributes,
+    ExtractorError,
     int_or_none,
     strip_or_none,
     unescapeHTML,
@@ -193,3 +194,106 @@ class PolskieRadioCategoryIE(InfoExtractor):
         return self.playlist_result(
             self._entries(url, webpage, category_id),
             category_id, title)
+
+
+class PolskieRadioPlayerIE(InfoExtractor):
+    IE_NAME = 'polskieradio:player'
+    _VALID_URL = r'https?://player\.polskieradio\.pl/anteny/(?P<id>[^/]+)'
+
+    _BASE_URL = 'https://player.polskieradio.pl'
+    _PLAYER_URL = 'https://player.polskieradio.pl/main.bundle.js'
+    _STATIONS_API_URL = 'https://apipr.polskieradio.pl/api/stacje'
+
+    _TESTS = [{
+        'url': 'https://player.polskieradio.pl/anteny/trojka',
+        'info_dict': {
+            'id': '3',
+            'ext': 'm3u8',
+            'title': 'Trójka',
+        },
+        'params': {
+            'format': 'bestaudio',
+            # endless stream
+            'skip_download': True,
+        },
+    }]
+
+    def _get_channel_list(self, channel_url='no_channel'):
+        player_code = self._download_webpage(
+            self._PLAYER_URL, channel_url,
+            note='Downloading js player')
+        channel_list = self._search_regex(
+            r';var r="anteny",a=(\[.+?\])},', player_code, 'channel list')
+        # weird regex replaces to hopefully make it a valid JSON string to parse
+
+        # insert keys inside quotemarks ("key")
+        channel_list = re.sub(r'([{,])(\w+):', r'\1"\2":', channel_list)
+        # replace shortened booleans (!0, !1, !-0.1)
+        channel_list = re.sub(r':\s*!-?(?:[1-9]\d*(?:\.\d+)?|0\.\d+)', r':true', channel_list)
+        channel_list = re.sub(r':\s*!0', r':false', channel_list)
+
+        return self._parse_json(channel_list, channel_url)
+
+    def _real_extract(self, url):
+        channel_url = self._match_id(url)
+        channel_list = self._get_channel_list(channel_url)
+
+        channel = None
+        for f_channel in channel_list:
+            if f_channel.get('url') == channel_url:
+                channel = f_channel
+                break
+
+        if not channel:
+            raise ExtractorError('Channel not found')
+
+        station_list = self._download_json(self._STATIONS_API_URL, channel_url,
+                                           note='Downloading stream url list',
+                                           headers={
+                                               'Accept': 'application/json',
+                                               'Referer': url,
+                                               'Origin': self._BASE_URL,
+                                           })
+        station = None
+        for f_station in station_list:
+            if f_station.get('Name') == (channel.get('streamName') or channel.get('name')):
+                station = f_station
+                break
+        if not station:
+            raise ExtractorError('Station not found even though we extracted channel (this is crazy)')
+
+        formats = []
+        # I have no idea who thought providing just a list of undescribed URLs is ok
+        for stream_url in station['Streams']:
+            if stream_url.startswith('//'):
+                # assume https on protocol independent URLs
+                stream_url = 'https:' + stream_url
+            if stream_url.endswith('/playlist.m3u8'):
+                formats.extend(self._extract_m3u8_formats(stream_url, channel_url, preference=500, live=True))
+            elif stream_url.endswith('/manifest.f4m'):
+                formats.extend(self._extract_mpd_formats(stream_url, channel_url))
+            elif stream_url.endswith('/Manifest'):
+                formats.extend(self._extract_ism_formats(stream_url, channel_url))
+            elif stream_url.startswith('rtmp://') \
+                    or stream_url.startswith('rtsp://') \
+                    or stream_url.startswith('mms://'):
+                formats.append({
+                    'url': stream_url,
+                    'preference': -1000,
+                })
+            else:
+                formats.append({
+                    'url': stream_url,
+                    'preference': -500,
+                })
+
+        self._sort_formats(formats)
+
+        return {
+            'id': compat_str(channel['id']),
+            'formats': formats,
+            'title': channel.get('name') or channel.get('streamName'),
+            'display_id': channel_url,
+            'thumbnail': '%s/images/%s-color-logo.png' % (self._BASE_URL, channel_url),
+            'is_live': True,
+        }
