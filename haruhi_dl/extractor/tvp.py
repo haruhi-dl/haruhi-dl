@@ -10,7 +10,9 @@ from ..utils import (
     determine_ext,
     ExtractorError,
     get_element_by_attribute,
+    int_or_none,
     orderedSet,
+    str_or_none,
 )
 
 
@@ -20,6 +22,7 @@ class TVPIE(InfoExtractor):
     _VALID_URL = r'https?://(?:[^/]+\.)?(?:tvp(?:parlament)?\.(?:pl|info)|polandin\.com)/(?:video/(?:[^,\s]*,)*|(?:(?!\d+/)[^/]+/)*)(?P<id>\d+)'
 
     _TESTS = [{
+        # TVPlayer 2 in js wrapper
         'url': 'https://vod.tvp.pl/video/czas-honoru,i-seria-odc-13,194536',
         'md5': 'a21eb0aa862f25414430f15fdfb9e76c',
         'info_dict': {
@@ -29,6 +32,7 @@ class TVPIE(InfoExtractor):
             'description': 'md5:437f48b93558370b031740546b696e24',
         },
     }, {
+        # TVPlayer legacy
         'url': 'http://www.tvp.pl/there-can-be-anything-so-i-shortened-it/17916176',
         'md5': 'b0005b542e5b4de643a9690326ab1257',
         'info_dict': {
@@ -38,16 +42,38 @@ class TVPIE(InfoExtractor):
             'description': 'TVP Gorzów pokaże filmy studentów z podroży dookoła świata',
         },
     }, {
-        # page id is not the same as video id(#7799)
-        'url': 'https://wiadomosci.tvp.pl/33908820/28092017-1930',
-        'md5': '84cd3c8aec4840046e5ab712416b73d0',
+        # TVPlayer 2 in iframe
+        'url': 'https://wiadomosci.tvp.pl/50725617/dzieci-na-sprzedaz-dla-homoseksualistow',
+        'md5': '624b78643e3cd039011fe23d76f0416e',
         'info_dict': {
-            'id': '33908820',
+            'id': '50725617',
             'ext': 'mp4',
-            'title': 'Wiadomości, 28.09.2017, 19:30',
-            'description': 'Wydanie główne codziennego serwisu informacyjnego.'
+            'title': 'Wiadomości, Dzieci na sprzedaż dla homoseksualistów',
+            'description': 'md5:7d318eef04e55ddd9f87a8488ac7d590',
         },
-        'skip': 'HTTP Error 404: Not Found',
+    }, {
+        # TVPlayer 2 in client-side rendered website (regional)
+        'url': 'https://warszawa.tvp.pl/25804446/studio-yayo',
+        'md5': '883c409691c6610bdc8f464fab45a9a9',
+        'info_dict': {
+            'id': '25804446',
+            'ext': 'mp4',
+            'title': 'Studio Yayo',
+            'upload_date': '20160616',
+            'timestamp': 1466075700,
+        }
+    }, {
+        # client-side rendered (regional) program (playlist) page
+        'url': 'https://opole.tvp.pl/9660819/rozmowa-dnia',
+        'info_dict': {
+            'id': '9660819',
+            'description': 'Od poniedziałku do piątku o 18:55',
+            'title': 'Rozmowa dnia',
+        },
+        'playlist_mincount': 1800,
+        'params': {
+            'skip_download': True,
+        }
     }, {
         'url': 'http://vod.tvp.pl/seriale/obyczajowe/na-sygnale/sezon-2-27-/odc-39/17834272',
         'only_matching': True,
@@ -77,23 +103,101 @@ class TVPIE(InfoExtractor):
         'only_matching': True,
     }]
 
+    def _parse_vue_website_data(self, webpage, page_id):
+        website_data = self._search_regex([
+            r'window\.__websiteData\s*=\s*({(?:.|\s)+?});',
+        ], webpage, 'website data')
+        if not website_data:
+            return None
+        # "sanitize" "JSON" trailing comma before parsing
+        website_data = re.sub(r',\s+}$', '}', website_data)
+        # replace JSON string with parsed dict
+        website_data = self._parse_json(website_data, page_id)
+        return website_data
+
+    def _extract_vue_video(self, video_data, page_id=None):
+        thumbnails = []
+        image = video_data.get('image')
+        if image:
+            for thumb in (image if isinstance(image, list) else [image]):
+                thmb_url = str_or_none(thumb.get('url'))
+                if thmb_url:
+                    thumbnails.append({
+                        'url': thmb_url,
+                    })
+        return {
+            '_type': 'url_transparent',
+            'id': str_or_none(video_data.get('_id') or page_id),
+            'url': 'tvp:' + str_or_none(video_data.get('_id') or page_id),
+            'ie_key': 'TVPEmbed',
+            'title': str_or_none(video_data.get('title')),
+            'description': str_or_none(video_data.get('lead')),
+            'timestamp': int_or_none(video_data.get('release_date_long')),
+            'duration': int_or_none(video_data.get('duration')),
+            'thumbnails': thumbnails,
+        }
+
     def _real_extract(self, url):
         page_id = self._match_id(url)
         webpage = self._download_webpage(url, page_id)
-        video_id = self._search_regex([
-            r'<iframe[^>]+src="[^"]*?embed\.php\?(?:[^&]+&)*ID=(\d+)',
-            r'<iframe[^>]+src="[^"]*?object_id=(\d+)',
-            r"object_id\s*:\s*'(\d+)'",
-            r'data-video-id="(\d+)"'], webpage, 'video id', default=page_id)
-        return {
-            '_type': 'url_transparent',
-            'url': 'tvp:' + video_id,
-            'description': self._og_search_description(
-                webpage, default=None) or self._html_search_meta(
-                'description', webpage, default=None),
-            'thumbnail': self._og_search_thumbnail(webpage, default=None),
-            'ie_key': 'TVPEmbed',
-        }
+        if '//s.tvp.pl/files/portale-v4/regiony-tvp-pl' in webpage:
+            # vue client-side rendered sites (all regional pages)
+            video_data = self._search_regex([
+                r'window\.__newsData\s*=\s*({(?:.|\s)+?});',
+            ], webpage, 'video data', default=None)
+            if video_data:
+                return self._extract_vue_video(
+                    self._parse_json(video_data, page_id),
+                    page_id=page_id)
+            # paged playlists
+            website_data = self._parse_vue_website_data(webpage, page_id)
+            if website_data:
+                entries = []
+                if website_data.get('latestVideo'):
+                    entries.append(self._extract_vue_video(website_data['latestVideo']))
+                for video in website_data.get('videos') or []:
+                    entries.append(self._extract_vue_video(video))
+                items_total_count = int_or_none(website_data.get('items_total_count'))
+                items_per_page = int_or_none(website_data.get('items_per_page'))
+                if items_total_count > len(entries) - 1:
+                    pages = items_total_count / items_per_page
+                    if pages != int(pages):
+                        pages = int(pages) + 1
+                    for page in range(2, pages):
+                        page_website_data = self._parse_vue_website_data(
+                            # seriously, this thing is rendered on the client and requires to reload page
+                            # when flipping the page, instead of just loading new pages with xhr or sth
+                            # (they already even import axios!)
+                            self._download_webpage(url, page_id, note='Downloading page #%d' % page,
+                                                   query={'page': page}),
+                            page_id)
+                        for video in page_website_data.get('videos') or []:
+                            entries.append(self._extract_vue_video(video))
+
+                return {
+                    '_type': 'playlist',
+                    'id': page_id,
+                    'title': str_or_none(website_data.get('title')),
+                    'description': str_or_none(website_data.get('lead')),
+                    'entries': entries,
+                }
+            raise ExtractorError('Could not extract video/website data')
+        else:
+            # classic server-site rendered sites
+            video_id = self._search_regex([
+                r'<iframe[^>]+src="[^"]*?embed\.php\?(?:[^&]+&)*ID=(\d+)',
+                r'<iframe[^>]+src="[^"]*?object_id=(\d+)',
+                r"object_id\s*:\s*'(\d+)'",
+                r'data-video-id="(\d+)"'], webpage, 'video id', default=page_id)
+            return {
+                '_type': 'url_transparent',
+                'url': 'tvp:' + video_id,
+                'description': self._og_search_description(
+                    webpage, default=None) or self._html_search_meta(
+                    'description', webpage, default=None),
+                'thumbnail': self._og_search_thumbnail(webpage, default=None),
+                'ie_key': 'TVPEmbed',
+            }
 
 
 class TVPStreamIE(InfoExtractor):
