@@ -18,7 +18,7 @@ from ..utils import (
 
 class CDAIE(InfoExtractor):
     _VALID_URL = r'https?://(?:(?:www\.)?cda\.pl/video|ebd\.cda\.pl/[0-9]+x[0-9]+)/(?P<id>[0-9a-z]+)'
-    _BASE_URL = 'http://www.cda.pl/'
+    _BASE_URL = 'https://www.cda.pl'
     _TESTS = [{
         'url': 'http://www.cda.pl/video/5749950c',
         'md5': '6f844bf51b15f31fae165365707ae970',
@@ -86,7 +86,7 @@ class CDAIE(InfoExtractor):
             raise ExtractorError('This video is only available for premium users.', expected=True)
 
         need_confirm_age = False
-        if self._html_search_regex(r'(<form[^>]+action="[^>]*/a/validatebirth")',
+        if self._html_search_regex(r'(<form[^>]+action="[^>]*/a/validatebirth)',
                                    webpage, 'birthday validate form', default=None):
             webpage = self._download_age_confirm_page(
                 url, video_id, note='Confirming age')
@@ -115,7 +115,7 @@ class CDAIE(InfoExtractor):
         def extract_format(page, version):
             json_str = self._html_search_regex(
                 r'player_data=(\\?["\'])(?P<player_data>.+?)\1', page,
-                '%s player_json' % version, fatal=False, group='player_data')
+                '%s player_json' % version, default=None, group='player_data')
             if not json_str:
                 return
             player_data = self._parse_json(
