@@ -769,45 +769,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             ],
         },
         {
-            # The following content has been identified by the YouTube community
-            # as inappropriate or offensive to some audiences.
-            'url': 'https://www.youtube.com/watch?v=6SJNVb0GnPI',
-            'info_dict': {
-                'id': '6SJNVb0GnPI',
-                'ext': 'mp4',
-                'title': 'Race Differences in Intelligence',
-                'description': 'md5:5d161533167390427a1f8ee89a1fc6f1',
-                'duration': 965,
-                'upload_date': '20140124',
-                'uploader': 'New Century Foundation',
-                'uploader_id': 'UCEJYpZGqgUob0zVVEaLhvVg',
-                'uploader_url': r're:https?://(?:www\.)?youtube\.com/channel/UCEJYpZGqgUob0zVVEaLhvVg',
-            },
-            'params': {
-                'skip_download': True,
-            },
-        },
-        {
-            # itag 212
-            'url': '1t24XAntNCY',
-            'only_matching': True,
-        },
-        {
-            # geo restricted to JP
-            'url': 'sJL6WA-aGkQ',
-            'only_matching': True,
-        },
-        {
             'url': 'https://www.youtube.com/watch?v=MuAGGZNfUkU&list=RDMM',
             'only_matching': True,
         },
         {
             'url': 'https://invidio.us/watch?v=BaW_jenozKc',
-            'only_matching': True,
-        },
-        {
-            # DRM protected
-            'url': 'https://www.youtube.com/watch?v=s7_qI6_mIXc',
             'only_matching': True,
         },
         {
@@ -899,7 +865,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             },
         },
         {
-            'url': 'https://www.youtubekids.com/watch?v=3b8nCWDgZ6Q',
+            'url': 'https://www.youtubekids.com/watch?v=BnC-cpUCdns',
             'only_matching': True,
         },
         {
