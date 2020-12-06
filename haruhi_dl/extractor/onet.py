@@ -226,6 +226,17 @@ class OnetPlIE(InfoExtractor):
             'upload_date': '20200203',
         },
     }, {
+        # AMP thing
+        'url': 'https://wiadomosci.onet.pl/kraj/koronawirus-michal-rogalski-polska-stala-sie-szara-wyspa-dostepu-do-danych/5plrwcc.amp?utm_campaign=leo_automatic',
+        'info_dict': {
+            'id': '2205367.1517834067',
+            'ext': 'mp4',
+            'title': 'Narodowy program szczepień na koronawirusa. Poznaliśmy szczegóły',
+            'description': 'md5:44f34f9718714e208797f62d851b58ec',
+            'timestamp': 1607111725,
+            'upload_date': '20201204',
+        },
+    }, {
         'url': 'http://film.onet.pl/zwiastuny/ghost-in-the-shell-drugi-zwiastun-pl/5q6yl3',
         'only_matching': True,
     }, {
@@ -247,6 +258,7 @@ class OnetPlIE(InfoExtractor):
     def _real_extract(self, url):
         video_id = self._match_id(url)
 
+        url = url.replace('.amp', '')
         webpage = self._download_webpage(url, video_id)
 
         mvp_id = self._search_mvp_id(webpage, default=None)
