@@ -207,28 +207,23 @@ class OnetPlIE(InfoExtractor):
     IE_NAME = 'onet.pl'
 
     _TESTS = [{
-        'url': 'http://eurosport.onet.pl/zimowe/skoki-narciarskie/ziobro-wygral-kwalifikacje-w-pjongczangu/9ckrly',
-        'md5': 'b94021eb56214c3969380388b6e73cb0',
+        'url': 'https://wiadomosci.onet.pl/tylko-w-onecie/stoki-narciarskie-w-czasie-pandemii-koronawirusa-sprawdzilismy-jak-funkcjonuja/nyzt08c',
         'info_dict': {
-            'id': '1561707.1685479',
+            'id': '2205732.1142844759',
             'ext': 'mp4',
-            'title': 'Ziobro wygrał kwalifikacje w Pjongczangu',
-            'description': 'md5:61fb0740084d2d702ea96512a03585b4',
-            'upload_date': '20170214',
-            'timestamp': 1487078046,
-        },
+            'description': 'md5:0e70c7be673157c62ca183791d2b7b27',
+            'title': 'Podróż służbowa z wypadem na stok? "Załatwiamy wszystko na nartach"',
+            'timestamp': 1607177736,
+            'upload_date': '20201205',
+        }
     }, {
-        # embedded via pulsembed
-        'url': 'http://film.onet.pl/pensjonat-nad-rozlewiskiem-relacja-z-planu-serialu/y428n0',
+        # audio podcast form from libsyn.com via pulsembed.eu (2 iframes fucking nested in each other, who the fuck did this?)
+        'url': 'https://wiadomosci.onet.pl/tylko-w-onecie/milosc-w-czasach-zarazy/nbqxxwm',
         'info_dict': {
-            'id': '501235.965429946',
-            'ext': 'mp4',
-            'title': '"Pensjonat nad rozlewiskiem": relacja z planu serialu',
-            'upload_date': '20170622',
-            'timestamp': 1498159955,
-        },
-        'params': {
-            'skip_download': True,
+            'id': '12991166',
+            'ext': 'mp3',
+            'title': 'Najlepszy tekst tygodnia - Miłość w czasach zarazy',
+            'upload_date': '20200203',
         },
     }, {
         'url': 'http://film.onet.pl/zwiastuny/ghost-in-the-shell-drugi-zwiastun-pl/5q6yl3',
@@ -262,7 +257,12 @@ class OnetPlIE(InfoExtractor):
                 webpage, 'pulsembed url', group='url')
             webpage = self._download_webpage(
                 pulsembed_url, video_id, 'Downloading pulsembed webpage')
-            mvp_id = self._search_mvp_id(webpage)
+            mvp_id = self._search_mvp_id(webpage, default=None)
+            if not mvp_id:
+                libsyn_url = self._search_regex(r'src=(["\'])(?P<url>(?:https?:)?//html5-player\.libsyn\.com/.+?)\1',
+                                                webpage, 'libsyn url', group='url')
+                if libsyn_url:
+                    return self.url_result(libsyn_url, 'Libsyn')
 
         return self.url_result(
             'onetmvp:%s' % mvp_id, OnetMVPIE.ie_key(), video_id=mvp_id)
