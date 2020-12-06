@@ -2161,7 +2161,7 @@ class GenericIE(InfoExtractor):
             'info_dict': {
                 'id': '337382',
                 'title': 'Rodzina+ odc. 1. Karolina i Ania',
-                'ext': 'mp4',
+                'ext': 'm3u8',
                 'age_limit': 16,
                 'upload_date': '20200929',
             },

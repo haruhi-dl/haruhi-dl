@@ -82,38 +82,12 @@ class OnNetworkFrameIE(InfoExtractor):
         if upload_date_unix:
             upload_date = datetime.datetime.fromtimestamp(int(upload_date_unix)).strftime('%Y%m%d')
 
-        m3u_content = self._download_webpage(m3u_url, video_id, 'Downloading format list')
-        base_m3u_url = re.sub(r'/[^/]+\.m3u8$', '/', m3u_url)
-        formats = []
-        for match in re.finditer(
-            r'#EXT-X-STREAM-INF:BANDWIDTH=(?P<bandwidth>\d+),RESOLUTION=(?P<width>\d+)x(?P<height>\d+),NAME=(?P<format_name>[^\n]+)\n(?P<filename>[^\n]+)',
-                m3u_content):
-
-            formats.append({
-                'url': base_m3u_url + match.group('filename'),
-                'format_id': match.group('format_name'),
-                'width': int(match.group('width')),
-                'height': int(match.group('height')),
-                'ext': 'mp4',
-                'protocol': 'm3u8',
-            })
-        subtitles = {}
-        for match in re.finditer(
-            r'#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="(?P<id>[^"]+)",NAME="(?P<name>[^"]+)",URI="(?P<filename>[^"]+)",LANGUAGE="(?P<lang>[^"]+)"',
-                m3u_content):
-
-            subtitles[match.group('lang')] = []
-            sub_list = self._download_webpage(base_m3u_url + match.group('filename'), video_id, 'Downloading subtitle list')
-            for sub_file in re.findall(r'(?<=\n)[^#\s]+', sub_list):
-                subtitles[match.group('lang')].append({
-                    'url': base_m3u_url + sub_file,
-                })
+        formats = self._extract_m3u8_formats(m3u_url, video_id)
 
         return {
             'id': video_id,
             'title': title,
             'formats': formats,
-            'subtitles': subtitles,
             'thumbnail': thumbnail,
             'duration': int_or_none(duration),
             'age_limit': int_or_none(age_limit),
