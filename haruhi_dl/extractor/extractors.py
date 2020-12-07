@@ -332,6 +332,9 @@ from .esri import EsriVideoIE
 from .europa import EuropaIE
 from .eurozet import (
     EurozetArticleIE,
+    EurozetPlayerStreamIE,
+    EurozetPlayerPodcastIE,
+    EurozetPlayerMusicStreamIE,
 )
 from .everyonesmixtape import EveryonesMixtapeIE
 from .expotv import ExpoTVIE
