@@ -323,6 +323,7 @@ from .engadget import EngadgetIE
 from .eporner import EpornerIE
 from .eroprofile import EroProfileIE
 from .escapist import EscapistIE
+from .eskago import EskaGoIE
 from .espn import (
     ESPNIE,
     ESPNArticleIE,
