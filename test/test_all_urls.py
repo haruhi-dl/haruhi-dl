@@ -89,7 +89,10 @@ class TestAllURLsMatching(unittest.TestCase):
             url = tc['url']
             for ie in ies:
                 if type(ie).__name__ in ('GenericIE', tc['name'] + 'IE'):
-                    self.assertTrue(ie.suitable(url), '%s should match URL %r' % (type(ie).__name__, url))
+                    if ie._SELFHOSTED is True:
+                        self.assertTrue(ie.suitable(url) or ie.suitable_selfhosted(url, None), '%s should match URL %r' % (type(ie).__name__, url))
+                    else:
+                        self.assertTrue(ie.suitable(url), '%s should match URL %r' % (type(ie).__name__, url))
                 else:
                     self.assertFalse(
                         ie.suitable(url),

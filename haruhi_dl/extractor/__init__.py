@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 try:
     from .lazy_extractors import *
-    from .lazy_extractors import _ALL_CLASSES
+    from .lazy_extractors import _ALL_CLASSES, _SH_CLASSES
     _LAZY_LOADER = True
 except ImportError:
     _LAZY_LOADER = False
@@ -14,6 +14,11 @@ except ImportError:
         if name.endswith('IE') and name != 'GenericIE'
     ]
     _ALL_CLASSES.append(GenericIE)
+    _SH_CLASSES = [
+        klass
+        for klass in _ALL_CLASSES
+        if klass._SELFHOSTED is True
+    ]
 
 
 def gen_extractor_classes():

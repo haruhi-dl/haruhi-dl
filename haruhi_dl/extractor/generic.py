@@ -109,7 +109,7 @@ from .yapfiles import YapFilesIE
 from .vice import ViceIE
 from .xfileshare import XFileShareIE
 from .cloudflarestream import CloudflareStreamIE
-from .peertube import PeerTubeIE
+from .peertube import PeerTubeSHIE
 from .teachable import TeachableIE
 from .indavideo import IndavideoEmbedIE
 from .apa import APAIE
@@ -2430,6 +2430,15 @@ class GenericIE(InfoExtractor):
         except compat_xml_parse_error:
             pass
 
+        if not self._downloader.params.get('force_generic_extractor', False):
+            # Is it a selfhosted web service?
+            from ..extractor import _SH_CLASSES
+            for shie in _SH_CLASSES:
+                if shie.suitable_selfhosted(url, webpage):
+                    shie = self._downloader.get_info_extractor(shie.ie_key())
+                    self.to_screen('%s: This webpage seems to be %s' % (video_id, shie.IE_NAME))
+                    return shie._selfhosted_extract(url, webpage=webpage)
+
         # Is it a Camtasia project?
         camtasia_res = self._extract_camtasia(url, video_id, webpage)
         if camtasia_res is not None:
@@ -3186,10 +3195,10 @@ class GenericIE(InfoExtractor):
             return self.playlist_from_matches(
                 cloudflarestream_urls, video_id, video_title, ie=CloudflareStreamIE.ie_key())
 
-        peertube_urls = PeerTubeIE._extract_urls(webpage, url)
+        peertube_urls = PeerTubeSHIE._extract_urls(webpage, url)
         if peertube_urls:
             return self.playlist_from_matches(
-                peertube_urls, video_id, video_title, ie=PeerTubeIE.ie_key())
+                peertube_urls, video_id, video_title, ie=PeerTubeSHIE.ie_key())
 
         indavideo_urls = IndavideoEmbedIE._extract_urls(webpage)
         if indavideo_urls:

@@ -394,6 +394,7 @@ class InfoExtractor(object):
     _GEO_COUNTRIES = None
     _GEO_IP_BLOCKS = None
     _WORKING = True
+    _SELFHOSTED = False
 
     def __init__(self, downloader=None):
         """Constructor. Receives an optional downloader."""
@@ -3020,3 +3021,73 @@ class SearchInfoExtractor(InfoExtractor):
     @property
     def SEARCH_KEY(self):
         return self._SEARCH_KEY
+
+
+class SelfhostedInfoExtractor(InfoExtractor):
+    """Selfhosted Information Extractor class.
+
+    Selfhosted info extractors are for the services,
+    that cannot be handled by just listing all of their domains.
+    Mostly related to free and open source software,
+    which everyone is allowed to host on their own servers
+    (like PeerTube, Funkwhale, Mastodon, Nextcloud, and lots of others).
+
+    The _VALID_URL value should not match URLs, but it surely can
+    match the extractor-specific ID pointer string
+    (f.e. Mastodon extractor can match "mastodon:donotsta.re:9xN1v6yM7WhzE7aIIC",
+    but not "https://donotsta.re/notice/9xN1v6yM7WhzE7aIIC").
+
+    https://git.sakamoto.pl/laudom/haruhi-dl/-/issues/10
+    """
+
+    _SELFHOSTED = True
+
+    """Regular expression that matches the actual URLs, or None if should not be checked"""
+    _SH_VALID_URL = None
+
+    """An iterable of strings, of which *any* should be contained in the webpage contents, or None if should not be checked"""
+    _SH_VALID_CONTENT_STRINGS = None
+
+    """An iterable of regular expression strings, of which *any* should match the webpage contents, or None if should not be checked"""
+    _SH_VALID_CONTENT_REGEXES = None
+
+    @property
+    def IE_NAME(self):
+        return compat_str(type(self).__name__[:-4])
+
+    @classmethod
+    def suitable_selfhosted(cls, url, webpage):
+        """Receives a URL and webpage contents, and returns True if suitable for this IE."""
+
+        if cls._SH_VALID_URL:
+            if '_SH_VALID_URL_RE' not in cls.__dict__:
+                cls._SH_VALID_URL_RE = re.compile(cls._SH_VALID_URL)
+            if cls._SH_VALID_URL_RE.match(url) is None:
+                return False
+
+        if webpage is None:
+            # if no webpage, assume just matching the URL is fine
+            if cls._SH_VALID_URL:
+                return True
+            # failing, there's nothing more to check
+            return False
+
+        if any(p in webpage for p in (cls._SH_VALID_CONTENT_STRINGS or ())):
+            return True
+
+        # no strings? check regexes!
+        if '_SH_CONTENT_REGEXES_RES' not in cls.__dict__:
+            cls._SH_VALID_CONTENT_REGEXES_RES = (re.compile(rgx)
+                                                 for rgx in cls._SH_VALID_CONTENT_REGEXES)
+        if not any(rgx.match(webpage) is not None for rgx in cls._SH_VALID_CONTENT_REGEXES_RES):
+            return False
+
+    def _real_extract(self, url):
+        """Unreal extraction process. Do NOT redefine in subclasses."""
+        return self._selfhosted_extract(url)
+
+    def _selfhosted_extract(self, url, webpage=None):
+        """Real extraction process. Redefine in subclasses.
+
+        `webpage` is a string (the website contents, as downloaded by GenericIE) or None"""
+        pass

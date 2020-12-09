@@ -1,4 +1,5 @@
 # coding: utf-8
+# flake8: noqa
 from __future__ import unicode_literals
 
 import re
@@ -17,3 +18,17 @@ class LazyLoadExtractor(object):
         instance = real_cls.__new__(real_cls)
         instance.__init__(*args, **kwargs)
         return instance
+
+
+    # suitable() inserts below
+{}
+
+
+class LazyLoadSearchExtractor(LazyLoadExtractor):
+    pass
+
+
+class LazyLoadSelfhostedExtractor(LazyLoadExtractor):
+
+    # suitable_selfhosted() inserts below
+{}

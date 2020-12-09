@@ -15,19 +15,26 @@ if os.path.exists(lazy_extractors_filename):
     os.remove(lazy_extractors_filename)
 
 from haruhi_dl.extractor import _ALL_CLASSES
-from haruhi_dl.extractor.common import InfoExtractor, SearchInfoExtractor
+from haruhi_dl.extractor.common import InfoExtractor, SearchInfoExtractor, SelfhostedInfoExtractor
 
 with open('devscripts/lazy_load_template.py', 'rt') as f:
     module_template = f.read()
 
 module_contents = [
-    module_template + '\n' + getsource(InfoExtractor.suitable) + '\n',
-    'class LazyLoadSearchExtractor(LazyLoadExtractor):\n    pass\n']
+    module_template.format(getsource(InfoExtractor.suitable),
+                           getsource(SelfhostedInfoExtractor.suitable_selfhosted)),
+]
 
 ie_template = '''
 class {name}({bases}):
     _VALID_URL = {valid_url!r}
     _module = '{module}'
+'''
+
+sh_additions_template = '''
+    _SH_VALID_URL = {sh_valid_url!r}
+    _SH_VALID_CONTENT_STRINGS = {sh_valid_content_strings!r}
+    _SH_VALID_CONTENT_REGEXES = {sh_valid_content_regexes!r}
 '''
 
 make_valid_template = '''
@@ -42,6 +49,8 @@ def get_base_name(base):
         return 'LazyLoadExtractor'
     elif base is SearchInfoExtractor:
         return 'LazyLoadSearchExtractor'
+    elif base is SelfhostedInfoExtractor:
+        return 'LazyLoadSelfhostedExtractor'
     else:
         return base.__name__
 
@@ -53,6 +62,13 @@ def build_lazy_ie(ie, name):
         bases=', '.join(map(get_base_name, ie.__bases__)),
         valid_url=valid_url,
         module=ie.__module__)
+    if ie._SELFHOSTED is True:
+        s += sh_additions_template.format(
+            sh_valid_url=ie._SH_VALID_URL,
+            sh_valid_content_strings=ie._SH_VALID_CONTENT_STRINGS,
+            sh_valid_content_regexes=ie._SH_VALID_CONTENT_REGEXES)
+        if ie.suitable_selfhosted.__func__ is not SelfhostedInfoExtractor.suitable_selfhosted.__func__:
+            s += '\n' + getsource(ie.suitable_selfhosted)
     if ie.suitable.__func__ is not InfoExtractor.suitable.__func__:
         s += '\n' + getsource(ie.suitable)
     if hasattr(ie, '_make_valid_url'):
@@ -84,15 +100,19 @@ while classes:
 ordered_cls.append(_ALL_CLASSES[-1])
 
 names = []
+sh_names = []
 for ie in ordered_cls:
     name = ie.__name__
     src = build_lazy_ie(ie, name)
     module_contents.append(src)
     if ie in _ALL_CLASSES:
         names.append(name)
+        if ie._SELFHOSTED is True:
+            sh_names.append(name)
 
-module_contents.append(
-    '_ALL_CLASSES = [{0}]'.format(', '.join(names)))
+module_contents.extend((
+    '\n_ALL_CLASSES = [{0}]'.format(', '.join(names)),
+    '\n_SH_CLASSES = [{0}]'.format(', '.join(sh_names))))
 
 module_src = '\n'.join(module_contents) + '\n'
 
