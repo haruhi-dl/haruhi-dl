@@ -610,6 +610,7 @@ from .markiza import (
     MarkizaIE,
     MarkizaPageIE,
 )
+from .mastodon import MastodonSHIE
 from .massengeschmacktv import MassengeschmackTVIE
 from .matchtv import MatchTVIE
 from .mdr import MDRIE
