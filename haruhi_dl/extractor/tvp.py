@@ -2,17 +2,17 @@
 from __future__ import unicode_literals
 
 import itertools
+import random
 import re
 
 from .common import InfoExtractor
 from ..utils import (
-    clean_html,
     determine_ext,
     ExtractorError,
-    get_element_by_attribute,
     int_or_none,
     orderedSet,
     str_or_none,
+    try_get,
 )
 
 
@@ -254,7 +254,17 @@ class TVPStreamIE(InfoExtractor):
 class TVPEmbedIE(InfoExtractor):
     IE_NAME = 'tvp:embed'
     IE_DESC = 'Telewizja Polska'
-    _VALID_URL = r'(?:tvp:|https?://(?:[^/]+\.)?tvp(?:parlament)?\.(?:pl|info)/sess/(?:tvplayer\.php\?.*?object_id|TVPlayer2/embed\.php\?.*ID)=)(?P<id>\d+)'
+    _VALID_URL = r'''(?x)
+        (?:
+            tvp:
+            |https?://
+                (?:[^/]+\.)?
+                tvp(?:parlament)?\.(?:pl|info)/sess/
+                (?:tvplayer\.php\?.*?object_id
+                |TVPlayer2/(?:embed|api)\.php\?.*[Ii][Dd])
+                =)
+        (?P<id>\d+)
+    '''
 
     _TESTS = [{
         'url': 'tvp:194536',
@@ -263,108 +273,123 @@ class TVPEmbedIE(InfoExtractor):
             'id': '194536',
             'ext': 'mp4',
             'title': 'Czas honoru, odc. 13 – Władek',
+            'description': 'Czesław prosi Marię o dostarczenie Władkowi zarazki tyfusu. Jeśli zachoruje zostanie przewieziony do szpitala skąd łatwiej będzie go odbić. Czy matka zdecyduje się zarazić syna?',
         },
     }, {
-        # not available
-        'url': 'http://www.tvp.pl/sess/tvplayer.php?object_id=22670268',
-        'md5': '8c9cd59d16edabf39331f93bf8a766c7',
+        'url': 'https://www.tvp.pl/sess/tvplayer.php?object_id=51247504&amp;autoplay=false',
         'info_dict': {
-            'id': '22670268',
+            'id': '51247504',
             'ext': 'mp4',
-            'title': 'Panorama, 07.12.2015, 15:40',
+            'title': 'Razmova 091220',
         },
-        'skip': 'Transmisja została zakończona lub materiał niedostępny',
     }, {
-        # TVPlayer2 (new) URL
+        # TVPlayer2 embed URL
         'url': 'https://tvp.info/sess/TVPlayer2/embed.php?ID=50595757',
         'only_matching': True,
     }, {
-        'url': 'tvp:22670268',
+        'url': 'https://wiadomosci.tvp.pl/sess/TVPlayer2/api.php?id=51233452',
         'only_matching': True,
     }]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
 
+        # it could be anything that is a valid JS function name
+        callback = random.choice((
+            'jebac_pis',
+            'jebacpis',
+            'ziobro',
+            'sasin70',
+            'sasin_przejebal_70_milionow_PLN',
+            'tvp_is_a_state_propaganda_service',
+        ))
+
         webpage = self._download_webpage(
-            'http://www.tvp.pl/sess/tvplayer.php?object_id=%s' % video_id, video_id)
+            ('https://www.tvp.pl/sess/TVPlayer2/api.php?id=%s'
+             + '&@method=getTvpConfig&@callback=%s') % (video_id, callback), video_id)
 
-        error = self._html_search_regex(
-            r'(?s)<p[^>]+\bclass=["\']notAvailable__text["\'][^>]*>(.+?)</p>',
-            webpage, 'error', default=None) or clean_html(
-            get_element_by_attribute('class', 'msg error', webpage))
-        if error:
-            raise ExtractorError('%s said: %s' % (
-                self.IE_NAME, clean_html(error)), expected=True)
+        # stripping JSONP padding
+        datastr = webpage[15 + len(callback):-3]
+        if datastr.startswith('null,'):
+            error = self._parse_json(datastr[5:], video_id)
+            raise ExtractorError(error[0]['desc'])
 
-        title = self._search_regex(
-            r'name\s*:\s*([\'"])Title\1\s*,\s*value\s*:\s*\1(?P<title>.+?)\1',
-            webpage, 'title', group='title')
-        series_title = self._search_regex(
-            r'name\s*:\s*([\'"])SeriesTitle\1\s*,\s*value\s*:\s*\1(?P<series>.+?)\1',
-            webpage, 'series', group='series', default=None)
-        if series_title:
-            title = '%s, %s' % (series_title, title)
-
-        thumbnail = self._search_regex(
-            r"poster\s*:\s*'([^']+)'", webpage, 'thumbnail', default=None)
-
-        video_url = self._search_regex(
-            r'0:{src:([\'"])(?P<url>.*?)\1', webpage,
-            'formats', group='url', default=None)
-        if not video_url or 'material_niedostepny.mp4' in video_url:
-            video_url = self._download_json(
-                'http://www.tvp.pl/pub/stat/videofileinfo?video_id=%s' % video_id,
-                video_id)['video_url']
+        content = self._parse_json(datastr, video_id)['content']
+        info = content['info']
 
         formats = []
-        video_url_base = self._search_regex(
-            r'(https?://.+?/video)(?:\.(?:ism|f4m|m3u8)|-\d+\.mp4)',
-            video_url, 'video base url', default=None)
-        if video_url_base:
-            # TODO: <Group> found instead of <AdaptationSet> in MPD manifest.
-            # It's not mentioned in MPEG-DASH standard. Figure that out.
-            # formats.extend(self._extract_mpd_formats(
-            #     video_url_base + '.ism/video.mpd',
-            #     video_id, mpd_id='dash', fatal=False))
-            formats.extend(self._extract_ism_formats(
-                video_url_base + '.ism/Manifest',
-                video_id, 'mss', fatal=False))
-            formats.extend(self._extract_f4m_formats(
-                video_url_base + '.ism/video.f4m',
-                video_id, f4m_id='hds', fatal=False))
-            m3u8_formats = self._extract_m3u8_formats(
-                video_url_base + '.ism/video.m3u8', video_id,
-                'mp4', 'm3u8_native', m3u8_id='hls', fatal=False)
-            self._sort_formats(m3u8_formats)
-            m3u8_formats = list(filter(
-                lambda f: f.get('vcodec') != 'none', m3u8_formats))
-            formats.extend(m3u8_formats)
-            for i, m3u8_format in enumerate(m3u8_formats, 2):
-                http_url = '%s-%d.mp4' % (video_url_base, i)
-                if self._is_valid_url(http_url, video_id):
-                    f = m3u8_format.copy()
-                    f.update({
-                        'url': http_url,
-                        'format_id': f['format_id'].replace('hls', 'http'),
-                        'protocol': 'http',
-                    })
-                    formats.append(f)
-        else:
-            formats = [{
-                'format_id': 'direct',
-                'url': video_url,
-                'ext': determine_ext(video_url, 'mp4'),
-            }]
+        for file in content['files']:
+            video_url = file['url']
+            if video_url.endswith('.m3u8'):
+                formats.extend(self._extract_m3u8_formats(video_url, video_id, m3u8_id='hls'))
+            elif video_url.endswith('.mpd'):
+                formats.extend(self._extract_mpd_formats(video_url, video_id, mpd_id='dash'))
+            elif video_url.endswith('.f4m'):
+                formats.extend(self._extract_f4m_formats(video_url, video_id, f4m_id='hds'))
+            elif video_url.endswith('.ism/manifest'):
+                formats.extend(self._extract_ism_formats(video_url, video_id, ism_id='mss'))
+            else:
+                # probably just mp4 versions
+                quality = file.get('quality', {})
+                formats.append({
+                    'format_id': 'direct',
+                    'url': video_url,
+                    'ext': determine_ext(video_url, 'mp4'),
+                    'fps': int_or_none(quality.get('fps')),
+                    'tbr': int_or_none(quality.get('bitrate')),
+                    'width': int_or_none(quality.get('width')),
+                    'height': int_or_none(quality.get('height')),
+                })
 
         self._sort_formats(formats)
 
-        return {
+        title = try_get(info, (
+            lambda x: x['title'],
+            lambda x: x['seoTitle'],
+            lambda x: x['subtitle'],
+            lambda x: x['subcategoryName'],
+        ))
+        description = try_get(info, (
+            lambda x: x['description'],
+            lambda x: x['seoDescription'],
+        ))
+        thumbnails = []
+        for thumb in content.get('posters') or ():
+            thumb_url = thumb.get('src')
+            # TVP, you're drunk, go home
+            if '{width}' not in thumb_url and '{height}' not in thumb_url:
+                thumbnails.append({
+                    'url': thumb.get('src'),
+                    'width': thumb.get('width'),
+                    'height': thumb.get('height'),
+                })
+        age_limit = try_get(content, lambda x: x['ageGroup']['minAge'], int)
+        if age_limit == 1:
+            age_limit = 0
+        is_live = try_get(content, lambda x: x['isLive'], bool)
+        duration = try_get(content, lambda x: x['duration'], int) if not is_live else None
+
+        info_dict = {
             'id': video_id,
             'title': title,
-            'thumbnail': thumbnail,
+            'description': description,
+            'thumbnails': thumbnails,
+            'age_limit': age_limit,
+            'is_live': is_live,
+            'duration': duration,
             'formats': formats,
         }
+
+        # vod.tvp.pl
+        if info.get('vortalName') == 'vod':
+            info_dict.update({
+                'title': '%s, %s' % (title, info.get('subtitle')),
+                'series': info.get('title'),
+                'season': info.get('season'),
+                'episode_number': info.get('episode'),
+            })
+
+        return info_dict
 
 
 class TVPWebsiteIE(InfoExtractor):
