@@ -3078,7 +3078,7 @@ class SelfhostedInfoExtractor(InfoExtractor):
         # no strings? check regexes!
         if '_SH_CONTENT_REGEXES_RES' not in cls.__dict__:
             cls._SH_VALID_CONTENT_REGEXES_RES = (re.compile(rgx)
-                                                 for rgx in cls._SH_VALID_CONTENT_REGEXES)
+                                                 for rgx in cls._SH_VALID_CONTENT_REGEXES or ())
         if not any(rgx.match(webpage) is not None for rgx in cls._SH_VALID_CONTENT_REGEXES_RES):
             return False
 
