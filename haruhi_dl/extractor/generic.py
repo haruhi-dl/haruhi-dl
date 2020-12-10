@@ -2029,12 +2029,12 @@ class GenericIE(InfoExtractor):
         },
         {
             # PeerTube embed
-            'url': 'https://joinpeertube.org/fr/home/',
+            'url': 'https://framablog.org/2020/10/20/queermotion-un-collectif-de-createur%e2%8b%85ices-sur-peertube/',
             'info_dict': {
-                'id': 'home',
-                'title': 'Reprenez le contrôle de vos vidéos ! #JoinPeertube',
+                'id': 'queermotion-un-collectif-de-createur⋅ices-sur-peertube',
+                'title': 'QueerMotion, un collectif de créateur⋅ices sur PeerTube',
             },
-            'playlist_count': 2,
+            'playlist_count': 7,
         },
         {
             # Indavideo embed
