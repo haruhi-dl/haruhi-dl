@@ -3091,3 +3091,15 @@ class SelfhostedInfoExtractor(InfoExtractor):
 
         `webpage` is a string (the website contents, as downloaded by GenericIE) or None"""
         pass
+
+    @classmethod
+    def _match_id_and_host(cls, url):
+        if '_VALID_URL_RE' not in cls.__dict__:
+            cls._VALID_URL_RE = re.compile(cls._VALID_URL)
+        m = cls._VALID_URL_RE.match(url)
+        if m is None:
+            if '_SH_VALID_URL_RE' not in cls.__dict__:
+                cls._SH_VALID_URL_RE = re.compile(cls._SH_VALID_URL)
+            m = cls._SH_VALID_URL_RE.match(url)
+            assert m
+        return compat_str(m.group('host')), compat_str(m.group('id'))
