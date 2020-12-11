@@ -1,3 +1,19 @@
+version 2020.12.11
+Extractor
+* [youtube] fixed playlist extract
+* [mastodon] Added extractor
+* [generic] selfhosted services like peertube are now matched with a regexp, not a list
+* [tvp] fixed extractor
+* [tvp] refactored to new tvp API
+* [tvp] Added regional pages support
+* [tvp] Added livestream support
+* [eskago] Added extractor
+* [atttechchannel] fixed extractor
+* [eurozet] player and article video extractors
+* [onet] libsyn podcast support
+* [polskieradio] Added livestream extractor
+* [cda] Fixed adult pages
+
 version 2020.11.27
 Extractor
 * [youtube] support for liked videos, watch later, video history,
