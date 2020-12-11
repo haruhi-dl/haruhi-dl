@@ -2295,7 +2295,7 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
 
 
 class YoutubeAjaxListInfoExtractor(YoutubeBaseListInfoExtractor):
-    def _download_continuation(self, continuation, list_id, page_no):
+    def _download_continuation(self, continuation, list_id, page_no, session_id=None):
         return self._download_json('https://www.youtube.com/browse_ajax', list_id,
                                    note='Downloading %s page #%d (ajax)' % (self._LIST_NAME, page_no),
                                    headers=self._YOUTUBE_CLIENT_HEADERS, query={
