@@ -1,27 +1,18 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
-
 from .common import InfoExtractor
 from ..utils import (
     determine_ext,
     ExtractorError,
     float_or_none,
-    get_element_by_class,
     int_or_none,
-    js_to_json,
     NO_DEFAULT,
     parse_iso8601,
-    remove_start,
-    strip_or_none,
-    url_basename,
 )
 
 
 class OnetBaseIE(InfoExtractor):
-    _URL_BASE_RE = r'https?://(?:(?:www\.)?onet\.tv|onet100\.vod\.pl)/[a-z]/'
-
     def _search_mvp_id(self, webpage):
         return self._search_regex(
             r'id=(["\'])mvp:(?P<id>.+?)\1', webpage, 'mvp id', group='id')
@@ -114,92 +105,6 @@ class OnetMVPIE(OnetBaseIE):
 
     def _real_extract(self, url):
         return self._extract_from_id(self._match_id(url))
-
-
-class OnetIE(OnetBaseIE):
-    _VALID_URL = OnetBaseIE._URL_BASE_RE + r'[a-z]+/(?P<display_id>[0-9a-z-]+)/(?P<id>[0-9a-z]+)'
-    IE_NAME = 'onet.tv'
-
-    _TESTS = [{
-        'url': 'http://onet.tv/k/openerfestival/open-er-festival-2016-najdziwniejsze-wymagania-gwiazd/qbpyqc',
-        'md5': '436102770fb095c75b8bb0392d3da9ff',
-        'info_dict': {
-            'id': 'qbpyqc',
-            'display_id': 'open-er-festival-2016-najdziwniejsze-wymagania-gwiazd',
-            'ext': 'mp4',
-            'title': 'Open\'er Festival 2016: najdziwniejsze wymagania gwiazd',
-            'description': 'Trzy samochody, których nigdy nie użyto, prywatne spa, hotel dekorowany czarnym suknem czy nielegalne używki. Organizatorzy koncertów i festiwali muszą stawać przed nie lada wyzwaniem zapraszając gwia...',
-            'upload_date': '20160705',
-            'timestamp': 1467721580,
-        },
-    }, {
-        'url': 'https://onet100.vod.pl/k/openerfestival/open-er-festival-2016-najdziwniejsze-wymagania-gwiazd/qbpyqc',
-        'only_matching': True,
-    }]
-
-    def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        display_id, video_id = mobj.group('display_id', 'id')
-
-        webpage = self._download_webpage(url, display_id)
-
-        mvp_id = self._search_mvp_id(webpage)
-
-        info_dict = self._extract_from_id(mvp_id, webpage)
-        info_dict.update({
-            'id': video_id,
-            'display_id': display_id,
-        })
-
-        return info_dict
-
-
-class OnetChannelIE(OnetBaseIE):
-    _VALID_URL = OnetBaseIE._URL_BASE_RE + r'(?P<id>[a-z]+)(?:[?#]|$)'
-    IE_NAME = 'onet.tv:channel'
-
-    _TESTS = [{
-        'url': 'http://onet.tv/k/openerfestival',
-        'info_dict': {
-            'id': 'openerfestival',
-            'title': "Open'er Festival",
-            'description': "Tak było na Open'er Festival 2016! Oglądaj nasze reportaże i wywiady z artystami.",
-        },
-        'playlist_mincount': 35,
-    }, {
-        'url': 'https://onet100.vod.pl/k/openerfestival',
-        'only_matching': True,
-    }]
-
-    def _real_extract(self, url):
-        channel_id = self._match_id(url)
-
-        webpage = self._download_webpage(url, channel_id)
-
-        current_clip_info = self._parse_json(self._search_regex(
-            r'var\s+currentClip\s*=\s*({[^}]+})', webpage, 'video info'), channel_id,
-            transform_source=lambda s: js_to_json(re.sub(r'\'\s*\+\s*\'', '', s)))
-        video_id = remove_start(current_clip_info['ckmId'], 'mvp:')
-        video_name = url_basename(current_clip_info['url'])
-
-        if self._downloader.params.get('noplaylist'):
-            self.to_screen(
-                'Downloading just video %s because of --no-playlist' % video_name)
-            return self._extract_from_id(video_id, webpage)
-
-        self.to_screen(
-            'Downloading channel %s - add --no-playlist to just download video %s' % (
-                channel_id, video_name))
-        matches = re.findall(
-            r'<a[^>]+href=[\'"](%s[a-z]+/[0-9a-z-]+/[0-9a-z]+)' % self._URL_BASE_RE,
-            webpage)
-        entries = [
-            self.url_result(video_link, OnetIE.ie_key())
-            for video_link in matches]
-
-        channel_title = strip_or_none(get_element_by_class('o_channelName', webpage))
-        channel_description = strip_or_none(get_element_by_class('o_channelDesc', webpage))
-        return self.playlist_result(entries, channel_id, channel_title, channel_description)
 
 
 class OnetPlIE(InfoExtractor):
