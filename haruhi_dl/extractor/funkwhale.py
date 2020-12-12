@@ -13,6 +13,7 @@ from ..utils import (
 class FunkwhaleBaseExtractor(SelfhostedInfoExtractor):
     _SH_VALID_CONTENT_STRINGS = (
         "<noscript><strong>We're sorry but Funkwhale doesn't work",
+        "<meta name=generator content=Funkwhale>",
     )
 
     def _call_api(self, host, method, params, vis_id, note='Downloading JSON metadata'):
