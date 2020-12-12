@@ -403,6 +403,13 @@ from .frontendmasters import (
 )
 from .funimation import FunimationIE
 from .funk import FunkIE
+from .funkwhale import (
+    FunkwhaleAlbumSHIE,
+    FunkwhaleArtistSHIE,
+    FunkwhaleChannelSHIE,
+    FunkwhalePlaylistSHIE,
+    FunkwhaleTrackSHIE,
+)
 from .fusion import FusionIE
 from .fxnetworks import FXNetworksIE
 from .gaia import GaiaIE
