@@ -2010,10 +2010,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             video_tags = try_get(video_details, lambda x: x['keywords'], list)
 
         def _extract_count(count_name):
-            return str_to_int(self._search_regex(
-                r'"label":"([0-9,]+) %s'
+            cnt = self._search_regex(
+                r'"label":"([0-9,]+|No) %s'
                 % re.escape(count_name),
-                video_webpage, count_name, default=None))
+                video_webpage, count_name, default=None)
+            if cnt:
+                cnt = cnt.replace('No', '0')
+                return str_to_int(cnt)
 
         like_count = _extract_count('likes')
         dislike_count = _extract_count('dislikes')
