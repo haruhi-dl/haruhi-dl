@@ -5,8 +5,10 @@ from .common import SelfhostedInfoExtractor
 from ..utils import (
     compat_str,
     compat_urllib_parse_urlencode,
+    int_or_none,
     try_get,
     parse_iso8601,
+    str_or_none,
 )
 
 
@@ -71,6 +73,7 @@ class FunkwhaleBaseExtractor(SelfhostedInfoExtractor):
             'tags': track_data.get('tags'),
         }
         info_dict.update(self._uploader_data_to_info_dict(track_data.get('attributed_to')))
+        info_dict.update(self._album_to_info_dict(track_data.get('album'), track_data))
         return info_dict
 
     def _uploader_data_to_info_dict(self, uploader_data):
@@ -80,6 +83,18 @@ class FunkwhaleBaseExtractor(SelfhostedInfoExtractor):
         return {
             'uploader': uploader_data.get('name'),
             'uploader_url': 'https://%s/@%s' % (uploader_data.get('domain'), uploader_data.get('preferred_username')),
+        }
+
+    def _album_to_info_dict(self, album_data, track_data={}):
+        if album_data is None:
+            return {}
+        return {
+            'track': str_or_none(track_data.get('title')),
+            'track_number': int_or_none(track_data.get('position')),
+            'album': str_or_none(album_data.get('title')),
+            'artist': str_or_none(track_data.get('artist', {}).get('name')),
+            'album_artist': str_or_none(album_data.get('artist', {}).get('name')),
+            'release_year': int_or_none(album_data.get('release_date', '')[:4]),
         }
 
 
@@ -298,4 +313,5 @@ class FunkwhaleAlbumSHIE(FunkwhaleBaseExtractor):
             'entries': entries,
             'thumbnails': thumbnails,
         }
+        info_dict.update(self._album_to_info_dict(album_data))
         return info_dict
