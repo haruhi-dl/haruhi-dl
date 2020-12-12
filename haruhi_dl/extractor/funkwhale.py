@@ -5,6 +5,7 @@ from .common import SelfhostedInfoExtractor
 from ..utils import (
     compat_str,
     compat_urllib_parse_urlencode,
+    float_or_none,
     int_or_none,
     try_get,
     parse_iso8601,
@@ -66,7 +67,7 @@ class FunkwhaleBaseExtractor(SelfhostedInfoExtractor):
                 lambda x: x['cover'],
                 lambda x: x['album']['cover'],
             ), dict)),
-            'duration': try_get(track_data, lambda x: ['uploads'][0]['duration'], int),
+            'duration': float_or_none(try_get(track_data, lambda x: x['uploads'][0]['duration'])),
             'timestamp': parse_iso8601(track_data.get('creation_date')),
             'view_count': track_data.get('downloads_count'),
             'license': track_data.get('license'),
