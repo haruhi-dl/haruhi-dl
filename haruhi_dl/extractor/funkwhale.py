@@ -123,7 +123,11 @@ class FunkwhaleTrackSHIE(FunkwhaleBaseExtractor):
 
         track_data = self._call_api(host, 'tracks/%s' % vis_id, None, vis_id)
 
-        return self._track_data_to_entry(track_data, host)
+        info_dict = self._track_data_to_entry(track_data, host)
+        info_dict.update({
+            'webpage_url': 'funkwhale:track:%s:%s' % (host, vis_id),
+        })
+        return info_dict
 
 
 class FunkwhaleArtistSHIE(FunkwhaleBaseExtractor):
@@ -175,6 +179,7 @@ class FunkwhaleArtistSHIE(FunkwhaleBaseExtractor):
             'id': vis_id,
             'entries': entries,
             'title': artist_data['attributed_to'].get('name'),
+            'webpage_url': 'funkwhale:artist:%s:%s' % (host, vis_id),
         }
         info_dict.update(self._uploader_data_to_info_dict(artist_data['attributed_to']))
 
@@ -226,6 +231,7 @@ class FunkwhaleChannelSHIE(FunkwhaleBaseExtractor):
             'id': uuid,
             'title': channel_data['attributed_to'].get('name'),
             'entries': entries,
+            'webpage_url': 'funkwhale:channel:%s:%s' % (host, vis_id),
         }
         info_dict.update(self._uploader_data_to_info_dict(channel_data['attributed_to']))
         return info_dict
@@ -261,6 +267,7 @@ class FunkwhalePlaylistSHIE(FunkwhaleBaseExtractor):
             'id': vis_id,
             'title': playlist_data['name'],
             'entries': entries,
+            'webpage_url': 'funkwhale:playlist:%s:%s' % (host, vis_id),
         }
         info_dict.update(self._uploader_data_to_info_dict(playlist_data.get('actor')))
         return info_dict
@@ -313,6 +320,7 @@ class FunkwhaleAlbumSHIE(FunkwhaleBaseExtractor):
             'title': album_data['title'],
             'entries': entries,
             'thumbnails': thumbnails,
+            'webpage_url': 'funkwhale:album:%s:%s' % (host, vis_id),
         }
         info_dict.update(self._album_to_info_dict(album_data))
         return info_dict
@@ -359,5 +367,6 @@ class FunkwhaleRadioSHIE(FunkwhaleBaseExtractor):
             'title': radio_data['name'],
             'entries': entries,
             'thumbnails': thumbnails,
+            'webpage_url': 'funkwhale:radio:%s:%s' % (host, vis_id),
         }
         return info_dict
