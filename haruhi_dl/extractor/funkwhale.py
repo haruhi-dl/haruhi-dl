@@ -95,7 +95,7 @@ class FunkwhaleBaseExtractor(SelfhostedInfoExtractor):
             'album': str_or_none(album_data.get('title')),
             'artist': str_or_none(track_data.get('artist', {}).get('name')),
             'album_artist': str_or_none(album_data.get('artist', {}).get('name')),
-            'release_year': int_or_none(album_data.get('release_date', '')[:4]),
+            'release_year': int_or_none((album_data.get('release_date') or '')[:4]),
         }
 
 
