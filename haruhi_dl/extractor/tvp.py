@@ -7,6 +7,7 @@ import re
 
 from .common import InfoExtractor
 from ..utils import (
+    compat_str,
     determine_ext,
     ExtractorError,
     int_or_none,
@@ -24,17 +25,16 @@ class TVPIE(InfoExtractor):
     _TESTS = [{
         # TVPlayer 2 in js wrapper
         'url': 'https://vod.tvp.pl/video/czas-honoru,i-seria-odc-13,194536',
-        'md5': 'a21eb0aa862f25414430f15fdfb9e76c',
         'info_dict': {
             'id': '194536',
             'ext': 'mp4',
             'title': 'Czas honoru, odc. 13 – Władek',
             'description': 'md5:437f48b93558370b031740546b696e24',
+            'age_limit': 12,
         },
     }, {
         # TVPlayer legacy
         'url': 'http://www.tvp.pl/there-can-be-anything-so-i-shortened-it/17916176',
-        'md5': 'b0005b542e5b4de643a9690326ab1257',
         'info_dict': {
             'id': '17916176',
             'ext': 'mp4',
@@ -44,12 +44,12 @@ class TVPIE(InfoExtractor):
     }, {
         # TVPlayer 2 in iframe
         'url': 'https://wiadomosci.tvp.pl/50725617/dzieci-na-sprzedaz-dla-homoseksualistow',
-        'md5': '624b78643e3cd039011fe23d76f0416e',
         'info_dict': {
             'id': '50725617',
             'ext': 'mp4',
-            'title': 'Wiadomości, Dzieci na sprzedaż dla homoseksualistów',
+            'title': 'Dzieci na sprzedaż dla homoseksualistów',
             'description': 'md5:7d318eef04e55ddd9f87a8488ac7d590',
+            'age_limit': 12,
         },
     }, {
         # TVPlayer 2 in client-side rendered website (regional)
@@ -74,6 +74,15 @@ class TVPIE(InfoExtractor):
         'params': {
             'skip_download': True,
         }
+    }, {
+        # ABC-specific video embeding
+        'url': 'https://abc.tvp.pl/48636269/zubry-odc-124',
+        'info_dict': {
+            'id': '48320456',
+            'ext': 'mp4',
+            'title': 'Teleranek, Żubr',
+            'description': 'W tym Teleranku przedstawimy Wam największe dziko żyjącego ssaki Europy. Mowa o żubrach Ponieważ zostało już bardzo niewiele osobników, ten gatunek jest objęty ścisłą ochroną. Opowiemy Wam o specyfice tych zwierząt i pokażemy je z bliska. Dlaczego żubry są tak rzadkie i co spowodowało, że są uznawane za narodowe zwierzęta Polski?',
+        },
     }, {
         'url': 'http://vod.tvp.pl/seriale/obyczajowe/na-sygnale/sezon-2-27-/odc-39/17834272',
         'only_matching': True,
@@ -188,13 +197,19 @@ class TVPIE(InfoExtractor):
                 r'<iframe[^>]+src="[^"]*?embed\.php\?(?:[^&]+&)*ID=(\d+)',
                 r'<iframe[^>]+src="[^"]*?object_id=(\d+)',
                 r"object_id\s*:\s*'(\d+)'",
-                r'data-video-id="(\d+)"'], webpage, 'video id', default=page_id)
+                r'data-video-id="(\d+)"',
+
+                # abc.tvp.pl - somehow there are more than one video IDs that seem to be the same video?
+                # the first one is referenced to as "copyid", and seems to be unused by the website
+                r'<script>\s*tvpabc\.video\.init\(\s*\d+,\s*(\d+)\s*\)\s*</script>',
+            ], webpage, 'video id', default=page_id)
             return {
                 '_type': 'url_transparent',
                 'url': 'tvp:' + video_id,
                 'description': self._og_search_description(
-                    webpage, default=None) or self._html_search_meta(
-                    'description', webpage, default=None),
+                    webpage, default=None) or (self._html_search_meta(
+                        'description', webpage, default=None)
+                        if '//s.tvp.pl/files/portal/v' in webpage else None),
                 'thumbnail': self._og_search_thumbnail(webpage, default=None),
                 'ie_key': 'TVPEmbed',
             }
@@ -274,6 +289,7 @@ class TVPEmbedIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'Czas honoru, odc. 13 – Władek',
             'description': 'Czesław prosi Marię o dostarczenie Władkowi zarazki tyfusu. Jeśli zachoruje zostanie przewieziony do szpitala skąd łatwiej będzie go odbić. Czy matka zdecyduje się zarazić syna?',
+            'age_limit': 12,
         },
     }, {
         'url': 'https://www.tvp.pl/sess/tvplayer.php?object_id=51247504&amp;autoplay=false',
@@ -344,15 +360,14 @@ class TVPEmbedIE(InfoExtractor):
         self._sort_formats(formats)
 
         title = try_get(info, (
+            lambda x: x['subtitle'],
             lambda x: x['title'],
             lambda x: x['seoTitle'],
-            lambda x: x['subtitle'],
-            lambda x: x['subcategoryName'],
-        ))
+        ), compat_str)
         description = try_get(info, (
             lambda x: x['description'],
             lambda x: x['seoDescription'],
-        ))
+        ), compat_str)
         thumbnails = []
         for thumb in content.get('posters') or ():
             thumb_url = thumb.get('src')
@@ -363,11 +378,11 @@ class TVPEmbedIE(InfoExtractor):
                     'width': thumb.get('width'),
                     'height': thumb.get('height'),
                 })
-        age_limit = try_get(content, lambda x: x['ageGroup']['minAge'], int)
+        age_limit = try_get(info, lambda x: x['ageGroup']['minAge'], int)
         if age_limit == 1:
             age_limit = 0
-        is_live = try_get(content, lambda x: x['isLive'], bool)
-        duration = try_get(content, lambda x: x['duration'], int) if not is_live else None
+        is_live = try_get(info, lambda x: x['isLive'], bool)
+        duration = try_get(info, lambda x: x['duration'], int) if not is_live else None
 
         info_dict = {
             'id': video_id,
@@ -383,7 +398,7 @@ class TVPEmbedIE(InfoExtractor):
         # vod.tvp.pl
         if info.get('vortalName') == 'vod':
             info_dict.update({
-                'title': '%s, %s' % (title, info.get('subtitle')),
+                'title': '%s, %s' % (info.get('title'), info.get('subtitle')),
                 'series': info.get('title'),
                 'season': info.get('season'),
                 'episode_number': info.get('episode'),
