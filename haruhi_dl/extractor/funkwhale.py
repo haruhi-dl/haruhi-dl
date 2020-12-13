@@ -196,6 +196,8 @@ class FunkwhaleChannelSHIE(FunkwhaleBaseExtractor):
         'url': 'https://podcast.midline.pl/channels/Midline/',
         'info_dict': {
             'id': 'd98ae7a5-5bd5-48c8-a178-a9a12e84cfc7',
+            'title': 'Internet. Czas działać!',
+            'uploader': 'Internet. Czas działać!',
         },
         'playlist_mincount': 9,
     }, {
