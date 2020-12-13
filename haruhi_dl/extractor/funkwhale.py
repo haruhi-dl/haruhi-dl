@@ -316,3 +316,48 @@ class FunkwhaleAlbumSHIE(FunkwhaleBaseExtractor):
         }
         info_dict.update(self._album_to_info_dict(album_data))
         return info_dict
+
+
+class FunkwhaleRadioSHIE(FunkwhaleBaseExtractor):
+    IE_NAME = 'funkwhale:radio'
+
+    _VALID_URL = r'funkwhale:radio:(?P<host>[^:]+):(?P<id>.+)'
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/library/radios/(?P<id>\d+)'
+
+    _TESTS = [{
+        'url': 'https://open.audio/library/radios/4',
+        'info_dict': {
+            'id': '4',
+            'title': 'FLOSS super radio',
+        },
+        'playlist_mincount': 77,
+    }]
+
+    def _selfhosted_extract(self, url, webpage=None):
+        host, vis_id = self._match_id_and_host(url)
+
+        radio_data = self._call_api(host, 'radios/radios/%s' % vis_id, None, vis_id)
+        tracks_data = self._call_api(host, 'radios/radios/%s/tracks' % vis_id, {
+            'playable': 'true',
+        }, vis_id, 'Downloading track list')
+        tracks = tracks_data['results']
+        page = 1
+        while tracks_data.get('next') is not None:
+            page += 1
+            tracks_data = tracks_data = self._call_api(host, 'radios/radios/%s/tracks' % vis_id, {
+                'playable': 'true',
+                'page': page,
+            }, vis_id, 'Downloading track list (page #%d)' % page)
+            tracks.extend(tracks_data['results'])
+        entries = [self._track_data_to_entry(track, host) for track in tracks]
+
+        thumbnails = self._cover_to_thumbnails(radio_data.get('user', {}).get('avatar'))
+
+        info_dict = {
+            '_type': 'playlist',
+            'id': vis_id,
+            'title': radio_data['name'],
+            'entries': entries,
+            'thumbnails': thumbnails,
+        }
+        return info_dict

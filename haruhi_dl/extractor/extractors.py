@@ -409,6 +409,7 @@ from .funkwhale import (
     FunkwhaleChannelSHIE,
     FunkwhalePlaylistSHIE,
     FunkwhaleTrackSHIE,
+    FunkwhaleRadioSHIE,
 )
 from .fusion import FusionIE
 from .fxnetworks import FXNetworksIE
