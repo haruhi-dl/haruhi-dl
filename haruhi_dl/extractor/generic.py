@@ -2514,20 +2514,61 @@ class GenericIE(InfoExtractor):
                 getter=lambda x: smuggle_url(x, {'referrer': url}),
                 ie='BrightcoveNew')
 
-        # Look for Nexx embeds
-        nexx_urls = NexxIE._extract_urls(webpage)
-        if nexx_urls:
-            return self.playlist_from_matches(nexx_urls, video_id, video_title, ie=NexxIE.ie_key())
-
-        # Look for Nexx iFrame embeds
-        nexx_embed_urls = NexxEmbedIE._extract_urls(webpage)
-        if nexx_embed_urls:
-            return self.playlist_from_matches(nexx_embed_urls, video_id, video_title, ie=NexxEmbedIE.ie_key())
-
-        # Look for ThePlatform embeds
-        tp_urls = ThePlatformIE._extract_urls(webpage)
-        if tp_urls:
-            return self.playlist_from_matches(tp_urls, video_id, video_title, ie='ThePlatform')
+        # Look for embeds
+        for embie in (
+            NexxIE,
+            NexxEmbedIE,
+            ThePlatformIE,
+            YoutubeIE,
+            DailymotionIE,
+            DailyMailIE,
+            FacebookIE,
+            SportBoxIE,
+            XHamsterEmbedIE,
+            TNAFlixNetworkEmbedIE,
+            PornHubIE,
+            DrTuberIE,
+            RedTubeIE,
+            Tube8IE,
+            MofosexEmbedIE,
+            SpankwireIE,
+            YouPornIE,
+            SoundcloudEmbedIE,
+            TuneInBaseIE,
+            JWPlatformIE,
+            LiveLeakIE,
+            DBTVIE,
+            VideaIE,
+            TwentyMinutenIE,
+            VideoPressIE,
+            RutubeIE,
+            WashingtonPostIE,
+            JojIE,
+            MegaphoneIE,
+            VzaarIE,
+            Channel9IE,
+            VShareIE,
+            SpringboardPlatformIE,
+            YapFilesIE,
+            ViceIE,
+            XFileShareIE,
+            CloudflareStreamIE,
+            PeerTubeSHIE,
+            IndavideoEmbedIE,
+            APAIE,
+            FoxNewsIE,
+            ViqeoIE,
+            ExpressenIE,
+            ZypeIE,
+            OnNetworkLoaderIE,
+        ):
+            try:
+                embie_urls = embie._extract_urls(webpage)
+                if embie_urls:
+                    return self.playlist_from_matches(embie_urls, video_id, video_title, ie=embie.ie_key())
+            except Exception as exc:
+                self.report_warning('The exception above was caused by: %sIE' % embie.ie_key())
+                raise exc
 
         # Look for embedded rtl.nl player
         matches = re.findall(
@@ -2546,16 +2587,6 @@ class GenericIE(InfoExtractor):
         if vid_me_embed_url is not None:
             return self.url_result(vid_me_embed_url, 'Vidme')
 
-        # Look for YouTube embeds
-        youtube_urls = YoutubeIE._extract_urls(webpage)
-        if youtube_urls:
-            return self.playlist_from_matches(
-                youtube_urls, video_id, video_title, ie=YoutubeIE.ie_key())
-
-        matches = DailymotionIE._extract_urls(webpage)
-        if matches:
-            return self.playlist_from_matches(matches, video_id, video_title)
-
         # Look for embedded Dailymotion playlist player (#3822)
         m = re.search(
             r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//(?:www\.)?dailymotion\.[a-z]{2,3}/widget/jukebox\?.+?)\1', webpage)
@@ -2565,12 +2596,6 @@ class GenericIE(InfoExtractor):
             if playlists:
                 return self.playlist_from_matches(
                     playlists, video_id, video_title, lambda p: '//dailymotion.com/playlist/%s' % p)
-
-        # Look for DailyMail embeds
-        dailymail_urls = DailyMailIE._extract_urls(webpage)
-        if dailymail_urls:
-            return self.playlist_from_matches(
-                dailymail_urls, video_id, video_title, ie=DailyMailIE.ie_key())
 
         # Look for Teachable embeds, must be before Wistia
         teachable_url = TeachableIE._extract_url(webpage, url)
@@ -2661,11 +2686,6 @@ class GenericIE(InfoExtractor):
         if mobj is not None:
             return self.url_result(mobj.group(1), 'Mpora')
 
-        # Look for embedded Facebook player
-        facebook_urls = FacebookIE._extract_urls(webpage)
-        if facebook_urls:
-            return self.playlist_from_matches(facebook_urls, video_id, video_title)
-
         # Look for embedded VK player
         mobj = re.search(r'<iframe[^>]+?src=(["\'])(?P<url>https?://vk\.com/video_ext\.php.+?)\1', webpage)
         if mobj is not None:
@@ -2716,56 +2736,6 @@ class GenericIE(InfoExtractor):
         if tvc_url:
             return self.url_result(tvc_url, 'TVC')
 
-        # Look for embedded SportBox player
-        sportbox_urls = SportBoxIE._extract_urls(webpage)
-        if sportbox_urls:
-            return self.playlist_from_matches(sportbox_urls, video_id, video_title, ie=SportBoxIE.ie_key())
-
-        # Look for embedded XHamster player
-        xhamster_urls = XHamsterEmbedIE._extract_urls(webpage)
-        if xhamster_urls:
-            return self.playlist_from_matches(xhamster_urls, video_id, video_title, ie='XHamsterEmbed')
-
-        # Look for embedded TNAFlixNetwork player
-        tnaflix_urls = TNAFlixNetworkEmbedIE._extract_urls(webpage)
-        if tnaflix_urls:
-            return self.playlist_from_matches(tnaflix_urls, video_id, video_title, ie=TNAFlixNetworkEmbedIE.ie_key())
-
-        # Look for embedded PornHub player
-        pornhub_urls = PornHubIE._extract_urls(webpage)
-        if pornhub_urls:
-            return self.playlist_from_matches(pornhub_urls, video_id, video_title, ie=PornHubIE.ie_key())
-
-        # Look for embedded DrTuber player
-        drtuber_urls = DrTuberIE._extract_urls(webpage)
-        if drtuber_urls:
-            return self.playlist_from_matches(drtuber_urls, video_id, video_title, ie=DrTuberIE.ie_key())
-
-        # Look for embedded RedTube player
-        redtube_urls = RedTubeIE._extract_urls(webpage)
-        if redtube_urls:
-            return self.playlist_from_matches(redtube_urls, video_id, video_title, ie=RedTubeIE.ie_key())
-
-        # Look for embedded Tube8 player
-        tube8_urls = Tube8IE._extract_urls(webpage)
-        if tube8_urls:
-            return self.playlist_from_matches(tube8_urls, video_id, video_title, ie=Tube8IE.ie_key())
-
-        # Look for embedded Mofosex player
-        mofosex_urls = MofosexEmbedIE._extract_urls(webpage)
-        if mofosex_urls:
-            return self.playlist_from_matches(mofosex_urls, video_id, video_title, ie=MofosexEmbedIE.ie_key())
-
-        # Look for embedded Spankwire player
-        spankwire_urls = SpankwireIE._extract_urls(webpage)
-        if spankwire_urls:
-            return self.playlist_from_matches(spankwire_urls, video_id, video_title, ie=SpankwireIE.ie_key())
-
-        # Look for embedded YouPorn player
-        youporn_urls = YouPornIE._extract_urls(webpage)
-        if youporn_urls:
-            return self.playlist_from_matches(youporn_urls, video_id, video_title, ie=YouPornIE.ie_key())
-
         # Look for embedded Tvigle player
         mobj = re.search(
             r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//cloud\.tvigle\.ru/video/.+?)\1', webpage)
@@ -2811,11 +2781,6 @@ class GenericIE(InfoExtractor):
         soundcloud_urls = SoundcloudEmbedIE._extract_urls(webpage)
         if soundcloud_urls:
             return self.playlist_from_matches(soundcloud_urls, video_id, video_title, getter=unescapeHTML)
-
-        # Look for tunein player
-        tunein_urls = TuneInBaseIE._extract_urls(webpage)
-        if tunein_urls:
-            return self.playlist_from_matches(tunein_urls, video_id, video_title)
 
         # Look for embedded mtvservices player
         mtvservices_url = MTVServicesEmbeddedIE._extract_url(webpage)
@@ -2972,11 +2937,6 @@ class GenericIE(InfoExtractor):
         if viewlift_url:
             return self.url_result(viewlift_url)
 
-        # Look for JWPlatform embeds
-        jwplatform_urls = JWPlatformIE._extract_urls(webpage)
-        if jwplatform_urls:
-            return self.playlist_from_matches(jwplatform_urls, video_id, video_title, ie=JWPlatformIE.ie_key())
-
         # Look for Digiteka embeds
         digiteka_url = DigitekaIE._extract_url(webpage)
         if digiteka_url:
@@ -3068,11 +3028,6 @@ class GenericIE(InfoExtractor):
             return self.url_result(
                 self._proto_relative_url(instagram_embed_url), InstagramIE.ie_key())
 
-        # Look for LiveLeak embeds
-        liveleak_urls = LiveLeakIE._extract_urls(webpage)
-        if liveleak_urls:
-            return self.playlist_from_matches(liveleak_urls, video_id, video_title)
-
         # Look for 3Q SDN embeds
         threeqsdn_url = ThreeQSDNIE._extract_url(webpage)
         if threeqsdn_url:
@@ -3091,73 +3046,11 @@ class GenericIE(InfoExtractor):
         if vbox7_url:
             return self.url_result(vbox7_url, Vbox7IE.ie_key())
 
-        # Look for DBTV embeds
-        dbtv_urls = DBTVIE._extract_urls(webpage)
-        if dbtv_urls:
-            return self.playlist_from_matches(dbtv_urls, video_id, video_title, ie=DBTVIE.ie_key())
-
-        # Look for Videa embeds
-        videa_urls = VideaIE._extract_urls(webpage)
-        if videa_urls:
-            return self.playlist_from_matches(videa_urls, video_id, video_title, ie=VideaIE.ie_key())
-
-        # Look for 20 minuten embeds
-        twentymin_urls = TwentyMinutenIE._extract_urls(webpage)
-        if twentymin_urls:
-            return self.playlist_from_matches(
-                twentymin_urls, video_id, video_title, ie=TwentyMinutenIE.ie_key())
-
-        # Look for VideoPress embeds
-        videopress_urls = VideoPressIE._extract_urls(webpage)
-        if videopress_urls:
-            return self.playlist_from_matches(
-                videopress_urls, video_id, video_title, ie=VideoPressIE.ie_key())
-
-        # Look for Rutube embeds
-        rutube_urls = RutubeIE._extract_urls(webpage)
-        if rutube_urls:
-            return self.playlist_from_matches(
-                rutube_urls, video_id, video_title, ie=RutubeIE.ie_key())
-
-        # Look for WashingtonPost embeds
-        wapo_urls = WashingtonPostIE._extract_urls(webpage)
-        if wapo_urls:
-            return self.playlist_from_matches(
-                wapo_urls, video_id, video_title, ie=WashingtonPostIE.ie_key())
-
         # Look for Mediaset embeds
         mediaset_urls = MediasetIE._extract_urls(self, webpage)
         if mediaset_urls:
             return self.playlist_from_matches(
                 mediaset_urls, video_id, video_title, ie=MediasetIE.ie_key())
-
-        # Look for JOJ.sk embeds
-        joj_urls = JojIE._extract_urls(webpage)
-        if joj_urls:
-            return self.playlist_from_matches(
-                joj_urls, video_id, video_title, ie=JojIE.ie_key())
-
-        # Look for megaphone.fm embeds
-        mpfn_urls = MegaphoneIE._extract_urls(webpage)
-        if mpfn_urls:
-            return self.playlist_from_matches(
-                mpfn_urls, video_id, video_title, ie=MegaphoneIE.ie_key())
-
-        # Look for vzaar embeds
-        vzaar_urls = VzaarIE._extract_urls(webpage)
-        if vzaar_urls:
-            return self.playlist_from_matches(
-                vzaar_urls, video_id, video_title, ie=VzaarIE.ie_key())
-
-        channel9_urls = Channel9IE._extract_urls(webpage)
-        if channel9_urls:
-            return self.playlist_from_matches(
-                channel9_urls, video_id, video_title, ie=Channel9IE.ie_key())
-
-        vshare_urls = VShareIE._extract_urls(webpage)
-        if vshare_urls:
-            return self.playlist_from_matches(
-                vshare_urls, video_id, video_title, ie=VShareIE.ie_key())
 
         # Look for Mediasite embeds
         mediasite_urls = MediasiteIE._extract_urls(webpage)
@@ -3169,78 +3062,12 @@ class GenericIE(InfoExtractor):
                 for mediasite_url in mediasite_urls]
             return self.playlist_result(entries, video_id, video_title)
 
-        springboardplatform_urls = SpringboardPlatformIE._extract_urls(webpage)
-        if springboardplatform_urls:
-            return self.playlist_from_matches(
-                springboardplatform_urls, video_id, video_title,
-                ie=SpringboardPlatformIE.ie_key())
-
-        yapfiles_urls = YapFilesIE._extract_urls(webpage)
-        if yapfiles_urls:
-            return self.playlist_from_matches(
-                yapfiles_urls, video_id, video_title, ie=YapFilesIE.ie_key())
-
-        vice_urls = ViceIE._extract_urls(webpage)
-        if vice_urls:
-            return self.playlist_from_matches(
-                vice_urls, video_id, video_title, ie=ViceIE.ie_key())
-
-        xfileshare_urls = XFileShareIE._extract_urls(webpage)
-        if xfileshare_urls:
-            return self.playlist_from_matches(
-                xfileshare_urls, video_id, video_title, ie=XFileShareIE.ie_key())
-
-        cloudflarestream_urls = CloudflareStreamIE._extract_urls(webpage)
-        if cloudflarestream_urls:
-            return self.playlist_from_matches(
-                cloudflarestream_urls, video_id, video_title, ie=CloudflareStreamIE.ie_key())
-
-        peertube_urls = PeerTubeSHIE._extract_urls(webpage, url)
-        if peertube_urls:
-            return self.playlist_from_matches(
-                peertube_urls, video_id, video_title, ie=PeerTubeSHIE.ie_key())
-
-        indavideo_urls = IndavideoEmbedIE._extract_urls(webpage)
-        if indavideo_urls:
-            return self.playlist_from_matches(
-                indavideo_urls, video_id, video_title, ie=IndavideoEmbedIE.ie_key())
-
-        apa_urls = APAIE._extract_urls(webpage)
-        if apa_urls:
-            return self.playlist_from_matches(
-                apa_urls, video_id, video_title, ie=APAIE.ie_key())
-
-        foxnews_urls = FoxNewsIE._extract_urls(webpage)
-        if foxnews_urls:
-            return self.playlist_from_matches(
-                foxnews_urls, video_id, video_title, ie=FoxNewsIE.ie_key())
-
         sharevideos_urls = [sharevideos_mobj.group('url') for sharevideos_mobj in re.finditer(
             r'<iframe[^>]+?\bsrc\s*=\s*(["\'])(?P<url>(?:https?:)?//embed\.share-videos\.se/auto/embed/\d+\?.*?\buid=\d+.*?)\1',
             webpage)]
         if sharevideos_urls:
             return self.playlist_from_matches(
                 sharevideos_urls, video_id, video_title)
-
-        viqeo_urls = ViqeoIE._extract_urls(webpage)
-        if viqeo_urls:
-            return self.playlist_from_matches(
-                viqeo_urls, video_id, video_title, ie=ViqeoIE.ie_key())
-
-        expressen_urls = ExpressenIE._extract_urls(webpage)
-        if expressen_urls:
-            return self.playlist_from_matches(
-                expressen_urls, video_id, video_title, ie=ExpressenIE.ie_key())
-
-        zype_urls = ZypeIE._extract_urls(webpage)
-        if zype_urls:
-            return self.playlist_from_matches(
-                zype_urls, video_id, video_title, ie=ZypeIE.ie_key())
-
-        onn_urls = OnNetworkLoaderIE._extract_urls(webpage)
-        if onn_urls:
-            return self.playlist_from_matches(
-                onn_urls, video_id, video_title, ie=OnNetworkLoaderIE.ie_key())
 
         # Look for HTML5 media
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')

@@ -72,7 +72,7 @@ class PeerTubeSHIE(SelfhostedInfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage, source_url):
+    def _extract_urls(webpage):
         entries = re.findall(
             r'''(?x)<iframe[^>]+\bsrc=["\'](?P<url>(?:https?:)?//[^/]+/videos/embed/%s)'''
             % (PeerTubeSHIE._UUID_RE), webpage)
