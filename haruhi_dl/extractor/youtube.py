@@ -1572,6 +1572,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             if video_description is None:
                 video_description = self._html_search_meta('description', video_webpage)
 
+        # title in English, if differs from the original one
+        video_alt_title = try_get(microformat, lambda x: x['title']['simpleText'], compat_str)
+        if video_alt_title == video_title:
+            video_alt_title = None
+
         if not smuggled_data.get('force_singlefeed', False):
             if not self._downloader.params.get('noplaylist'):
                 multifeed_metadata_list = try_get(
@@ -1949,7 +1954,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             video_alt_title = remove_quotes(unescapeHTML(m_music.group('title')))
             video_creator = clean_html(m_music.group('creator'))
         else:
-            video_alt_title = video_creator = None
+            video_creator = None
 
         def extract_meta(field):
             return self._html_search_regex(
