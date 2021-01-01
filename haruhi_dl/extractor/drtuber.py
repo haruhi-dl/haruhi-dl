@@ -36,7 +36,7 @@ class DrTuberIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+?src=["\'](?P<url>(?:https?:)?//(?:www\.)?drtuber\.com/embed/\d+)',
             webpage)

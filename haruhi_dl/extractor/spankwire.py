@@ -68,7 +68,7 @@ class SpankwireIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+\bsrc=["\']((?:https?:)?//(?:www\.)?spankwire\.com/EmbedPlayer\.aspx/?\?.*?\bArticleId=\d+)',
             webpage)

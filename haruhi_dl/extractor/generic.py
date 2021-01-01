@@ -2563,7 +2563,8 @@ class GenericIE(InfoExtractor):
             OnNetworkLoaderIE,
         ):
             try:
-                embie_urls = embie._extract_urls(webpage)
+                embie_urls = embie._extract_urls(webpage,
+                                                 url=url)
                 if embie_urls:
                     return self.playlist_from_matches(embie_urls, video_id, video_title, ie=embie.ie_key())
             except Exception as exc:

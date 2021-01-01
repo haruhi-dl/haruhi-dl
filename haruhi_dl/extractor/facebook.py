@@ -225,7 +225,7 @@ class FacebookIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         urls = []
         for mobj in re.finditer(
                 r'<iframe[^>]+?src=(["\'])(?P<url>https?://www\.facebook\.com/(?:video/embed|plugins/video\.php).+?)\1',

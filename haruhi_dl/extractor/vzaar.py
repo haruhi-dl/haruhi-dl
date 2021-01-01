@@ -51,7 +51,7 @@ class VzaarIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+src=["\']((?:https?:)?//(?:view\.vzaar\.com)/[0-9]+)',
             webpage)

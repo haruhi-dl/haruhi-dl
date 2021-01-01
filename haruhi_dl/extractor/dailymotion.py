@@ -191,7 +191,7 @@ class DailymotionIE(DailymotionBaseInfoExtractor):
       xid'''
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         urls = []
         # Look for embedded Dailymotion player
         # https://developer.dailymotion.com/player#player-parameters

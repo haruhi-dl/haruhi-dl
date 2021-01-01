@@ -1252,7 +1252,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'Unable to mark watched', fatal=False)
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         # Embedded YouTube player
         entries = [
             unescapeHTML(mobj.group('url'))

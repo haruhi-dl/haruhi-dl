@@ -33,7 +33,7 @@ class ZypeIE(InfoExtractor):
     }
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return [
             mobj.group('url')
             for mobj in re.finditer(

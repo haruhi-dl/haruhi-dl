@@ -37,7 +37,7 @@ class RedTubeIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+?src=["\'](?P<url>(?:https?:)?//embed\.redtube\.com/\?.*?\bid=\d+)',
             webpage)

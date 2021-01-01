@@ -197,7 +197,7 @@ class TNAFlixNetworkEmbedIE(TNAFlixNetworkBaseIE):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return [url for _, url in re.findall(
             r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//player\.(?:tna|emp)flix\.com/video/\d+)\1',
             webpage)]

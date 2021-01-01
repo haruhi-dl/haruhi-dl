@@ -72,11 +72,12 @@ class PeerTubeSHIE(SelfhostedInfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
-        entries = re.findall(
-            r'''(?x)<iframe[^>]+\bsrc=["\'](?P<url>(?:https?:)?//[^/]+/videos/embed/%s)'''
+    def _extract_urls(webpage, **kwargs):
+        entries = re.finditer(
+            r'''(?x)<iframe[^>]+\bsrc=["\'](?:https?:)?//(?P<host>[^/]+)/videos/embed/(?P<video_id>%s)'''
             % (PeerTubeSHIE._UUID_RE), webpage)
-        return entries
+        return ['peertube:%s:%s' % (mobj.group('host'), mobj.group('video_id'))
+                for mobj in entries]
 
     def _call_api(self, host, video_id, path, note=None, errnote=None, fatal=True):
         return self._download_json(

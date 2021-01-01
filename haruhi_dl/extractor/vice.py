@@ -107,7 +107,7 @@ class ViceIE(ViceBaseIE, AdobePassIE):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe\b[^>]+\bsrc=["\']((?:https?:)?//video\.vice\.com/[^/]+/embed/[\da-f]{24})',
             webpage)

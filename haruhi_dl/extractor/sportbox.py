@@ -46,7 +46,7 @@ class SportBoxIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+src="(https?://(?:news\.sportbox|matchtv)\.ru/vdl/player[^"]+)"',
             webpage)

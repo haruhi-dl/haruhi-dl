@@ -67,7 +67,7 @@ class MofosexEmbedIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+\bsrc=["\']((?:https?:)?//(?:www\.)?mofosex\.com/embed/?\?.*?\bvideoid=\d+)',
             webpage)

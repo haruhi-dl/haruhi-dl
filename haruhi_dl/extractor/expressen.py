@@ -48,7 +48,7 @@ class ExpressenIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return [
             mobj.group('url') for mobj in re.finditer(
                 r'<iframe[^>]+\bsrc=(["\'])(?P<url>(?:https?:)?//(?:www\.)?(?:expressen|di)\.se/(?:tvspelare/video|videoplayer/embed)/tv/.+?)\1',

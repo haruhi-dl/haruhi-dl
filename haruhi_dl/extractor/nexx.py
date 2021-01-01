@@ -113,7 +113,7 @@ class NexxIE(InfoExtractor):
         return mobj.group('id') if mobj else None
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         # Reference:
         # 1. https://nx-s.akamaized.net/files/201510/44.pdf
 
@@ -436,7 +436,7 @@ class NexxEmbedIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         # Reference:
         # 1. https://nx-s.akamaized.net/files/201510/44.pdf
 

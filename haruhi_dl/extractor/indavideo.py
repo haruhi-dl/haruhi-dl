@@ -49,7 +49,7 @@ class IndavideoEmbedIE(InfoExtractor):
     #   http://palyazat.indavideo.hu/video/Embertelen_dal_Dodgem_egyuttes
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+\bsrc=["\'](?P<url>(?:https?:)?//embed\.indavideo\.hu/player/video/[\da-f]+)',
             webpage)

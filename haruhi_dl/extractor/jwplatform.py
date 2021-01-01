@@ -31,7 +31,7 @@ class JWPlatformIE(InfoExtractor):
         return urls[0] if urls else None
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<(?:script|iframe)[^>]+?src=["\']((?:https?:)?//(?:content\.jwplatform|cdn\.jwplayer)\.com/players/[a-zA-Z0-9]{8})',
             webpage)

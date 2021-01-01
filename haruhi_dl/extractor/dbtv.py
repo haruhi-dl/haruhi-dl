@@ -32,7 +32,7 @@ class DBTVIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return [url for _, url in re.findall(
             r'<iframe[^>]+src=(["\'])((?:https?:)?//(?:www\.)?dagbladet\.no/video/embed/(?:[0-9A-Za-z_-]{11}|[a-zA-Z0-9]{8}).*?)\1',
             webpage)]

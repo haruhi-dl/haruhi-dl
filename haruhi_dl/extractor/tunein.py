@@ -12,7 +12,7 @@ class TuneInBaseIE(InfoExtractor):
     _API_BASE_URL = 'http://tunein.com/tuner/tune/'
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+src=["\'](?P<url>(?:https?://)?tunein\.com/embed/player/[pst]\d+)',
             webpage)

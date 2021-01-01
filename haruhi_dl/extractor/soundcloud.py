@@ -40,7 +40,7 @@ class SoundcloudEmbedIE(InfoExtractor):
     }
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return [m.group('url') for m in re.finditer(
             r'<iframe[^>]+src=(["\'])(?P<url>(?:https?://)?(?:w\.)?soundcloud\.com/player.+?)\1',
             webpage)]

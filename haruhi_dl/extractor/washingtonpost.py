@@ -29,7 +29,7 @@ class WashingtonPostIE(InfoExtractor):
     }
 
     @classmethod
-    def _extract_urls(cls, webpage):
+    def _extract_urls(cls, webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+\bsrc=["\'](%s)' % cls._EMBED_URL, webpage)
 

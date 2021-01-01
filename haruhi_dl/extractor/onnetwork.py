@@ -24,7 +24,7 @@ class OnNetworkLoaderIE(InfoExtractor):
     _VALID_URL = r'''https?://video\.onnetwork\.tv/embed\.php\?(?:mid=(?P<mid>[^&]+))?(?:&?sid=(?P<sid>[^&\s]+))?(?:&?cId=onn-cid-(?P<cid>\d+))?(?:.+)?'''
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         matches = re.finditer(
             r'''<script\s+[^>]*src=["'](%s.*?)["']''' % OnNetworkLoaderIE._VALID_URL,
             webpage)

@@ -50,6 +50,6 @@ class MegaphoneIE(InfoExtractor):
         }
 
     @classmethod
-    def _extract_urls(cls, webpage):
+    def _extract_urls(cls, webpage, **kwargs):
         return [m[0] for m in re.findall(
             r'<iframe[^>]*?\ssrc=["\'](%s)' % cls._VALID_URL, webpage)]

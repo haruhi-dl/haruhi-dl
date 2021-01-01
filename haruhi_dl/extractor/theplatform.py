@@ -198,7 +198,7 @@ class ThePlatformIE(ThePlatformBaseIE, AdobePassIE):
     }]
 
     @classmethod
-    def _extract_urls(cls, webpage):
+    def _extract_urls(cls, webpage, **kwargs):
         m = re.search(
             r'''(?x)
                     <meta\s+

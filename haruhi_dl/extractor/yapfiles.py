@@ -34,7 +34,7 @@ class YapFilesIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return [unescapeHTML(mobj.group('url')) for mobj in re.finditer(
             r'<iframe\b[^>]+\bsrc=(["\'])(?P<url>(?:https?:)?%s.*?)\1'
             % YapFilesIE._YAPFILES_URL, webpage)]

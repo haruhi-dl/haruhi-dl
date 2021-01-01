@@ -89,7 +89,7 @@ class LiveLeakIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+src="(https?://(?:\w+\.)?liveleak\.com/ll_embed\?[^"]*[ift]=[\w_]+[^"]+)"',
             webpage)

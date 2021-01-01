@@ -65,7 +65,7 @@ class YouPornIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return re.findall(
             r'<iframe[^>]+\bsrc=["\']((?:https?:)?//(?:www\.)?youporn\.com/embed/\d+)',
             webpage)

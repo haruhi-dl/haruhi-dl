@@ -325,7 +325,7 @@ class XHamsterEmbedIE(InfoExtractor):
     }
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kwargs):
         return [url for _, url in re.findall(
             r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//(?:www\.)?xhamster\.com/xembed\.php\?video=\d+)\1',
             webpage)]
