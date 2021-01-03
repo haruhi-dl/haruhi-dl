@@ -1233,6 +1233,7 @@ from .tvc import (
 from .tvigle import TvigleIE
 from .tvland import TVLandIE
 from .tvn24 import TVN24IE
+from .tvnplayer import TVNPlayerIE
 from .tvnet import TVNetIE
 from .tvnoe import TVNoeIE
 from .tvnow import (
