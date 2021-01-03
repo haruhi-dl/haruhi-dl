@@ -1,3 +1,14 @@
+version 2021.01.03
+Extractor
+* [youtube] new crypto
+* [youtube] now extracts alt-title with english title if it differs
+* [tokfm] Added extractor
+* [ipla] Added extractor (thankies, @ptrcnull!)
+* [tvnplayer] Added extractor (again, thanks Pati!)
+* [funkwhale] Added extractors
+* [tvp] fixed tvpabc
+* [onet] removed deprecated extractors
+
 version 2020.12.11
 Extractor
 * [youtube] fixed playlist extract
