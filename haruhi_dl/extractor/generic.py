@@ -2561,12 +2561,28 @@ class GenericIE(InfoExtractor):
             ExpressenIE,
             ZypeIE,
             OnNetworkLoaderIE,
+            VimeoIE,
+            SoundcloudEmbedIE,
+            KalturaIE,
         ):
             try:
                 embie_urls = embie._extract_urls(webpage,
                                                  url=url)
                 if embie_urls:
-                    return self.playlist_from_matches(embie_urls, video_id, video_title, ie=embie.ie_key())
+                    entries = []
+                    for embie_url in embie_urls:
+                        entries.append({
+                            '_type': 'url_transparent',
+                            'url': smuggle_url(unescapeHTML(embie_url), {'source_url': embie_url}),
+                            'ie_key': embie.ie_key(),
+                        })
+                    return {
+                        '_type': 'playlist',
+                        'entries': entries,
+                        'id': video_id,
+                        'title': video_title,
+                        'uploader': video_uploader,
+                    }
             except Exception as exc:
                 self.report_warning('The exception above was caused by: %sIE' % embie.ie_key())
                 raise exc
@@ -2577,10 +2593,6 @@ class GenericIE(InfoExtractor):
             webpage)
         if matches:
             return self.playlist_from_matches(matches, video_id, video_title, ie='RtlNl')
-
-        vimeo_urls = VimeoIE._extract_urls(url, webpage)
-        if vimeo_urls:
-            return self.playlist_from_matches(vimeo_urls, video_id, video_title, ie=VimeoIE.ie_key())
 
         vid_me_embed_url = self._search_regex(
             r'src=[\'"](https?://vid\.me/[^\'"]+)[\'"]',
@@ -2778,11 +2790,6 @@ class GenericIE(InfoExtractor):
         if myvi_url:
             return self.url_result(myvi_url)
 
-        # Look for embedded soundcloud player
-        soundcloud_urls = SoundcloudEmbedIE._extract_urls(webpage)
-        if soundcloud_urls:
-            return self.playlist_from_matches(soundcloud_urls, video_id, video_title, getter=unescapeHTML)
-
         # Look for embedded mtvservices player
         mtvservices_url = MTVServicesEmbeddedIE._extract_url(webpage)
         if mtvservices_url:
@@ -2841,14 +2848,6 @@ class GenericIE(InfoExtractor):
             r'<iframe[^>]+src="(?P<url>https?://(?:www\.)?zapiks\.fr/index\.php\?.+?)"', webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'Zapiks')
-
-        # Look for Kaltura embeds
-        kaltura_urls = KalturaIE._extract_urls(webpage)
-        if kaltura_urls:
-            return self.playlist_from_matches(
-                kaltura_urls, video_id, video_title,
-                getter=lambda x: smuggle_url(x, {'source_url': url}),
-                ie=KalturaIE.ie_key())
 
         # Look for EaglePlatform embeds
         eagleplatform_url = EaglePlatformIE._extract_url(webpage)

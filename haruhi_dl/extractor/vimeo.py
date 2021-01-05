@@ -519,7 +519,7 @@ class VimeoIE(VimeoBaseInfoExtractor):
         return smuggle_url(url, {'http_headers': {'Referer': referrer_url}})
 
     @staticmethod
-    def _extract_urls(url, webpage):
+    def _extract_urls(webpage, url=None):
         urls = []
         # Look for embedded (iframe) Vimeo player
         for mobj in re.finditer(

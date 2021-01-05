@@ -117,7 +117,7 @@ class KalturaIE(InfoExtractor):
         return urls[0] if urls else None
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, url=None):
         # Embed codes: https://knowledge.kaltura.com/embedding-kaltura-media-players-your-site
         finditer = (
             re.finditer(
@@ -159,13 +159,15 @@ class KalturaIE(InfoExtractor):
             for k, v in embed_info.items():
                 if v:
                     embed_info[k] = v.strip()
-            url = 'kaltura:%(partner_id)s:%(id)s' % embed_info
+            result_url = 'kaltura:%(partner_id)s:%(id)s' % embed_info
             escaped_pid = re.escape(embed_info['partner_id'])
             service_mobj = re.search(
                 r'<script[^>]+src=(["\'])(?P<id>(?:https?:)?//(?:(?!\1).)+)/p/%s/sp/%s00/embedIframeJs' % (escaped_pid, escaped_pid),
                 webpage)
+            smug = {'source_url': url}
             if service_mobj:
-                url = smuggle_url(url, {'service_url': service_mobj.group('id')})
+                smug['service_url'] = service_mobj.group('id')
+            url = smuggle_url(result_url, smug)
             urls.append(url)
         return urls
 
