@@ -962,6 +962,11 @@ from .reuters import ReutersIE
 from .reverbnation import ReverbNationIE
 from .rice import RICEIE
 from .rmcdecouverte import RMCDecouverteIE
+from .rmf import (
+    RMFonPodcastsIE,
+    RMFonStreamIE,
+    RMF24IE,
+)
 from .ro220 import Ro220IE
 from .rockstargames import RockstarGamesIE
 from .roosterteeth import RoosterTeethIE
