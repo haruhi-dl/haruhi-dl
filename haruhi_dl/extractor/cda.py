@@ -1,24 +1,54 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
+import datetime
 
 from .common import InfoExtractor
 from ..utils import (
-    compat_urllib_parse_unquote_plus,
     ExtractorError,
     float_or_none,
-    multipart_encode,
-    parse_duration,
-    random_birthday,
-    rot47,
-    urljoin,
+    int_or_none,
+    try_get,
 )
 
 
-class CDAIE(InfoExtractor):
+class CDABaseExtractor(InfoExtractor):
+    _BASE_URL = 'https://api.cda.pl'
+    _BASE_HEADERS = {
+        'Accept': 'application/vnd.cda.public+json',
+        'User-Agent': 'pl.cda 1.0 (version 1.2.88 build 15306; Android 9; Xiaomi Redmi 3S)',
+        # gets replaced with Bearer token after the login request
+        # apparently the token is hardcoded in the app
+        'Authorization': 'Basic YzU3YzBlZDUtYTIzOC00MWQwLWI2NjQtNmZmMWMxY2Y2YzVlOklBTm95QlhRRVR6U09MV1hnV3MwMW0xT2VyNWJNZzV4clRNTXhpNGZJUGVGZ0lWUlo5UGVYTDhtUGZaR1U1U3Q',
+    }
+    _bearer = None
+
+    # logs into cda.pl and returns _BASE_HEADERS with the Bearer token
+    def _get_headers(self, video_id):
+        headers = self._BASE_HEADERS
+
+        if self._bearer and self._bearer['valid_until'] > datetime.datetime.now().timestamp() + 5:
+            headers.update({
+                'Authorization': 'Bearer %s' % self._bearer['token'],
+            })
+            return headers
+
+        token_res = self._download_json(self._BASE_URL + '/oauth/token?grant_type=password&login=niezesrajciesiecda&password=VD3QbYWSb_uwAShBZKN7F1DwEg_tRTdb4Xd3JvFsx6Y',
+                                        video_id, 'Logging into cda.pl', headers=headers, data=bytes(''.encode('utf-8')))
+
+        self._bearer = {
+            'token': token_res['access_token'],
+            'valid_until': token_res['expires_in'] + datetime.datetime.now().timestamp(),
+        }
+
+        headers.update({
+            'Authorization': 'Bearer %s' % token_res['access_token'],
+        })
+        return headers
+
+
+class CDAIE(CDABaseExtractor):
     _VALID_URL = r'https?://(?:(?:www\.)?cda\.pl/video|ebd\.cda\.pl/[0-9]+x[0-9]+)/(?P<id>[0-9a-z]+)'
-    _BASE_URL = 'https://www.cda.pl'
     _TESTS = [{
         'url': 'http://www.cda.pl/video/5749950c',
         'md5': '6f844bf51b15f31fae165365707ae970',
@@ -28,7 +58,7 @@ class CDAIE(InfoExtractor):
             'height': 720,
             'title': 'Oto dlaczego przed zakrętem należy zwolnić.',
             'description': 'md5:269ccd135d550da90d1662651fcb9772',
-            'thumbnail': r're:^https?://.*\.jpg$',
+            'thumbnail': r're:^https?://.*\.jpg(?:\?t=\d+)?$',
             'average_rating': float,
             'duration': 39,
             'age_limit': 0,
@@ -41,7 +71,7 @@ class CDAIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'Lądowanie na lotnisku na Maderze',
             'description': 'md5:60d76b71186dcce4e0ba6d4bbdb13e1a',
-            'thumbnail': r're:^https?://.*\.jpg$',
+            'thumbnail': r're:^https?://.*\.jpg(?:\?t=\d+)?$',
             'uploader': 'crash404',
             'average_rating': float,
             'duration': 137,
@@ -55,7 +85,7 @@ class CDAIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'Cycki',
             'description': 'cycki cycuszki fajne ciekawe azja ajzatka',
-            'thumbnail': r're:^https?://.*\.jpg$',
+            'thumbnail': r're:^https?://.*\.jpg(?:\?t=\d+)?$',
             'duration': 6,
             'age_limit': 18,
             'average_rating': float,
@@ -65,122 +95,41 @@ class CDAIE(InfoExtractor):
         'only_matching': True,
     }]
 
-    def _download_age_confirm_page(self, url, video_id, *args, **kwargs):
-        form_data = random_birthday('rok', 'miesiac', 'dzien')
-        form_data.update({'return': url, 'module': 'video', 'module_id': video_id})
-        data, content_type = multipart_encode(form_data)
-        return self._download_webpage(
-            urljoin(url, '/a/validatebirth'), video_id, *args,
-            data=data, headers={
-                'Referer': url,
-                'Content-Type': content_type,
-            }, **kwargs)
-
     def _real_extract(self, url):
         video_id = self._match_id(url)
-        self._set_cookie('cda.pl', 'cda.player', 'html5')
-        webpage = self._download_webpage(
-            self._BASE_URL + '/video/' + video_id, video_id)
 
-        if 'Ten film jest dostępny dla użytkowników premium' in webpage:
+        headers = self._get_headers(video_id)
+
+        metadata = self._download_json(
+            self._BASE_URL + '/video/' + video_id, video_id, headers=headers)['video']
+
+        if metadata.get('premium') is True and metadata.get('premium_free') is not True:
             raise ExtractorError('This video is only available for premium users.', expected=True)
 
-        need_confirm_age = False
-        if self._html_search_regex(r'(<form[^>]+action="[^>]*/a/validatebirth)',
-                                   webpage, 'birthday validate form', default=None):
-            webpage = self._download_age_confirm_page(
-                url, video_id, note='Confirming age')
-            need_confirm_age = True
+        uploader = try_get(metadata, lambda x: x['author']['login'])
+        # anonymous uploader
+        if uploader == 'anonim':
+            uploader = None
 
         formats = []
+        for quality in metadata['qualities']:
+            formats.append({
+                'url': quality['file'],
+                'format': quality['title'],
+                'resolution': quality['name'],
+                'height': int_or_none(quality['name'][:-1]),    # for the format sorting
+                'filesize': quality.get('length'),
+            })
 
-        uploader = self._search_regex(r'"author":\s*{[^}]*"name":\s*"([^"]+)"',
-                                      webpage, 'uploader', default=None)
-        average_rating = self._search_regex(
-            r'<span class="rating">\s*([\d.]+)',
-            webpage, 'rating', fatal=False)
-
-        info_dict = {
+        return {
             'id': video_id,
-            'title': self._og_search_title(webpage),
-            'description': self._og_search_description(webpage),
+            'title': metadata['title'],
+            'description': metadata.get('description'),
             'uploader': uploader,
-            'average_rating': float_or_none(average_rating),
-            'thumbnail': self._og_search_thumbnail(webpage),
+            'average_rating': float_or_none(metadata.get('rating')),
+            'thumbnail': metadata.get('thumb'),
             'formats': formats,
-            'duration': None,
-            'age_limit': 18 if need_confirm_age else 0,
+            'duration': metadata.get('duration'),
+            'age_limit': 18 if metadata.get('for_adults') else 0,
+            'view_count': metadata.get('views'),
         }
-
-        def extract_format(page, version):
-            json_str = self._html_search_regex(
-                r'player_data=(\\?["\'])(?P<player_data>.+?)\1', page,
-                '%s player_json' % version, default=None, group='player_data')
-            if not json_str:
-                return
-            player_data = self._parse_json(
-                json_str, '%s player_data' % version, fatal=False)
-            if not player_data:
-                return
-            video = player_data.get('video')
-            if not video or 'file' not in video:
-                self.report_warning('Unable to extract %s version information' % version)
-                return
-            video['file'] = rot47(compat_urllib_parse_unquote_plus(video['file']))
-            if not video['file'].startswith('http'):
-                video['file'] = 'https://' + video['file']
-            # https://www.cda.pl/js/player.js as of 2020-12-05
-            video['file'] = video['file'] \
-                .replace('.cda.mp4', '') \
-                .replace('.2cda.pl', '.cda.pl') \
-                .replace('.3cda.pl', '.cda.pl') \
-                .replace('adc.mp4', '.mp4') \
-                .replace('/upstream', '.mp4/upstream') \
-                .replace('_XDDD', '') \
-                .replace('_CDA', '') \
-                .replace('_ADC', '') \
-                .replace('_CXD', '') \
-                .replace('_QWE', '') \
-                .replace('_Q5', '') \
-                .replace('_IKSDE', '')
-            if not video['file'].endswith('.mp4'):
-                video['file'] = video['file'][:-3] + '.mp4'
-            f = {
-                'url': video['file'],
-            }
-            m = re.search(
-                r'<a[^>]+data-quality="(?P<format_id>[^"]+)"[^>]+href="[^"]+"[^>]+class="[^"]*quality-btn-active[^"]*">(?P<height>[0-9]+)p',
-                page)
-            if m:
-                f.update({
-                    'format_id': m.group('format_id'),
-                    'height': int(m.group('height')),
-                })
-            info_dict['formats'].append(f)
-            if not info_dict['duration']:
-                info_dict['duration'] = parse_duration(video.get('duration'))
-
-        extract_format(webpage, 'default')
-
-        for href, resolution in re.findall(
-                r'<a[^>]+data-quality="[^"]+"[^>]+href="([^"]+)"[^>]+class="quality-btn"[^>]*>([0-9]+p)',
-                webpage):
-            if need_confirm_age:
-                handler = self._download_age_confirm_page
-            else:
-                handler = self._download_webpage
-
-            webpage = handler(
-                href if href.startswith('http') else self._BASE_URL + href, video_id,
-                'Downloading %s version information' % resolution, fatal=False)
-            if not webpage:
-                # Manually report warning because empty page is returned when
-                # invalid version is requested.
-                self.report_warning('Unable to download %s version information' % resolution)
-                continue
-
-            extract_format(webpage, resolution)
-
-        self._sort_formats(formats)
-
-        return info_dict
