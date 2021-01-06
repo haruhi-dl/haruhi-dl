@@ -1266,11 +1266,17 @@ class InfoExtractor(object):
 
         def extract_video_object(e):
             assert e['@type'] == 'VideoObject'
+            thumbnails = e.get('thumbnailUrl') or e.get('thumbnailURL')
+            if isinstance(thumbnails, compat_str):
+                thumbnails = [thumbnails]
+            elif thumbnails is None:
+                thumbnails = []
+            thumbnails = [({'url': thumb}) for thumb in thumbnails]
             info.update({
                 'url': url_or_none(e.get('contentUrl')),
                 'title': unescapeHTML(e.get('name')),
                 'description': unescapeHTML(e.get('description')),
-                'thumbnail': url_or_none(e.get('thumbnailUrl') or e.get('thumbnailURL')),
+                'thumbnails': thumbnails,
                 'duration': parse_duration(e.get('duration')),
                 'timestamp': unified_timestamp(e.get('uploadDate')),
                 'uploader': str_or_none(e.get('author')),
