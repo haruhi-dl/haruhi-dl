@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import itertools
 import random
 import re
 
@@ -11,9 +10,9 @@ from ..utils import (
     determine_ext,
     ExtractorError,
     int_or_none,
-    orderedSet,
     str_or_none,
     try_get,
+    unescapeHTML,
 )
 
 
@@ -413,18 +412,22 @@ class TVPWebsiteIE(InfoExtractor):
 
     _TESTS = [{
         # series
-        'url': 'https://vod.tvp.pl/website/lzy-cennet,38678312/video',
+        'url': 'https://vod.tvp.pl/website/wspaniale-stulecie,17069012/video',
         'info_dict': {
-            'id': '38678312',
+            'id': '17069012',
+            'title': 'Wspaniałe stulecie',
+            'description': 'md5:f10ddf01760c829274ae4e511334d53e',
         },
-        'playlist_count': 115,
+        'playlist_count': 312,
     }, {
         # film
-        'url': 'https://vod.tvp.pl/website/gloria,35139666',
+        'url': 'https://vod.tvp.pl/website/krzysztof-krawczyk-cale-moje-zycie,51374466',
         'info_dict': {
-            'id': '36637049',
+            'id': '51374509',
             'ext': 'mp4',
-            'title': 'Gloria, Gloria',
+            'title': 'Krzysztof Krawczyk – całe moje życie',
+            'description': 'Dokumentalna opowieść o karierze Krzysztofa Krawczyka, jednego z najpopularniejszych wykonawców muzyki pop na polskiej scenie. Artysta ma na  swoimi koncie wiele przebojów. W filmie wykorzystano unikatowe materiały archiwalne.',
+            'age_limit': 12,
         },
         'params': {
             'skip_download': True,
@@ -435,27 +438,78 @@ class TVPWebsiteIE(InfoExtractor):
         'only_matching': True,
     }]
 
-    def _entries(self, display_id, playlist_id):
-        url = 'https://vod.tvp.pl/website/%s,%s/video' % (display_id, playlist_id)
-        for page_num in itertools.count(1):
-            page = self._download_webpage(
-                url, display_id, 'Downloading page %d' % page_num,
-                query={'page': page_num})
-
-            video_ids = orderedSet(re.findall(
-                r'<a[^>]+\bhref=["\']/video/%s,[^,]+,(\d+)' % display_id,
-                page))
-
-            if not video_ids:
-                break
-
-            for video_id in video_ids:
-                yield self.url_result(
-                    'tvp:%s' % video_id, ie=TVPEmbedIE.ie_key(),
-                    video_id=video_id)
+    _API_BASE = 'https://apivod.tvp.pl'
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
         display_id, playlist_id = mobj.group('display_id', 'id')
-        return self.playlist_result(
-            self._entries(display_id, playlist_id), playlist_id)
+
+        headers = {
+            'Authorization': 'Basic YXBpOnZvZA==',
+            'User-Agent': 'okhttp/4.2.2',
+        }
+        data = self._download_json(self._API_BASE + '/tv/v2/website/%s' % playlist_id,
+                                   playlist_id, 'Downloading series metadata', headers=headers)
+
+        info_dict = {}
+        entries = []
+        pages_count = None
+        selected_filter = 'default'
+        selected_sorting = '10'  # the app does that for some reason
+        for d in data['data']:
+            if d['type'] == 'page':
+                pages_count = d['pagesCount']
+                selected_filter = d.get('selected_filter', selected_filter)
+                for sorting in d.get('sortOptions', ()):
+                    if sorting.get('selected') is True:
+                        selected_sorting = sorting.get('value', selected_sorting)
+                info_dict.update({
+                    'title': d['title'],
+                })
+            elif d['type'] == 'website':
+                info_dict.update({
+                    'id': compat_str(d['id']),
+                    'description': unescapeHTML(d['lead']),
+                })
+            elif d['type'] == 'listing' and d['title'] == 'Odcinki':
+                # series
+                # broken, just TVP things
+                # for ep in d['elements']:
+                # entries.append(self._episode_to_entry(ep))
+                info_dict.update({
+                    '_type': 'playlist',
+                })
+            elif d['type'] == 'listing' and d['title'] == 'Wideo':
+                # single movie
+                info_dict.update(self._episode_to_entry(d['elements'][0]))
+                return info_dict
+
+        # if pages_count > 1:
+        for page in range(1, pages_count + 1):
+            ep_list = self._download_json(self._API_BASE + '/tv/v2/website-videos/%s/%d/%s/%s' % (playlist_id, page, '10', selected_filter),
+                                          playlist_id, 'Downloading episodes page %d' % page, headers=headers)
+            for ep in ep_list['data']:
+                if ep.get('type') == 'video':
+                    entries.append(self._episode_to_entry(ep))
+
+        info_dict.update({
+            'entries': entries,
+        })
+        return info_dict
+
+    def _episode_to_entry(self, ep):
+        age_limit = None
+        for label in ep.get('label', ()):
+            if label.get('type') == 'PEGI':
+                age_limit = int_or_none(label.get('text'))
+        return {
+            '_type': 'url_transparent',
+            'ie_key': 'TVPEmbed',
+            'url': 'tvp:' + compat_str(ep['id']),
+            'id': compat_str(ep['id']),
+            'title': ep['title'],
+            'alt_title': ep.get('subtitle'),
+            'description': unescapeHTML(ep.get('lead')),
+            'is_live': ep.get('is_live', False),
+            'age_limit': age_limit,
+        }
