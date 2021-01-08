@@ -438,6 +438,10 @@ from .googlesearch import GoogleSearchIE
 from .goshgay import GoshgayIE
 from .gputechconf import GPUTechConfIE
 from .groupon import GrouponIE
+from .guardian import (
+    GuardianAudioIE,
+    GuardianVideoIE,
+)
 from .hbo import HBOIE
 from .hearthisat import HearThisAtIE
 from .heise import HeiseIE
