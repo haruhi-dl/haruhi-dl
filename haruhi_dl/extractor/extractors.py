@@ -1203,6 +1203,10 @@ from .traileraddict import TrailerAddictIE
 from .trilulilu import TriluliluIE
 from .trunews import TruNewsIE
 from .trutv import TruTVIE
+from .tubafm import (
+    TubaFMIE,
+    TubaFMPageIE,
+)
 from .tube8 import Tube8IE
 from .tubitv import TubiTvIE
 from .tumblr import TumblrIE
