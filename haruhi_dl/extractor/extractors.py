@@ -1526,6 +1526,7 @@ from .youtube import (
     YoutubeChannelIE,
     YoutubeHistoryIE,
     YoutubeLikedIE,
+    YoutubeMusicAlbumIE,
     YoutubePlaylistIE,
     YoutubeSearchIE,
     YoutubeSubscriptionsIE,

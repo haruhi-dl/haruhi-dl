@@ -2355,7 +2355,7 @@ class YoutubeYti1ListInfoExtractor(YoutubeBaseListInfoExtractor):
 
 class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
     IE_NAME = 'youtube:channel'
-    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/(?!watch|playlist|v|e|embed|shared)(?:(?P<type>user|channel|c)/)?(?P<id>[\w-]+)(?!/live)'
+    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/(?!watch|playlist|v|e|embed|shared|browse)(?:(?P<type>user|channel|c)/)?(?P<id>[\w-]+)(?!/live)'
     _LIST_NAME = 'channel'
 
     _TESTS = [{
@@ -2404,7 +2404,7 @@ class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
 
 class YoutubePlaylistIE(YoutubeYti1ListInfoExtractor):
     IE_NAME = 'youtube:playlist'
-    _VALID_URL = r'(?:https?://(?:\w+\.)?youtube\.com/(?:playlist\?(?:[^&;]+[&;])*|watch\?(?:[^&;]+[&;])*playnext=1&(?:[^&;]+[&;])*)list=|ytplaylist:)?(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
+    _VALID_URL = r'(?:https?://(?:www\.)?youtube\.com/(?:playlist\?(?:[^&;]+[&;])*|watch\?(?:[^&;]+[&;])*playnext=1&(?:[^&;]+[&;])*)list=|ytplaylist:)?(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
     _LIST_NAME = 'playlist'
 
     _TESTS = [{
@@ -2584,7 +2584,7 @@ class YoutubeBaseShelfInfoExtractor(YoutubeYti1ListInfoExtractor):
 
 
 class YoutubeSubscriptionsIE(YoutubeBaseShelfInfoExtractor):
-    _VALID_URL = r'(?:https?://(?:www\.)youtube\.com/feed/|:yt)(?P<id>subs(?:criptions)?)'
+    _VALID_URL = r'(?:https?://(?:www\.)?youtube\.com/feed/|:yt)(?P<id>subs(?:criptions)?)'
     IE_NAME = 'youtube:subscriptions'
     _LIST_NAME = 'subscriptions'
     _LOGIN_REQUIRED = True
@@ -2594,7 +2594,7 @@ class YoutubeSubscriptionsIE(YoutubeBaseShelfInfoExtractor):
 
 
 class YoutubeHistoryIE(YoutubeYti1ListInfoExtractor):
-    _VALID_URL = r'(?:https?://(?:www\.)youtube\.com/feed/|:yt)(?P<id>history)'
+    _VALID_URL = r'(?:https?://(?:www\.)?youtube\.com/feed/|:yt)(?P<id>history)'
     IE_NAME = 'youtube:history'
     _LIST_NAME = 'history'
     _LOGIN_REQUIRED = True
@@ -2625,6 +2625,82 @@ class YoutubeHistoryIE(YoutubeYti1ListInfoExtractor):
             'info_dict': {
                 'title': self._LIST_NAME,
             },
+        }
+
+
+class YoutubeMusicAlbumIE(YoutubeBaseListInfoExtractor):
+    _VALID_URL = r'https://music\.youtube\.com/browse/(?P<id>MPREb_\w{11})'
+    IE_NAME = 'youtube:music:album'
+    _LIST_NAME = 'album'
+    _TESTS = [{
+        'url': 'https://music.youtube.com/browse/MPREb_R4FiVJOusZp',
+        'info_dict': {
+            'id': 'MPREb_R4FiVJOusZp',
+            'title': '1000 gecs',
+            'description': 'md5:107a8e7bbef00df750350775ad6a2601',
+            'age_limit': 18,
+        },
+        'playlist_count': 10,
+    }]
+
+    def _parse_video(self, video, full_data=None, entry_key=None):
+        return {
+            'id': video['videoId'],
+            'url': 'https://www.youtube.com/watch?v=%s' % video['videoId'],
+            'title': video['title'],
+            'thumbnails': try_get(video, lambda x: x['thumbnailDetails']['thumbnails']),
+            'age_limit': 18 if try_get(video, lambda x: x['contentRating']['explicitType']) == 'MUSIC_ENTITY_EXPLICIT_TYPE_EXPLICIT' else 0,
+            'track': video['title'],
+            'track_number': int_or_none(video.get('albumTrackIndex')),
+            'track_id': video.get('albumTrackIndex'),
+            'artist': video.get('artistNames'),
+        }
+
+    def _download_first_data(self, url, list_id, query=None):
+        webpage = self._download_webpage(url, list_id)
+
+        data = self._search_regex(
+            r"initialData\.push\({path: '\\\/browse',.+, data: '([^']+)'}\);",
+            webpage, 'album data')
+        # prevent DeprecationWarning on the next step
+        data = data.replace(r'\/', '/')
+        # https://stackoverflow.com/a/16493336/8222484
+        data = bytes(data.encode('utf-8')).decode('unicode_escape')
+        data = self._parse_json(data, list_id)
+        return data, webpage
+
+    def _parse_init_video_list(self, data):
+        item_list = try_get(data, [
+            lambda x: x['frameworkUpdates']['entityBatchUpdate']['mutations'],
+        ])
+        if not item_list:
+            raise ExtractorError('Could not extract album item list')
+        entries = []
+        info_dict = {}
+        for item in item_list:
+            if item.get('type') == 'ENTITY_MUTATION_TYPE_REPLACE':
+                payload = item.get('payload', {})
+                if 'musicTrack' in payload:
+                    entries.append(self._parse_video(payload['musicTrack']))
+                elif 'musicAlbumRelease' in payload:
+                    release = payload['musicAlbumRelease']
+                    info_dict.update({
+                        'title': release['title'],
+                        'thumbnails': try_get(release, lambda x: x['thumbnailDetails']['thumbnails']),
+                        'age_limit': 18 if try_get(release, lambda x: x['contentRating']['explicitType']) == 'MUSIC_ENTITY_EXPLICIT_TYPE_EXPLICIT' else 0,
+                        'album': release['title'],
+                        'album_artist': release.get('artistDisplayName'),
+                        'release_year': try_get(release, lambda x: x['releaseDate']['year'], int),
+                    })
+                elif 'musicAlbumReleaseDetail' in payload:
+                    release = payload['musicAlbumReleaseDetail']
+                    info_dict.update({
+                        'description': release.get('description'),
+                    })
+        return {
+            'entries': entries,
+            'continuation': None,   # everything is returned on the webpage
+            'info_dict': info_dict,
         }
 
 
