@@ -2264,7 +2264,7 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
         continuation_token = videos['continuation']
         if continuation_token and (not is_search or results):
             session_id = self._search_regex(r'ytcfg\.set\({.*?"DELEGATED_SESSION_ID":"(\d+)"',
-                                            webpage, 'session id', fatal=False)
+                                            webpage, 'session id', default=None)
             page_no = 2
             while continuation_token is not None and (len(entries) < results if results else True):
                 cont_res = self._download_continuation(continuation_token, list_id, page_no, session_id=session_id)
@@ -2355,7 +2355,7 @@ class YoutubeYti1ListInfoExtractor(YoutubeBaseListInfoExtractor):
 
 class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
     IE_NAME = 'youtube:channel'
-    _VALID_URL = r'https?://(?:\w+\.)?youtube\.com/(?!watch|playlist|v|e|embed|shared|browse)(?:(?P<type>user|channel|c)/)?(?P<id>[\w-]+)(?!/live)'
+    _VALID_URL = r'https?://(?:www\.|music\.)?youtube\.com/(?P<type>user|channel|c)/(?P<id>[\w-]+)(?!/live)'
     _LIST_NAME = 'channel'
 
     _TESTS = [{
@@ -2366,13 +2366,20 @@ class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
         },
         'playlist_mincount': 110,
     }, {
+        'url': 'https://music.youtube.com/channel/UCyGv29emV8sGWSCle5-atLA',
+        'info_dict': {
+            'id': 'UCyGv29emV8sGWSCle5-atLA',
+            'title': '100 gecs - Topic',
+        },
+        'playlist_mincount': 35,
+    }, {
         'url': 'https://www.youtube.com/channel/UCVdlcqbM4oh0xJIQAxiaV5Q',
         'only_matching': True,
     }, {
         'url': 'https://www.youtube.com/c/Redspl/featured',
         'only_matching': True,
     }, {
-        'url': 'https://www.youtube.com/Dem3000',
+        'url': 'https://www.youtube.com/user/Dem3000',
         'only_matching': True,
     }]
 
@@ -2404,7 +2411,7 @@ class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
 
 class YoutubePlaylistIE(YoutubeYti1ListInfoExtractor):
     IE_NAME = 'youtube:playlist'
-    _VALID_URL = r'(?:https?://(?:www\.)?youtube\.com/(?:playlist\?(?:[^&;]+[&;])*|watch\?(?:[^&;]+[&;])*playnext=1&(?:[^&;]+[&;])*)list=|ytplaylist:)?(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
+    _VALID_URL = r'(?:https?://(?:www\.|music\.)?youtube\.com/(?:playlist\?(?:[^&;]+[&;])*|watch\?(?:[^&;]+[&;])*playnext=1&(?:[^&;]+[&;])*)list=|ytplaylist:)?(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
     _LIST_NAME = 'playlist'
 
     _TESTS = [{
@@ -2426,6 +2433,9 @@ class YoutubePlaylistIE(YoutubeYti1ListInfoExtractor):
         'params': {
             'skip_download': True,
         }
+    }, {
+        'url': 'https://music.youtube.com/playlist?list=RDCLAK5uy_muUSLNHUW02KEaoEwQJmUjVPFMFSc1BEY',
+        'only_matching': True,
     }]
 
     def _handle_url(self, url):
