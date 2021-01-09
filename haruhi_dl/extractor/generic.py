@@ -120,6 +120,7 @@ from .zype import ZypeIE
 from .odnoklassniki import OdnoklassnikiIE
 from .kinja import KinjaEmbedIE
 from .onnetwork import OnNetworkLoaderIE
+from .embetty import EmbettyIE
 
 
 class GenericIE(InfoExtractor):
@@ -2166,6 +2167,23 @@ class GenericIE(InfoExtractor):
                 'upload_date': '20200929',
             },
         },
+        {
+            # Embetty video embeds (youtube, vimeo, facebook)
+            'url': 'https://heiseonline.github.io/embetty/video.html',
+            'info_dict': {
+                'id': 'video',
+                'title': 'embetty',
+            },
+            'playlist_count': 4,
+        }, {
+            # Embetty Twitter embeds
+            'url': 'https://heiseonline.github.io/embetty/tweet.html',
+            'info_dict': {
+                'id': 'tweet',
+                'title': 'embetty',
+            },
+            'playlist_count': 11,
+        },
         # {
         #     # TODO: find another test
         #     # http://schema.org/VideoObject
@@ -3068,6 +3086,10 @@ class GenericIE(InfoExtractor):
         if sharevideos_urls:
             return self.playlist_from_matches(
                 sharevideos_urls, video_id, video_title)
+
+        embetty_entries = EmbettyIE._extract_entries(webpage)
+        if embetty_entries:
+            return self.playlist_result(embetty_entries, video_id, video_title)
 
         # Look for HTML5 media
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')
