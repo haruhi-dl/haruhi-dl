@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from .common import InfoExtractor
 from .kaltura import KalturaIE
-from .youtube import YoutubeIE
+from .embetty import EmbettyIE
 from ..utils import (
     determine_ext,
     int_or_none,
@@ -15,7 +15,7 @@ from ..utils import (
 
 
 class HeiseIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?heise\.de/(?:[^/]+/)+[^/]+-(?P<id>[0-9]+)\.html'
+    _VALID_URL = r'https?://(?:www\.)?heise\.de/(?:[^/]+/)*[^/]+-(?P<id>[0-9]+)\.html'
     _TESTS = [{
         # kaltura embed
         'url': 'http://www.heise.de/video/artikel/Podcast-c-t-uplink-3-3-Owncloud-Tastaturen-Peilsender-Smartphone-2404147.html',
@@ -37,8 +37,8 @@ class HeiseIE(InfoExtractor):
         'info_dict': {
             'id': '6kmWbXleKW4',
             'ext': 'mp4',
-            'title': 'NEU IM SEPTEMBER | Netflix',
-            'description': 'md5:2131f3c7525e540d5fd841de938bd452',
+            'title': 'Neu im September 2017 | Netflix',
+            'description': 'md5:d6852d1f96bb80760608eed3b907437c',
             'upload_date': '20170830',
             'uploader': 'Netflix Deutschland, Österreich und Schweiz',
             'uploader_id': 'netflixdach',
@@ -72,6 +72,14 @@ class HeiseIE(InfoExtractor):
         'params': {
             'skip_download': True,
         },
+    }, {
+        'url': 'https://www.heise.de/Social-Media-Inhalte-datenschutzfreundlich-einbetten-mit-Embetty-4041045.html',
+        'info_dict': {
+            'id': '4041045',
+            'title': 'Social-Media-Inhalte datenschutzfreundlich einbetten mit Embetty',
+        },
+        'playlist_count': 1,
+        'expected_errors': ['Unsupported Twitter Card.'],
     }, {
         'url': 'http://www.heise.de/ct/artikel/c-t-uplink-3-3-Owncloud-Tastaturen-Peilsender-Smartphone-2403911.html',
         'only_matching': True,
@@ -124,10 +132,10 @@ class HeiseIE(InfoExtractor):
         if kaltura_id:
             return _make_kaltura_result('kaltura:2238431:%s' % kaltura_id)
 
-        yt_urls = YoutubeIE._extract_urls(webpage)
-        if yt_urls:
-            return self.playlist_from_matches(
-                yt_urls, video_id, title, ie=YoutubeIE.ie_key())
+        embetty_entries = EmbettyIE._extract_entries(webpage)
+        if embetty_entries:
+            return self.playlist_result(
+                embetty_entries, video_id, title)
 
         title = extract_title()
 
