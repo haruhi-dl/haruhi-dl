@@ -55,7 +55,9 @@ class TestAllURLsMatching(unittest.TestCase):
         assertChannel('https://www.youtube.com/channel/HCtnHdj3df7iM')
         assertChannel('https://www.youtube.com/channel/HCtnHdj3df7iM?feature=gb_ch_rec')
         assertChannel('https://www.youtube.com/channel/HCtnHdj3df7iM/videos')
-        assertChannel('http://www.youtube.com/NASAgovVideo/videos')
+        # problematic url, but it's matched anyway as it gets redirected to https://www.youtube.com/user/NASAgovVideo/videos
+        # assertChannel('http://www.youtube.com/NASAgovVideo/videos')
+        assertChannel('https://www.youtube.com/user/NASAgovVideo/videos')
 
     # def test_youtube_feeds(self):
     #    self.assertMatch('https://www.youtube.com/feed/watch_later', ['youtube:watchlater'])
