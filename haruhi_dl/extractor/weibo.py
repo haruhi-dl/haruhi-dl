@@ -20,14 +20,25 @@ from ..utils import (
 
 class WeiboIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www\.)?weibo\.com/[0-9]+/(?P<id>[a-zA-Z0-9]+)'
-    _TEST = {
+    _TESTS = [{
         'url': 'https://weibo.com/6275294458/Fp6RGfbff?type=comment',
         'info_dict': {
             'id': 'Fp6RGfbff',
             'ext': 'mp4',
             'title': 'You should have servants to massage you,... 来自Hosico_猫 - 微博',
         }
-    }
+    }, {
+        # DASH formats - https://github.com/ytdl-org/youtube-dl/issues/27320
+        'url': 'https://weibo.com/5720474518/JxfyRbDh6?type=repost',
+        'info_dict': {
+            'id': 'JxfyRbDh6',
+            'ext': 'mp4',
+            'title': '#张亚东访谈KDA#击穿次元壁！张亚东访谈K... 来自英雄联盟 - 微博',
+        },
+        'params': {
+            'format': 'bestvideo',
+        },
+    }]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
@@ -92,7 +103,33 @@ class WeiboIE(InfoExtractor):
                 'height': res,
             })
 
-        self._sort_formats(formats)
+        media_ids = self._search_regex(
+            # for single-media posts only
+            r' action-data=\\"protocol=(?:.*?,)?dash(?:,.*?)?&type=feedvideo&objectid=(\d+:[\da-f]+)&',
+            webpage, 'media ids', default=None)
+        if media_ids:
+            dash_data = self._download_json('https://weibo.com/aj/video/getdashinfo?media_ids=%s' % media_ids,
+                                            media_ids, 'Downloading DASH mp4 urls')
+            for media in dash_data['data']['list'][0]['details']:
+                if 'play_info' not in media:
+                    continue
+                pinf = media['play_info']
+                if not pinf['url']:
+                    continue
+                formats.append({
+                    'url': pinf['url'],
+                    'format_id': pinf.get('label'),
+                    'width': pinf.get('width') if 'video/' in pinf.get('mime') else None,
+                    'height': pinf.get('height') if 'video/' in pinf.get('mime') else None,
+                    ('vbr' if 'video/' in pinf.get('mime') else 'abr'): pinf.get('bitrate'),
+                    'fps': pinf.get('fps') if 'video/' in pinf.get('mime') else None,
+                    'vcodec': pinf.get('video_codecs') if 'video/' in pinf.get('mime') else 'none',
+                    'acodec': pinf.get('audio_codecs') if 'audio/' in pinf.get('mime') else 'none',
+                    'asr': pinf.get('audio_sample_rate') if 'audio/' in pinf.get('mime') else None,
+                    'filesize': pinf.get('size'),
+                })
+
+        self._sort_formats(formats, field_preference=('height', 'vbr', 'abr'))
 
         uploader = self._og_search_property(
             'nick-name', webpage, 'uploader', default=None)
