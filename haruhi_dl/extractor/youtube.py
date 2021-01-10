@@ -2259,6 +2259,12 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
         if self._handle_url:
             url = self._handle_url(url)
         data, webpage = self._download_first_data(url, list_id, query=query)
+        if '/channel/' in url and '- Topic - YouTube</title>' in webpage:
+            return {
+                '_type': 'url',
+                'url': 'youtube_topic_channel_workaround:%s' % list_id,
+                'ie_key': 'YoutubeTopicChannelWorkaround',
+            }
         videos = self._parse_init_video_list(data)
         entries = videos['entries']
         continuation_token = videos['continuation']
@@ -2366,12 +2372,13 @@ class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
         },
         'playlist_mincount': 110,
     }, {
+        # Topic channel - no /videos; requires a workaround
         'url': 'https://music.youtube.com/channel/UCyGv29emV8sGWSCle5-atLA',
         'info_dict': {
             'id': 'UCyGv29emV8sGWSCle5-atLA',
-            'title': '100 gecs - Topic',
+            'title': '100 Gecs',
         },
-        'playlist_mincount': 35,
+        'playlist_mincount': 10,
     }, {
         'url': 'https://www.youtube.com/channel/UCVdlcqbM4oh0xJIQAxiaV5Q',
         'only_matching': True,
@@ -2406,6 +2413,43 @@ class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
             'info_dict': {
                 'title': try_get(data, lambda x: x['header']['c4TabbedHeaderRenderer']['title'], expected_type=compat_str),
             },
+        }
+
+
+class YoutubeTopicChannelWorkaroundIE(YoutubeBaseListInfoExtractor):
+    IE_NAME = 'youtube:channel:topic'
+    IE_DESC = False
+    _VALID_URL = r'youtube_topic_channel_workaround:(?P<id>.+)'
+
+    def _real_extract(self, url):
+        channel_id = self._match_id(url)
+
+        webpage = self._download_webpage('https://www.youtube.com/channel/%s/playlists' % channel_id, channel_id)
+
+        initial_data = self._parse_json(
+            self._search_regex(
+                r'(?:window(?:\["|\.)|var )ytInitialData(?:"])?\s*=\s*({.+});',
+                webpage, 'initial data JSON'), 'initial data JSON')
+
+        # self.to_screen(json.dumps(initial_data))
+        entries = []
+        for shelf in initial_data['contents']['twoColumnBrowseResultsRenderer']['tabs'][1]['tabRenderer']['content']['sectionListRenderer']['contents'][1]['itemSectionRenderer']['contents']:
+            if shelf['shelfRenderer']['title']['runs'][0]['text'] == 'Albums & Singles':
+                items = shelf['shelfRenderer']['content']['horizontalListRenderer']['items']
+                for item in items:
+                    playlist = self._parse_video(item['gridPlaylistRenderer'])
+                    playlist.update({
+                        '_type': 'url',
+                        'url': 'https://www.youtube.com/playlist?list=%s' % (item['gridPlaylistRenderer']['playlistId']),
+                        'ie_key': 'YoutubePlaylist',
+                    })
+                    entries.append(playlist)
+
+        return {
+            '_type': 'playlist',
+            'entries': entries,
+            'id': channel_id,
+            'title': initial_data['metadata']['channelMetadataRenderer']['musicArtistName'],
         }
 
 

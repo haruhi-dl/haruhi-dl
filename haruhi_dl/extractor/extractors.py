@@ -1531,6 +1531,7 @@ from .youtube import (
     YoutubeSearchIE,
     YoutubeSubscriptionsIE,
     YoutubeWatchLaterIE,
+    YoutubeTopicChannelWorkaroundIE,
     YoutubeTruncatedIDIE,
     YoutubeTruncatedURLIE,
 )
