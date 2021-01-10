@@ -438,6 +438,7 @@ from .googlesearch import GoogleSearchIE
 from .goshgay import GoshgayIE
 from .gputechconf import GPUTechConfIE
 from .groupon import GrouponIE
+from .gtv import GtvIE
 from .guardian import (
     GuardianAudioIE,
     GuardianVideoIE,
