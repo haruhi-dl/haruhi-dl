@@ -74,7 +74,7 @@ class VimeoBaseInfoExtractor(InfoExtractor):
                     expected=True)
             raise ExtractorError('Unable to log in')
 
-    def _verify_video_password(self, url, video_id, webpage):
+    def _verify_video_password(self, url, video_id, webpage, referer=None):
         password = self._downloader.params.get('videopassword')
         if password is None:
             raise ExtractorError('This video is protected by a password, use the --video-password option', expected=True)
@@ -88,7 +88,7 @@ class VimeoBaseInfoExtractor(InfoExtractor):
             url = url.replace('http://', 'https://')
         password_request = sanitized_Request(url + '/password', data)
         password_request.add_header('Content-Type', 'application/x-www-form-urlencoded')
-        password_request.add_header('Referer', url)
+        password_request.add_header('Referer', referer or url)
         self._set_vimeo_cookie('vuid', vuid)
         return self._download_webpage(
             password_request, video_id,
@@ -1028,18 +1028,17 @@ class VimeoReviewIE(VimeoBaseInfoExtractor):
         'skip': 'video gone',
     }, {
         'note': 'Password protected',
-        'url': 'https://vimeo.com/user37284429/review/138823582/c4d865efde',
+        'url': 'https://vimeo.com/user109873352/review/428572575/dd0024554a',
         'info_dict': {
-            'id': '138823582',
+            'id': '428572575',
             'ext': 'mp4',
-            'title': 'EFFICIENT PICKUP MASTERCLASS MODULE 1',
-            'uploader': 'TMB',
-            'uploader_id': 'user37284429',
+            'title': '6/12 Barre with Megan',
+            'uploader': 'Ashley Cramer',
+            'uploader_id': 'user109873352',
         },
         'params': {
-            'videopassword': 'holygrail',
+            'videopassword': 'BarreLove1',
         },
-        'skip': 'video gone',
     }]
 
     def _real_initialize(self):
@@ -1047,16 +1046,23 @@ class VimeoReviewIE(VimeoBaseInfoExtractor):
 
     def _real_extract(self, url):
         page_url, video_id = re.match(self._VALID_URL, url).groups()
-        clip_data = self._download_json(
-            page_url.replace('/review/', '/review/data/'),
-            video_id)['clipData']
+        json_url = page_url.replace('/review/', '/review/data/')
+        clip_data = self._download_json(json_url, video_id)
+        if clip_data.get('isLocked'):
+            video_page_url = 'https://vimeo.com/%s' % video_id
+            webpage = self._download_webpage(video_page_url, video_id)
+            self._verify_video_password(video_page_url, video_id, webpage, referer=page_url)
+            clip_data = self._download_json(json_url, video_id)
+        clip_data = clip_data['clipData']
         config_url = clip_data['configUrl']
         config = self._download_json(config_url, video_id)
         info_dict = self._parse_config(config, video_id)
-        source_format = self._extract_original_format(
-            page_url + '/action', video_id)
-        if source_format:
-            info_dict['formats'].append(source_format)
+        if clip_data.get('allowDownloads') != 0:
+            # the request would return HTTP 403 Forbidden anyway, so why bother?
+            source_format = self._extract_original_format(
+                page_url + '/action', video_id)
+            if source_format:
+                info_dict['formats'].append(source_format)
         self._vimeo_sort_formats(info_dict['formats'])
         info_dict['description'] = clean_html(clip_data.get('description'))
         return info_dict
