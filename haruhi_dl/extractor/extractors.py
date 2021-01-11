@@ -586,6 +586,7 @@ from .limelight import (
 )
 from .line import LineTVIE
 from .linkedin import (
+    LinkedInPostIE,
     LinkedInLearningIE,
     LinkedInLearningCourseIE,
 )

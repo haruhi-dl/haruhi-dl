@@ -8,9 +8,68 @@ from ..utils import (
     ExtractorError,
     float_or_none,
     int_or_none,
+    mimetype2ext,
+    unescapeHTML,
     urlencode_postdata,
     urljoin,
 )
+
+
+class LinkedInPostIE(InfoExtractor):
+    IE_NAME = 'linkedin:post'
+    _VALID_URL = r'''(?x)
+    https?://(?:www\.)?linkedin\.com/
+        (?:feed/update/urn:li:activity:
+        |posts/[^/]+?-)
+    (?P<id>\d{19})
+    '''
+    _TESTS = [{
+        'url': 'https://www.linkedin.com/posts/mrpreventive_amazing-drone-footage-activity-6738422973809602561-icet/',
+        'info_dict': {
+            'id': '6738422973809602561',
+            'ext': 'mp4',
+            'title': 'Amazing drone footage',
+            'description': 'Amazing drone footage',
+        },
+    }, {
+        'url': 'https://www.linkedin.com/feed/update/urn:li:activity:6741704259739426816/',
+        'info_dict': {
+            'id': '6741704259739426816',
+            'ext': 'mp4',
+            'title': 'O czym jest nasz podcast?',
+            'description': 'Witamy Was serdecznie na profilu "Internet. Czas działać!"  W tym krótkim zwiastunie mówimy, o czym jest nasz podcast i jakie temat w nim poruszamy....',
+        },
+    }]
+
+    def _real_extract(self, url):
+        video_id = self._match_id(url)
+        webpage = self._download_webpage(url, video_id)
+        sources = self._parse_json(
+            self._html_search_regex(r'<video\b[^>]+\bdata-sources="(\[{.+?\}])"',
+                                    webpage, 'video sources'), video_id)
+        formats = []
+        for source in sources:
+            formats.append({
+                'url': source['src'],
+                'ext': mimetype2ext(source['type']),
+                'tbr': source.get('data-bitrate'),
+            })
+        self._sort_formats(formats)
+
+        title = self._og_search_title(webpage)
+        title = self._search_regex(r'^.+? on LinkedIn: (.+)$', title, 'actual video title', default=title)
+        title = self._search_regex(r'^(.+?) \| \d+ comments?$', title, 'actual video title', default=title)
+
+        # double-escaped like &amp;quot;
+        description = unescapeHTML(self._og_search_description(webpage))
+        description = self._search_regex(r'^(.+?)\.\.\. \d+ comments? on LinkedIn$', description, 'actual post title', default=description)
+
+        return {
+            'id': video_id,
+            'title': title,
+            'description': description,
+            'formats': formats,
+        }
 
 
 class LinkedInLearningBaseIE(InfoExtractor):
