@@ -1,3 +1,26 @@
+version 2021.01.16
+Extractor
+* [youtube] new crypto
+* [tvp] Laura probably fixed something, I can't keep up
+* [linkedin] post extractor
+* [weibo] dash formats support
+* [vimeo:review] fix videos with video password
+* [gtv.org] extractor that **may** _sometimes_ work
+* [youtube] oh cool, playlist and channels got fixed
+* [youtube] youtube-music extractor
+* [lbry] new extractor
+* [embetty] new extractor, detection in genericie
+* [heise] extracting embetty embeds
+* [theguardian] new extractor(s)
+* [tvp:series] API refactor (I KNEW IT)
+* [tubafm] basic support
+* [rmf] added extractors
+* [cda] refactor to mobile JSON API
+
+Core:
+* _json_ld now handles multiple thumbails
+* normalization of searching for embeds in genericie
+
 version 2021.01.03
 Extractor
 * [youtube] new crypto
