@@ -33,6 +33,12 @@ from .aenetworks import (
     HistoryTopicIE,
 )
 from .afreecatv import AfreecaTVIE
+from .agora import (
+    TokFMAuditionIE,
+    TokFMPodcastIE,
+    WyborczaPodcastIE,
+    WyborczaVideoIE,
+)
 from .airmozilla import AirMozillaIE
 from .aljazeera import AlJazeeraIE
 from .alphaporno import AlphaPornoIE
@@ -1199,10 +1205,6 @@ from .tnaflix import (
     MovieFapIE,
 )
 from .toggle import ToggleIE
-from .tokfm import (
-    TokFMAuditionIE,
-    TokFMPodcastIE,
-)
 from .tonline import TOnlineIE
 from .toongoggles import ToonGogglesIE
 from .toutv import TouTvIE
