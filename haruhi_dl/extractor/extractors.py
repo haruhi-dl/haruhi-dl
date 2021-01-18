@@ -820,6 +820,7 @@ from .nuvid import NuvidIE
 from .nzz import NZZIE
 from .odatv import OdaTVIE
 from .odnoklassniki import OdnoklassnikiIE
+from .okopress import OKOPressIE
 from .oktoberfesttv import OktoberfestTVIE
 from .ondemandkorea import OnDemandKoreaIE
 from .onet import (
