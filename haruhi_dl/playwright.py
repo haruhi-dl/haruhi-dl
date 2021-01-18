@@ -22,7 +22,8 @@ class PlaywrightHelper():
             cls._real_import_pw()
         except ImportError as err:
             if fatal is True:
-                raise ExtractorError('Playwright could not be imported: %s' % err.msg, expected=True)
+                raise ExtractorError('Playwright could not be imported: %s' % err.msg if 'msg' in err else '[no err.msg]',
+                                     expected=True)
 
     @classmethod
     def _version(cls):
