@@ -1264,8 +1264,10 @@ class InfoExtractor(object):
                     continue
                 info[count_key] = interaction_count
 
-        def extract_video_object(e):
-            assert e['@type'] == 'VideoObject'
+        media_object_types = ('MediaObject', 'VideoObject', 'AudioObject', 'MusicVideoObject')
+
+        def extract_media_object(e):
+            assert e['@type'] in media_object_types
             thumbnails = e.get('thumbnailUrl') or e.get('thumbnailURL')
             if isinstance(thumbnails, compat_str):
                 thumbnails = [thumbnails]
@@ -1293,8 +1295,8 @@ class InfoExtractor(object):
                 item_type = e.get('@type')
                 if expected_type is not None and expected_type != item_type:
                     continue
-                if item_type in ('TVEpisode', 'Episode'):
-                    episode_name = unescapeHTML(e.get('name'))
+                if item_type in ('TVEpisode', 'Episode', 'PodcastEpisode'):
+                    episode_name = unescapeHTML(e.get('name') or e.get('headline'))
                     info.update({
                         'episode': episode_name,
                         'episode_number': int_or_none(e.get('episodeNumber')),
@@ -1309,7 +1311,7 @@ class InfoExtractor(object):
                             'season_number': int_or_none(part_of_season.get('seasonNumber')),
                         })
                     part_of_series = e.get('partOfSeries') or e.get('partOfTVSeries')
-                    if isinstance(part_of_series, dict) and part_of_series.get('@type') in ('TVSeries', 'Series', 'CreativeWorkSeries'):
+                    if isinstance(part_of_series, dict) and part_of_series.get('@type') in ('TVSeries', 'Series', 'CreativeWorkSeries', 'PodcastSeries'):
                         info['series'] = unescapeHTML(part_of_series.get('name'))
                 elif item_type == 'Movie':
                     info.update({
@@ -1324,15 +1326,16 @@ class InfoExtractor(object):
                         'title': unescapeHTML(e.get('headline')),
                         'description': unescapeHTML(e.get('articleBody')),
                     })
-                elif item_type == 'VideoObject':
-                    extract_video_object(e)
+                elif item_type in media_object_types:
+                    extract_media_object(e)
                     if expected_type is None:
                         continue
                     else:
                         break
-                video = e.get('video')
-                if isinstance(video, dict) and video.get('@type') == 'VideoObject':
-                    extract_video_object(video)
+                for media_key in ('video', 'associatedMedia'):
+                    media = e.get(media_key)
+                    if isinstance(media, dict) and media.get('@type') in media_object_types:
+                        extract_media_object(media)
                 if expected_type is None:
                     continue
                 else:
