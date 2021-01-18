@@ -12,6 +12,9 @@ case "$HDL_TEST_SET" in
     ;;
     download)
         test_set="-I test_(?!$DOWNLOAD_TESTS).+\.py"
+        if [[ "$HDL_TEST_PLAYWRIGHT_DOWNLOAD" == "1" ]]; then
+            test_set="-I test_(?!download).+\.py"
+        fi
         multiprocess_args="--processes=4 --process-timeout=540"
     ;;
     *)

@@ -37,7 +37,10 @@ from haruhi_dl.utils import (
     UnavailableVideoError,
 )
 from haruhi_dl.extractor import get_info_extractor
+from haruhi_dl.playwright import PlaywrightHelper
 
+
+PLAYWRIGHT_INSTALLED = PlaywrightHelper._version() is not None
 RETRIES = 3
 
 
@@ -102,6 +105,14 @@ def generator(test_case, tname):
             print('Skipping %s: %s' % (test_case['name'], reason))
         if not ie.working():
             print_skipping('IE marked as not _WORKING')
+            return
+
+        if ie._REQUIRES_PLAYWRIGHT:
+            if not PLAYWRIGHT_INSTALLED:
+                print_skipping('Playwright is not installed')
+                return
+        elif os.environ.get('HDL_TEST_PLAYWRIGHT_DOWNLOAD') == '1':
+            print_skipping('Does not use Playwright')
             return
 
         for tc in test_cases:

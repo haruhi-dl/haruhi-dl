@@ -395,6 +395,7 @@ class InfoExtractor(object):
     _GEO_IP_BLOCKS = None
     _WORKING = True
     _SELFHOSTED = False
+    _REQUIRES_PLAYWRIGHT = False
 
     def __init__(self, downloader=None):
         """Constructor. Receives an optional downloader."""
