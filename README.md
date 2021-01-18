@@ -8,7 +8,8 @@
 
 This is a fork of [youtube-dl](https://yt-dl.org/), focused on bringing a fast, steady stream of updates. We'll do our best to merge patches to any site, not only youtube.
 
-Our main repository is on GitLab: https://git.sakamoto.pl/laudompat/haruhi-dl
+Our main repository is on our GitLab: https://git.sakamoto.pl/laudompat/haruhi-dl
+A Microsoft GitHub mirror exists as well: https://github.com/haruhi-dl/haruhi-dl
 
 ## Installing
 
@@ -20,7 +21,7 @@ $ python3 -m pip install --upgrade haruhi-dl
 ```
 Install from master (unstable) on Python 3.x:
 ```sh
-$ python3 -m pip install --upgrade git+https://git.sakamoto.pl/laudom/haruhi-dl.git
+$ python3 -m pip install --upgrade git+https://git.sakamoto.pl/laudompat/haruhi-dl.git
 ```
 
 Install release from PyPI on Python 2.x:
@@ -29,7 +30,7 @@ $ python2 -m pip install --upgrade haruhi-dl
 ```
 Install from master (unstable) on Python 2.x:
 ```sh
-$ python2 -m pip install --upgrade git+https://git.sakamoto.pl/laudom/haruhi-dl.git
+$ python2 -m pip install --upgrade git+https://git.sakamoto.pl/laudompat/haruhi-dl.git
 ```
 
 ## Usage
@@ -45,4 +46,4 @@ $ haruhi-dl --help
 ```
 ## Contributing
 
-If you want to contribute, send us a diff to <contribute@haruhi.download>, or submit a Pull Request on [our mirror at Microsoft GitHub](https://haruhi.download/).
+If you want to contribute, send us a diff to <contribute@haruhi.download>, or submit a Pull Request on [our mirror at Microsoft GitHub](https://github.com/haruhi-dl/haruhi-dl).
