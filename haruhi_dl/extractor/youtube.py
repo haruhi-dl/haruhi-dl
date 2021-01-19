@@ -2261,6 +2261,13 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
                 'url': 'youtube_topic_channel_workaround:%s' % list_id,
                 'ie_key': 'YoutubeTopicChannelWorkaround',
             }
+        alert = try_get(data, lambda x: x['alerts'][0]['alertRenderer'])
+        if alert:
+            alert_msg = ''.join((run['text'] for run in alert['text']['runs']))
+            if alert.get('type') == 'ERROR':
+                raise ExtractorError('YouTube said: %s' % alert_msg, expected=True)
+            else:
+                self.report_warning(alert_msg, video_id=list_id)
         videos = self._parse_init_video_list(data)
         entries = videos['entries']
         continuation_token = videos['continuation']
@@ -2451,7 +2458,7 @@ class YoutubeTopicChannelWorkaroundIE(YoutubeBaseListInfoExtractor):
 
 class YoutubePlaylistIE(YoutubeYti1ListInfoExtractor):
     IE_NAME = 'youtube:playlist'
-    _VALID_URL = r'(?:https?://(?:www\.|music\.)?youtube\.com/(?:playlist\?(?:[^&;]+[&;])*|watch\?(?:[^&;]+[&;])*playnext=1&(?:[^&;]+[&;])*)list=|ytplaylist:)?(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
+    _VALID_URL = r'(?:https?://(?:www\.|music\.)?youtube\.com/(?:playlist\?(?:[^&;]+[&;])*|watch\?(?:[^&;]+[&;])*)list=|ytplaylist:)?(?P<id>%(playlist_id)s)' % {'playlist_id': YoutubeBaseInfoExtractor._PLAYLIST_ID_RE}
     _LIST_NAME = 'playlist'
 
     _TESTS = [{
@@ -2467,7 +2474,7 @@ class YoutubePlaylistIE(YoutubeYti1ListInfoExtractor):
         'url': 'https://www.youtube.com/playlist?list=PLv3TTBr1W_9tppikBxAE_G6qjWdBljBHJ',
         'info_dict': {
             'id': 'PLv3TTBr1W_9tppikBxAE_G6qjWdBljBHJ',
-            'title': 'Instant Regret Clicking this Playlist (Memes)',
+            'title': 'Instant Regret Clicking this Playlist',
         },
         'playlist_mincount': 3000,
         'params': {
