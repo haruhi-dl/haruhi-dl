@@ -14,7 +14,10 @@ import copy
 from test.helper import FakeHDL, assertRegexpMatches
 from haruhi_dl import HaruhiDL
 from haruhi_dl.compat import compat_str, compat_urllib_error
-from haruhi_dl.extractor import YoutubeIE
+
+# extractors must be imported directly from their files,
+# __init__.py points to lazy_extractors, which have no additional attributes/methods
+from haruhi_dl.extractor.youtube import YoutubeIE
 from haruhi_dl.extractor.common import InfoExtractor
 from haruhi_dl.postprocessor.common import PostProcessor
 from haruhi_dl.utils import ExtractorError, match_filter_func

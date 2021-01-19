@@ -12,11 +12,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from test.helper import gettestcases
 
-from haruhi_dl.extractor import (
-    FacebookIE,
-    gen_extractors,
-    YoutubeIE,
-)
+from haruhi_dl.extractor import gen_extractors
+
+# extractors must be imported directly from their files,
+# __init__.py points to lazy_extractors, which have no additional attributes/methods
+from haruhi_dl.extractor.youtube import YoutubeIE
+from haruhi_dl.extractor.facebook import FacebookIE
 
 
 class TestAllURLsMatching(unittest.TestCase):
