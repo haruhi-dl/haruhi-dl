@@ -4140,7 +4140,7 @@ def is_outdated_version(version, limit, assume_new=True):
     if not version:
         return not assume_new
     try:
-        return version_tuple(version) < version_tuple(limit)
+        return version_tuple(version) <= version_tuple(limit)
     except ValueError:
         return not assume_new
 
