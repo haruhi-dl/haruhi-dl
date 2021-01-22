@@ -419,7 +419,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             mobile_webpage = self._download_webpage(url, video_id, 'Downloading mobile webpage')
             webpage_url = self._search_regex(r'<link rel="canonical" href="([^"]+)" />', mobile_webpage, 'webpage_url')
         else:
-            webpage_url = 'http://www.' + mobj.group('url')
+            webpage_url = 'https://www.' + mobj.group('url')
 
         webpage = self._download_webpage(
             self._add_skip_wall(webpage_url), video_id,
