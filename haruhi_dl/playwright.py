@@ -20,8 +20,8 @@ class PlaywrightHelper():
     @classmethod
     def _check_version(cls):
         if 'a' in cls._required_pw_version:
-            return is_outdated_version(cls._pw_version.split('a')[0], cls._required_pw_version.split('a')[0])
-        return is_outdated_version(cls._pw_version, cls._required_pw_version)
+            return not is_outdated_version(cls._pw_version.split('a')[0], cls._required_pw_version.split('a')[0])
+        return not is_outdated_version(cls._pw_version, cls._required_pw_version)
 
     @classmethod
     def _real_import_pw(cls):
