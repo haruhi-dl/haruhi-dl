@@ -96,7 +96,6 @@ from .utils import (
 )
 from .cache import Cache
 from .extractor import get_info_extractor, gen_extractor_classes, _LAZY_LOADER
-from .extractor.openload import PhantomJSwrapper
 from .downloader import get_suitable_downloader
 from .downloader.rtmp import rtmpdump_version
 from .playwright import PlaywrightHelper
@@ -2287,7 +2286,6 @@ class HaruhiDL(object):
 
         exe_versions = FFmpegPostProcessor.get_versions(self)
         exe_versions['rtmpdump'] = rtmpdump_version()
-        exe_versions['phantomjs'] = PhantomJSwrapper._version()
         exe_versions['playwright'] = PlaywrightHelper._version()
         exe_str = ', '.join(
             '%s %s' % (exe, v)
