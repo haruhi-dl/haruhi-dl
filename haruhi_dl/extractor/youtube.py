@@ -327,6 +327,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                          ))
                          |(?:
                             youtu\.be|                                        # just youtu.be/xxxx
+                            youtube\.com/shorts|                              # or youtube.com/shorts/xxx
                             vid\.plus|                                        # or vid.plus/xxxx
                             zwearz\.com/watch|                                # or zwearz.com/watch/xxxx
                          )/
@@ -903,6 +904,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'params': {
                 'skip_download': True,
             },
+        },
+        {
+            'url': 'https://youtube.com/shorts/7awd-y_DTQY',
+            'only_matching': True,
         },
     ]
 
