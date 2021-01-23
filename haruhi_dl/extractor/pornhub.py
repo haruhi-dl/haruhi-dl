@@ -12,7 +12,7 @@ from ..compat import (
     compat_str,
     compat_urllib_request,
 )
-from .openload import PhantomJSwrapper
+from ..playwright import PlaywrightHelper
 from ..utils import (
     determine_ext,
     ExtractorError,
@@ -27,6 +27,8 @@ from ..utils import (
 
 
 class PornHubBaseIE(InfoExtractor):
+    _REQUIRES_PLAYWRIGHT = True
+
     def _download_webpage_handle(self, *args, **kwargs):
         def dl(*args, **kwargs):
             return super(PornHubBaseIE, self)._download_webpage_handle(*args, **kwargs)
@@ -41,8 +43,10 @@ class PornHubBaseIE(InfoExtractor):
             url = (url_or_request.get_full_url()
                    if isinstance(url_or_request, compat_urllib_request.Request)
                    else url_or_request)
-            phantom = PhantomJSwrapper(self, required_version='2.0')
-            phantom.get(url, html=webpage)
+            display_id = args[1]
+            pwh = PlaywrightHelper(self)
+            pwh.open_page(url, display_id, html=webpage)
+            pwh.browser_stop()
             webpage, urlh = dl(*args, **kwargs)
 
         return webpage, urlh
@@ -53,14 +57,13 @@ class PornHubIE(PornHubBaseIE):
     _VALID_URL = r'''(?x)
                     https?://
                         (?:
-                            (?:[^/]+\.)?(?P<host>pornhub(?:premium)?\.(?:com|net))/(?:(?:view_video\.php|video/show)\?viewkey=|embed/)|
+                            (?:[^/]+\.)?(?P<host>pornhub(?:premium)?\.(?:com|net|org))/(?:(?:view_video\.php|video/show)\?viewkey=|embed/)|
                             (?:www\.)?thumbzilla\.com/video/
                         )
                         (?P<id>[\da-z]+)
                     '''
     _TESTS = [{
         'url': 'http://www.pornhub.com/view_video.php?viewkey=648719015',
-        'md5': 'a6391306d050e4547f62b3f485dd9ba9',
         'info_dict': {
             'id': '648719015',
             'ext': 'mp4',
@@ -79,14 +82,14 @@ class PornHubIE(PornHubBaseIE):
         },
     }, {
         # non-ASCII title
-        'url': 'http://www.pornhub.com/view_video.php?viewkey=1331683002',
+        'url': 'https://www.pornhub.com/view_video.php?viewkey=ph5fc81436ca0ec',
         'info_dict': {
-            'id': '1331683002',
+            'id': 'ph5fc81436ca0ec',
             'ext': 'mp4',
-            'title': '重庆婷婷女王足交',
-            'upload_date': '20150213',
-            'timestamp': 1423804862,
-            'duration': 1753,
+            'title': '淨化魔物的少女-3',
+            'timestamp': 1606948060,
+            'upload_date': '20201202',
+            'uploader': 'jojobyby999',
             'view_count': int,
             'like_count': int,
             'dislike_count': int,
@@ -100,13 +103,14 @@ class PornHubIE(PornHubBaseIE):
         },
     }, {
         # subtitles
-        'url': 'https://www.pornhub.com/view_video.php?viewkey=ph5af5fef7c2aa7',
+        'url': 'https://www.pornhub.com/view_video.php?viewkey=ph5a0daf3c370f6',
         'info_dict': {
-            'id': 'ph5af5fef7c2aa7',
+            'id': 'ph5a0daf3c370f6',
             'ext': 'mp4',
-            'title': 'BFFS - Cute Teen Girls Share Cock On the Floor',
-            'uploader': 'BFFs',
-            'duration': 622,
+            'title': 'VIXEN Hot Student Fucks Teacher',
+            'upload_date': '20171116',
+            'timestamp': 1510946038,
+            'uploader': 'Vixen',
             'view_count': int,
             'like_count': int,
             'dislike_count': int,
@@ -123,7 +127,6 @@ class PornHubIE(PornHubBaseIE):
         'params': {
             'skip_download': True,
         },
-        'skip': 'This video has been disabled',
     }, {
         'url': 'http://www.pornhub.com/view_video.php?viewkey=ph557bbb6676d2d',
         'only_matching': True,
@@ -151,6 +154,9 @@ class PornHubIE(PornHubBaseIE):
         'only_matching': True,
     }, {
         'url': 'https://www.pornhub.net/view_video.php?viewkey=203640933',
+        'only_matching': True,
+    }, {
+        'url': 'https://www.pornhub.org/view_video.php?viewkey=ph5a0daf3c370f6',
         'only_matching': True,
     }, {
         'url': 'https://www.pornhubpremium.com/view_video.php?viewkey=ph5e4acdae54a82',
@@ -344,11 +350,11 @@ class PornHubIE(PornHubBaseIE):
             webpage, 'uploader', default=None)
 
         view_count = self._extract_count(
-            r'<span class="count">([\d,\.]+)</span> [Vv]iews', webpage, 'view')
+            r'<span class="count"(?: [^>]+)?>([\d,\.]+)</span> [Vv]iews', webpage, 'view')
         like_count = self._extract_count(
-            r'<span class="votesUp">([\d,\.]+)</span>', webpage, 'like')
+            r'<span class="votesUp"(?: [^>]+)?\s+data-rating="(\d+)"', webpage, 'like')
         dislike_count = self._extract_count(
-            r'<span class="votesDown">([\d,\.]+)</span>', webpage, 'dislike')
+            r'<span class="votesDown"(?: [^>]+)?\s+data-rating="(\d+)"', webpage, 'dislike')
         comment_count = self._extract_count(
             r'All Comments\s*<span>\(([\d,.]+)\)', webpage, 'comment')
 
@@ -422,7 +428,7 @@ class PornHubPlaylistBaseIE(PornHubBaseIE):
 
 
 class PornHubUserIE(PornHubPlaylistBaseIE):
-    _VALID_URL = r'(?P<url>https?://(?:[^/]+\.)?(?P<host>pornhub(?:premium)?\.(?:com|net))/(?:(?:user|channel)s|model|pornstar)/(?P<id>[^/?#&]+))(?:[?#&]|/(?!videos)|$)'
+    _VALID_URL = r'(?P<url>https?://(?:[^/]+\.)?(?P<host>pornhub(?:premium)?\.(?:com|net|org))/(?:(?:user|channel)s|model|pornstar)/(?P<id>[^/?#&]+))(?:[?#&]|/(?!videos)|$)'
     _TESTS = [{
         'url': 'https://www.pornhub.com/model/zoe_ph',
         'playlist_mincount': 118,
@@ -605,7 +611,7 @@ class PornHubPagedVideoListIE(PornHubPagedPlaylistBaseIE):
 
 
 class PornHubUserVideosUploadIE(PornHubPagedPlaylistBaseIE):
-    _VALID_URL = r'(?P<url>https?://(?:[^/]+\.)?(?P<host>pornhub(?:premium)?\.(?:com|net))/(?:(?:user|channel)s|model|pornstar)/(?P<id>[^/]+)/videos/upload)'
+    _VALID_URL = r'(?P<url>https?://(?:[^/]+\.)?(?P<host>pornhub(?:premium)?\.(?:com|net|org))/(?:(?:user|channel)s|model|pornstar)/(?P<id>[^/]+)/videos/upload)'
     _TESTS = [{
         'url': 'https://www.pornhub.com/pornstar/jenny-blighe/videos/upload',
         'info_dict': {
