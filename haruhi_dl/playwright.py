@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+from .compat import compat_cookiejar_Cookie
 from .utils import (
     ExtractorError,
     is_outdated_version,
@@ -52,27 +53,61 @@ class PlaywrightHelper():
     def pw(self):
         if not self._pw:
             self._import_pw(fatal=True)
-        if not self.pw_instance:
-            self.pw_instance = self._pw().__enter__()
-        return self.pw_instance
+        if 'pw_instance' not in self._extractor._downloader.__dict__:
+            self._extractor._downloader.pw_instance = self._pw().__enter__()
+        return self._extractor._downloader.pw_instance
 
     def pw_stop(self):
         self.pw_instance.stop()
 
     def browser_stop(self):
+        self._set_cookies_from_browser(self.browser_context.cookies())
         self.browser.close()
 
-    def open_page(self, url, display_id, browser_used='firefox', note='Opening page in %(browser)s'):
+    def _get_cookies_for_browser(self):
+        browser_cookies = []
+        for cookie in self._extractor._downloader.cookiejar:
+            c = {
+                'name': cookie.name,
+                'value': cookie.value,
+                'port': cookie.port,
+                'domain': cookie.domain,
+                'path': cookie.path,
+                # 'expires': cookie.expires,
+                'secure': cookie.secure,
+            }
+            # https://github.com/microsoft/playwright-python/issues/459
+            if cookie.expires:
+                c['expires'] = cookie.expires
+            browser_cookies.append(c)
+        return browser_cookies
+
+    def _set_cookies_from_browser(self, cookies):
+        for cookie in cookies:
+            self._extractor._downloader.cookiejar.set_cookie(
+                compat_cookiejar_Cookie(0, cookie['name'], cookie['value'], cookie.get('port'), False,
+                                        cookie['domain'], False, cookie['domain'].startswith('.'),
+                                        cookie['path'], cookie['path'] != '/',
+                                        cookie['secure'], cookie['expires'],
+                                        False, None, None, None))
+
+    def open_page(self, url, display_id, browser_used='firefox', note='Opening page in %(browser)s', html=None):
         pw = self.pw()
         self.pw_instance = pw
         browser = {
             'firefox': pw.firefox,
             'chromium': pw.chromium,
             'webkit': pw.webkit,
-        }[browser_used].launch()
+        }[browser_used].launch(
+            headless=self._extractor._downloader.params.get('headless_playwright', True))
         self.browser = browser
+        browser_context = browser.new_context()
+        self.browser_context = browser_context
+        browser_context.add_cookies(self._get_cookies_for_browser())
         if not self._extractor._downloader.params.get('quiet'):
             self._extractor.to_screen('%s: %s' % (display_id, note % {'browser': browser_used}))
-        page = browser.new_page()
+        page = browser_context.new_page()
+        if html:
+            page.set_content(html)
         page.goto(url)
         return page

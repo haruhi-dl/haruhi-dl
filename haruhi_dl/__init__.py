@@ -414,6 +414,7 @@ def _real_main(argv=None):
         'fixup': opts.fixup,
         'source_address': opts.source_address,
         'call_home': opts.call_home,
+        'headless_playwright': opts.headless_playwright,
         'sleep_interval': opts.sleep_interval,
         'max_sleep_interval': opts.max_sleep_interval,
         'external_downloader': opts.external_downloader,
