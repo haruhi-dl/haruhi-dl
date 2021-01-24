@@ -1,3 +1,20 @@
+version 2021.01.24
+Extractor
+* [youtube] (you've guessed it) new crypto
+* [lurker] new extractor
+* [wyborcza] new extractor(s)
+* [okopress] new extractor
+* [youtube] minor playlist improvements
+* [tvn24] fixed extractor (now uses playwright)
+* [tokfm] podcast extractor fixes
+* [youtube] match `/shorts/` URLs
+* [pornhub] refactor scraping protection workaround to playwright
+
+Core:
+* _json_ld now extracts podcast objects
+* playwright wrapper (replaces PhantomJS)
+* ...also, we removed PhantomJS
+
 version 2021.01.16
 Extractor
 * [youtube] new crypto

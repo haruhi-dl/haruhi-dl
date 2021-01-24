@@ -1075,9 +1075,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         a = list(s)
         a = a[2:]
         a.reverse()
-        a = a[2:]
-        a = self.mess(a, 1)
-        a = self.mess(a, 8)
+        a = self.mess(a, 29)
         return "".join(a)
 
     def _get_subtitles(self, video_id, webpage):
