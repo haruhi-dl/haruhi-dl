@@ -327,7 +327,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                          ))
                          |(?:
                             youtu\.be|                                        # just youtu.be/xxxx
-                            youtube\.com/shorts|                              # or youtube.com/shorts/xxx
+                            (?:www\.)?youtube\.com/(?:
+                                shorts|                                       # or youtube.com/shorts/xxx
+                                video                                         # or youtube.com/video/xxx
+                            )|
                             vid\.plus|                                        # or vid.plus/xxxx
                             zwearz\.com/watch|                                # or zwearz.com/watch/xxxx
                          )/
