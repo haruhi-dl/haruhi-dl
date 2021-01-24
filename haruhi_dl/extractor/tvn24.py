@@ -154,7 +154,11 @@ class TVN24IE(InfoExtractor):
     def _handle_nextjs_frontend(self, url, display_id):
         # make sure the GDPR consent appears, as we have to accept it so the video can play
         for cookie_name in ('OptanonAlertBoxClosed', 'OptanonConsent', 'eupubconsent-v2'):
-            self._downloader.cookiejar.clear('.tvn24.pl', '/', cookie_name)
+            try:
+                self._downloader.cookiejar.clear('.tvn24.pl', '/', cookie_name)
+            except KeyError:
+                # ignore, if cookies don't exist
+                pass
 
         pwh = PlaywrightHelper(self)
         page = pwh.open_page(url, display_id)
