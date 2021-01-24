@@ -135,13 +135,15 @@ class PeerTubeSHIE(SelfhostedInfoExtractor):
             formats.append(f)
         self._sort_formats(formats)
 
-        full_description = self._call_api(
-            host, video_id, 'description', note='Downloading description JSON',
-            fatal=False)
-
         description = None
-        if isinstance(full_description, dict):
-            description = str_or_none(full_description.get('description'))
+        if webpage:
+            description = self._og_search_description(webpage)
+        if not description:
+            full_description = self._call_api(
+                host, video_id, 'description', note='Downloading description JSON',
+                fatal=False)
+            if isinstance(full_description, dict):
+                description = str_or_none(full_description.get('description'))
         if not description:
             description = video.get('description')
 
