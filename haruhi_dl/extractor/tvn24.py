@@ -15,7 +15,7 @@ from ..playwright import PlaywrightHelper
 
 
 class TVN24IE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?(?P<domain>(?:(?:[^/]+)\.)?tvn24(?:bis)?\.pl)/(?:[^/]+/)*[^/?#\s]+[,-](?P<id>\d+)(?:\.html)?'
+    _VALID_URL = r'https?://(?:www\.)?(?P<domain>(?:(?:[^/]+)\.)?tvn24\.pl)/(?:[^/]+/)*[^/?#\s]+[,-](?P<id>\d+)(?:\.html)?'
     _TESTS = [{
         'url': 'https://tvn24.pl/polska/edyta-gorniak-napisala-o-statystach-w-szpitalach-udajacych-chorych-na-covid-19-jerzy-polaczek-i-marek-posobkiewicz-odpowiadaja-zapraszamy-4747899',
         'info_dict': {
@@ -51,9 +51,6 @@ class TVN24IE(InfoExtractor):
         'url': 'http://sport.tvn24.pl/pilka-nozna,105/ligue-1-kamil-glik-rozcial-glowe-monaco-tylko-remisuje-z-bastia,716522.html',
         'only_matching': True,
     }, {
-        'url': 'http://tvn24bis.pl/poranek,146,m/gen-koziej-w-tvn24-bis-wracamy-do-czasow-zimnej-wojny,715660.html',
-        'only_matching': True,
-    }, {
         'url': 'https://www.tvn24.pl/magazyn-tvn24/angie-w-jednej-czwartej-polka-od-szarej-myszki-do-cesarzowej-europy,119,2158',
         'only_matching': True,
     }]
@@ -65,7 +62,7 @@ class TVN24IE(InfoExtractor):
 
         if '/magazyn-tvn24/' in url:
             return self._handle_magazine_frontend(url, display_id)
-        elif domain in ('tvn24.pl', 'tvn24bis.pl'):
+        elif domain in ('tvn24.pl', ):
             return self._handle_nextjs_frontend(url, display_id)
         else:
             return self._handle_old_frontend(url, display_id)
@@ -155,6 +152,10 @@ class TVN24IE(InfoExtractor):
         }
 
     def _handle_nextjs_frontend(self, url, display_id):
+        # make sure the GDPR consent appears, as we have to accept it so the video can play
+        for cookie_name in ('OptanonAlertBoxClosed', 'OptanonConsent', 'eupubconsent-v2'):
+            self._downloader.cookiejar.clear('.tvn24.pl', '/', cookie_name)
+
         pwh = PlaywrightHelper(self)
         page = pwh.open_page(url, display_id)
         page.route(re.compile(r'(\.(png|jpg|svg|css)$)'), lambda route: route.abort())
@@ -164,7 +165,7 @@ class TVN24IE(InfoExtractor):
         page.click('#onetrust-accept-btn-handler')
 
         with page.expect_request(
-                lambda r: re.match(r'https?://(?:www\.)?tvn24(?:bis)?\.pl/api/[A-Za-z\d+-]+/plst', r.url),
+                lambda r: re.match(r'https?://(?:www\.)?tvn24\.pl/api/[A-Za-z\d+-]+/plst', r.url),
                 timeout=20000) as plst_req:
             # tip: always collect the request data before closing browser
             plst_url = plst_req.value.url
