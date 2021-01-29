@@ -3,15 +3,6 @@ default:
     - apk add bash
     - pip install nose
 
-py2.7-core:
-  image: python:2.7
-  variables:
-    HDL_TEST_SET: core
-  before_script:
-    - pip install nose
-  script:
-    - ./devscripts/run_tests.sh
-
 py3.6-core:
   image: python:3.6-alpine
   variables:
@@ -48,18 +39,18 @@ py3.9-download:
   script:
     - ./devscripts/run_tests.sh
 
-jython-core:
-  image: openjdk:11-slim
-  variables:
-    HDL_TEST_SET: core
-  allow_failure: true
-  before_script:
-    - apt-get update
-    - apt-get install -y wget
-    - ./devscripts/install_jython.sh
-    - export PATH="$HOME/jython/bin:$PATH"
-  script:
-    - ./devscripts/run_tests.sh
+#jython-core:
+#  image: openjdk:11-slim
+#  variables:
+#    HDL_TEST_SET: core
+#  allow_failure: true
+#  before_script:
+#    - apt-get update
+#    - apt-get install -y wget
+#    - ./devscripts/install_jython.sh
+#    - export PATH="$HOME/jython/bin:$PATH"
+#  script:
+#    - ./devscripts/run_tests.sh
 
 # uncomment once the images are available
 # https://github.com/microsoft/playwright-python/issues/338
