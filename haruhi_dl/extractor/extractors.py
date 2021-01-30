@@ -40,6 +40,7 @@ from .agora import (
     WyborczaVideoIE,
 )
 from .airmozilla import AirMozillaIE
+from .albicla import AlbiclaIE
 from .aljazeera import AlJazeeraIE
 from .alphaporno import AlphaPornoIE
 from .amcnetworks import AMCNetworksIE
