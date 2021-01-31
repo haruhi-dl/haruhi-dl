@@ -122,6 +122,7 @@ from .kinja import KinjaEmbedIE
 from .onnetwork import OnNetworkLoaderIE
 from .embetty import EmbettyIE
 from .rtlnl import RtlNlIE
+from .xnews import XLinkIE
 
 
 class GenericIE(InfoExtractor):
@@ -2587,6 +2588,7 @@ class GenericIE(InfoExtractor):
             TeachableIE,    # must be before Wistia
             WistiaIE,
             SVTIE,
+            XLinkIE,
         ):
             try:
                 ie_key = embie.ie_key()

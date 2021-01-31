@@ -1492,6 +1492,7 @@ from .ximalaya import (
     XimalayaAlbumIE
 )
 from .xminus import XMinusIE
+from .xnews import XLinkIE
 from .xnxx import XNXXIE
 from .xstream import XstreamIE
 from .xtube import XTubeUserIE, XTubeIE
