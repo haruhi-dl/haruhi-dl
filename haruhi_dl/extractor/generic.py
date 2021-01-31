@@ -121,6 +121,7 @@ from .odnoklassniki import OdnoklassnikiIE
 from .kinja import KinjaEmbedIE
 from .onnetwork import OnNetworkLoaderIE
 from .embetty import EmbettyIE
+from .rtlnl import RtlNlIE
 
 
 class GenericIE(InfoExtractor):
@@ -2582,18 +2583,28 @@ class GenericIE(InfoExtractor):
             VimeoIE,
             SoundcloudEmbedIE,
             KalturaIE,
+            RtlNlIE,
+            TeachableIE,    # must be before Wistia
+            WistiaIE,
+            SVTIE,
         ):
             try:
+                ie_key = embie.ie_key()
                 embie_urls = embie._extract_urls(webpage,
                                                  url=url)
                 if embie_urls:
                     entries = []
                     for embie_url in embie_urls:
-                        entries.append({
+                        entry = {
                             '_type': 'url_transparent',
-                            'url': smuggle_url(unescapeHTML(embie_url), {'source_url': embie_url}),
-                            'ie_key': embie.ie_key(),
-                        })
+                            'url': embie_url,
+                            'ie_key': ie_key,
+                        }
+                        if ie_key in ("Wistia", ):
+                            entries["uploader"] = video_uploader
+                        if ie_key in ("Bandcamp", ):
+                            entry["ie_key"] = None
+                        entries.append(entry)
                     return {
                         '_type': 'playlist',
                         'entries': entries,
@@ -2604,50 +2615,6 @@ class GenericIE(InfoExtractor):
             except Exception as exc:
                 self.report_warning('The exception above was caused by: %sIE' % embie.ie_key())
                 raise exc
-
-        # Look for embedded rtl.nl player
-        matches = re.findall(
-            r'<iframe[^>]+?src="((?:https?:)?//(?:(?:www|static)\.)?rtl\.nl/(?:system/videoplayer/[^"]+(?:video_)?)?embed[^"]+)"',
-            webpage)
-        if matches:
-            return self.playlist_from_matches(matches, video_id, video_title, ie='RtlNl')
-
-        vid_me_embed_url = self._search_regex(
-            r'src=[\'"](https?://vid\.me/[^\'"]+)[\'"]',
-            webpage, 'vid.me embed', default=None)
-        if vid_me_embed_url is not None:
-            return self.url_result(vid_me_embed_url, 'Vidme')
-
-        # Look for embedded Dailymotion playlist player (#3822)
-        m = re.search(
-            r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//(?:www\.)?dailymotion\.[a-z]{2,3}/widget/jukebox\?.+?)\1', webpage)
-        if m:
-            playlists = re.findall(
-                r'list\[\]=/playlist/([^/]+)/', unescapeHTML(m.group('url')))
-            if playlists:
-                return self.playlist_from_matches(
-                    playlists, video_id, video_title, lambda p: '//dailymotion.com/playlist/%s' % p)
-
-        # Look for Teachable embeds, must be before Wistia
-        teachable_url = TeachableIE._extract_url(webpage, url)
-        if teachable_url:
-            return self.url_result(teachable_url)
-
-        # Look for embedded Wistia player
-        wistia_urls = WistiaIE._extract_urls(webpage)
-        if wistia_urls:
-            playlist = self.playlist_from_matches(wistia_urls, video_id, video_title, ie=WistiaIE.ie_key())
-            for entry in playlist['entries']:
-                entry.update({
-                    '_type': 'url_transparent',
-                    'uploader': video_uploader,
-                })
-            return playlist
-
-        # Look for SVT player
-        svt_url = SVTIE._extract_url(webpage)
-        if svt_url:
-            return self.url_result(svt_url, 'SVT')
 
         # Look for Bandcamp pages with custom domain
         mobj = re.search(r'<meta property="og:url"[^>]*?content="(.*?bandcamp\.com.*?)"', webpage)

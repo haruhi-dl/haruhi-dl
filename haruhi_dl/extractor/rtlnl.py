@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+
 from .common import InfoExtractor
 from ..utils import (
     int_or_none,
@@ -97,6 +99,12 @@ class RtlNlIE(InfoExtractor):
         'url': 'https://embed.rtl.nl/#uuid=84ae5571-ac25-4225-ae0c-ef8d9efb2aed/autoplay=false',
         'only_matching': True,
     }]
+
+    @staticmethod
+    def _extract_urls(webpage, url=None):
+        return re.findall(
+            r'<iframe[^>]+?src="((?:https?:)?//(?:(?:www|static)\.)?rtl\.nl/(?:system/videoplayer/[^"]+(?:video_)?)?embed[^"]+)"',
+            webpage)
 
     def _real_extract(self, url):
         uuid = self._match_id(url)

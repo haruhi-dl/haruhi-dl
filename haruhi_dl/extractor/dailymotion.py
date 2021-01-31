@@ -363,6 +363,16 @@ class DailymotionPlaylistIE(DailymotionPlaylistBaseIE):
     }]
     _OBJECT_TYPE = 'collection'
 
+    def _extract_urls(webpage, url=None):
+        m = re.search(
+            r'<iframe[^>]+?src=(["\'])(?P<url>(?:https?:)?//(?:www\.)?dailymotion\.[a-z]{2,3}/widget/jukebox\?.+?)\1', webpage)
+        if m:
+            playlists = re.findall(
+                r'list\[\]=/playlist/([^/]+)/', unescapeHTML(m.group('url')))
+            if playlists:
+                return ['//dailymotion.com/playlist/%s' % p for p in playlists]
+        return []
+
 
 class DailymotionUserIE(DailymotionPlaylistBaseIE):
     IE_NAME = 'dailymotion:user'

@@ -144,11 +144,11 @@ class TeachableIE(TeachableBaseIE):
             webpage)
 
     @staticmethod
-    def _extract_url(webpage, source_url):
+    def _extract_urls(webpage, url=None):
         if not TeachableIE._is_teachable(webpage):
-            return
-        if re.match(r'https?://[^/]+/(?:courses|p)', source_url):
-            return '%s%s' % (TeachableBaseIE._URL_PREFIX, source_url)
+            return []
+        if re.match(r'https?://[^/]+/(?:courses|p)', url):
+            return ['%s%s' % (TeachableBaseIE._URL_PREFIX, url)]
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)

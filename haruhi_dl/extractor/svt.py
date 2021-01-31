@@ -108,11 +108,10 @@ class SVTIE(SVTBaseIE):
     }
 
     @staticmethod
-    def _extract_url(webpage):
-        mobj = re.search(
+    def _extract_urls(webpage, url=None):
+        mobj = re.finditer(
             r'(?:<iframe src|href)="(?P<url>%s[^"]*)"' % SVTIE._VALID_URL, webpage)
-        if mobj:
-            return mobj.group('url')
+        return [match.group('url') for match in mobj]
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)

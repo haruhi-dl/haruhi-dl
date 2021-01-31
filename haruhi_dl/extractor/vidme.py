@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import itertools
+import re
 
 from .common import InfoExtractor
 from ..compat import compat_HTTPError
@@ -131,6 +132,12 @@ class VidmeIE(InfoExtractor):
             'skip_download': True,
         },
     }]
+
+    @staticmethod
+    def _extract_urls(webpage, url=None):
+        return re.findall(
+            r'src=[\'"](https?://vid\.me/[^\'"]+)[\'"]',
+            webpage)
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
