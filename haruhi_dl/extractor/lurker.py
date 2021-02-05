@@ -13,7 +13,7 @@ from ..utils import (
 
 
 class LurkerIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?lurker\.pl/post/(?P<id>[A-Za-z\d]{9})'
+    _VALID_URL = r'https?://(?:www\.)?lurker\.(?:pl|land)/post/(?P<id>[A-Za-z\d]{9})'
     _TESTS = [{
         # no title (microblog/comment)
         'url': 'https://www.lurker.pl/post/HMPQwlZrm',
@@ -44,7 +44,7 @@ class LurkerIE(InfoExtractor):
     def _real_extract(self, url):
         post_id = self._match_id(url)
 
-        meta = self._download_json('https://api.lurker.pl/v3?action=POST_GET', post_id,
+        meta = self._download_json('https://lurker.land/api/v3?action=POST_GET', post_id,
                                    data=bytes(compat_str(json.dumps({
                                        'id': post_id,
                                        'subsort': 'best',
@@ -52,8 +52,8 @@ class LurkerIE(InfoExtractor):
                                    headers={
                                        'Accept': 'application/json',
                                        'Content-Type': 'application/json',
-                                       'Origin': 'https://www.lurker.pl',
-                                       'Referer': 'https://www.lurker.pl/post/%s' % post_id,
+                                       'Origin': 'https://www.lurker.land',
+                                       'Referer': 'https://www.lurker.land/post/%s' % post_id,
                                    })
 
         post = None
@@ -86,7 +86,7 @@ class LurkerIE(InfoExtractor):
             'description': clean_html(post.get('body')) if post['hasTitle'] else None,
             'uploader': uploader,
             'uploader_id': post.get('userId'),
-            'uploader_url': 'https://www.lurker.pl/user/%s' % uploader,
+            'uploader_url': 'https://lurker.land/user/%s' % uploader,
             'timestamp': parse_iso8601(post.get('createdAt')),
             'like_count': post.get('upvotes'),
             'dislike_count': post.get('downvotes'),
