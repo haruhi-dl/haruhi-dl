@@ -1,27 +1,25 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+
+from ..playwright import PlaywrightHelper
 from .common import InfoExtractor
 from ..utils import (
-    compat_urllib_parse_urlencode,
     int_or_none,
-    std_headers,
     str_or_none,
     try_get,
     url_or_none,
 )
-import random
 
 
 class TikTokBaseIE(InfoExtractor):
     _DATA_RE = r'<script id="__NEXT_DATA__"[^>]+>(.+?)</script>'
 
-    def _extract_headers(self, data):
-        cookie_value = data['props']['initialProps']['$wid']
+    def _extract_headers(self, data, url):
         return {
             'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
-            'Cookie': 'tt_webid=%s; tt_webid_v2=%s' % (cookie_value, cookie_value),
-            'Referer': data['query']['$initialProps']['$fullUrl'],
+            'Referer': data['query']['$initialProps']['$fullUrl'] if data else url,
         }
 
     def _extract_author_data(self, author):
@@ -35,11 +33,10 @@ class TikTokBaseIE(InfoExtractor):
             'uploader_url': uploader_url,
         }
 
-    def _extract_video(self, data):
-        props = data['props']['pageProps']['itemInfo']['itemStruct']
-        video = props['video']
-        stats = props['stats']
-        description = str_or_none(props['desc'])
+    def _extract_video(self, item, data, url):
+        video = item['video']
+        stats = item['stats']
+        description = str_or_none(item['desc'])
         width = int_or_none(video['width'])
         height = int_or_none(video['height'])
         duration = int_or_none(video['duration'])
@@ -73,17 +70,17 @@ class TikTokBaseIE(InfoExtractor):
                             'url': url,
                         })
 
-        timestamp = int_or_none(props.get('createTime'))
+        timestamp = int_or_none(item.get('createTime'))
         view_count = int_or_none(stats.get('playCount'))
         like_count = int_or_none(stats.get('diggCount'))
         comment_count = int_or_none(stats.get('commentCount'))
         repost_count = int_or_none(stats.get('shareCount'))
 
-        author = self._extract_author_data(props['author'])
-        http_headers = self._extract_headers(data)
+        author = self._extract_author_data(item['author'])
+        http_headers = self._extract_headers(data, url)
 
         return {
-            'id': props['id'],
+            'id': item['id'],
             'title': author['uploader'],
             'description': description,
             'duration': duration,
@@ -151,82 +148,62 @@ class TikTokIE(TikTokBaseIE):
         webpage = self._download_webpage('https://www.tiktok.com/share/video/%s' % video_id, video_id)
         data = self._parse_json(self._search_regex(
             self._DATA_RE, webpage, 'data'), video_id)
-        return self._extract_video(data)
+        return self._extract_video(data['props']['pageProps']['itemInfo']['itemStruct'], data, url)
 
 
 class TikTokUserIE(TikTokBaseIE):
-    _WORKING = False
     IE_NAME = 'tiktok:user'
     _VALID_URL = r'https?://(?:www\.)?tiktok\.com/@(?P<id>[\w.]+)/?(?:\?.+)?$'
     _TESTS = [{
         'url': 'https://www.tiktok.com/@puczirajot',
         'info_dict': {
-            'id': '6797754125703693317'
+            'id': '6797754125703693317',
+            'title': 'Marta Puczyńska',
+            'description': '🏳️‍🌈🏴\nactivist\nInsta: Puczirajot',
+            'uploader_id': '6797754125703693317',
+            'uploader': 'Marta Puczyńska',
         },
         'playlist_mincount': 60,
     }]
-
-    def _get_item_list_page(self, data, page=0, max_cursor=0):
-        initial_props = data['query']['$initialProps']
-        page_props = data['props']['pageProps']
-        screen_resolution = random.choice((
-            (1280, 720),
-            (1366, 768),
-            (1920, 1080),
-        ))
-        url = 'https://%s/api/item_list/?%s' % (
-            try_get(initial_props, lambda x: x['$baseURL'], str) or 'm.tiktok.com',
-            compat_urllib_parse_urlencode({
-                'aid': '1988',
-                'app_name': 'tiktok_web',
-                'referer': '',
-                'user_agent': std_headers['User-Agent'],
-                'cookie_enabled': 'true',
-                'screen_width': screen_resolution[0],
-                'screen_height': screen_resolution[1],
-                'browser_language': 'en-US',
-                'browser_platform': 'Win32',
-                'browser_name': 'Mozilla',
-                'browser_version': std_headers['User-Agent'][8:],
-                'browser_online': 'true',
-                'ac': '',
-                'timezone_name': 'Europe/Warsaw',
-                'priority_region': '',
-                'verifyFp': 'verify_',  # needs investigation
-                'appId': initial_props['$appId'],
-                'region': initial_props['$region'],
-                'appType': initial_props['$appType'],
-                'isAndroid': initial_props['$isAndroid'],
-                'isMobile': initial_props['$isMobile'],
-                'isIOS': initial_props['$isIOS'],
-                'OS': initial_props['$os'],
-                'did': '0',  # '6892477327352038917',
-                'count': 30,
-                'id': page_props['feedConfig']['id'],
-                'secUid': page_props['feedConfig']['secUid'],
-                'maxCursor': max_cursor,
-                'minCursor': '0',
-                'sourceType': '8',
-                'language': 'en',
-                '_signature': '',  # needs investigation
-            }))
-        return self._download_json(url, page_props['feedConfig']['id'], 'Downloading video list (page #%d)' % page)
+    _REQUIRES_PLAYWRIGHT = True
 
     def _real_extract(self, url):
-        username = self._match_id(url)
-        webpage = self._download_webpage(
-            url, username)
-        data = self._parse_json(self._search_regex(
-            self._DATA_RE, webpage, 'data'), username)
-        user = self._extract_author_data(data['props']['pageProps']['userInfo']['user'])
+        display_id = self._match_id(url)
 
-        entries = []
-        videos_page = self._get_item_list_page(data)
-        self.to_screen(str(videos_page))
+        pwh = PlaywrightHelper(self)
+        page = pwh.open_page(url, display_id)
 
-        return {
+        items = []
+        item_list_re = re.compile(r'^https?://(?:[^/]+\.)?tiktok\.com/api/post/item_list/?\?')
+
+        more = True
+        pages = 0
+        while more:
+            # if pages > 0:
+            page.evaluate('() => window.scrollTo(0, document.body.scrollHeight)')
+            with page.expect_response(
+                    lambda r: re.match(item_list_re, r.url)) as item_list_res:
+                item_list = item_list_res.value.json()
+                items.extend(item_list['itemList'])
+                more = item_list['hasMore'] is True
+                if not self._downloader.params.get('quiet', False):
+                    self.to_screen('%s: Fetched video list page %d' % (display_id, pages))
+                pages += 1
+
+        data = page.eval_on_selector('script#__NEXT_DATA__', 'el => JSON.parse(el.textContent)')
+        pwh.browser_stop()
+
+        page_props = data['props']['pageProps']
+        next_data_items = try_get(page_props, lambda x: x['items'], expected_type=list)
+        if next_data_items:
+            items = next_data_items + items
+
+        info_dict = {
             '_type': 'playlist',
-            'id': user['uploader_id'],
-            'title': user['uploader'] or user['uploader_id'],
-            'entries': entries,
+            'id': page_props['userInfo']['user']['id'],
+            'title': page_props['userInfo']['user']['nickname'],
+            'description': page_props['userInfo']['user']['signature'],
+            'entries': [self._extract_video(item, data, url) for item in items],
         }
+        info_dict.update(self._extract_author_data(page_props['userInfo']['user']))
+        return info_dict
