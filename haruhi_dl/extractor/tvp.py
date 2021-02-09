@@ -273,9 +273,11 @@ class TVPEmbedIE(InfoExtractor):
             tvp:
             |https?://
                 (?:[^/]+\.)?
-                tvp(?:parlament)?\.(?:pl|info)/sess/
-                (?:tvplayer\.php\?.*?object_id
-                |TVPlayer2/(?:embed|api)\.php\?.*[Ii][Dd])
+                (?:tvp(?:parlament)?\.pl|tvp\.info|polandin\.com)/
+                (?:sess/
+                        (?:tvplayer\.php\?.*?object_id
+                        |TVPlayer2/(?:embed|api)\.php\?.*[Ii][Dd])
+                    |shared/details\.php\?.*?object_id)
                 =)
         (?P<id>\d+)
     '''
@@ -304,7 +306,20 @@ class TVPEmbedIE(InfoExtractor):
     }, {
         'url': 'https://wiadomosci.tvp.pl/sess/TVPlayer2/api.php?id=51233452',
         'only_matching': True,
+    }, {
+        # pulsembed on dziennik.pl
+        'url': 'https://www.tvp.pl/shared/details.php?copy_id=52205981&object_id=52204505&autoplay=false&is_muted=false&allowfullscreen=true&template=external-embed/video/iframe-video.html',
+        'only_matching': True,
     }]
+
+    @staticmethod
+    def _extract_urls(webpage, **kw):
+        return [
+            m.group('embed')
+            for m
+            in re.finditer(
+                r'<iframe\b[^>]+?\bsrc=(["\'])(?P<embed>%s)\1' % TVPEmbedIE,
+                webpage)]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
