@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+
 from .common import InfoExtractor
 from ..utils import (
     determine_ext,
@@ -13,9 +15,15 @@ from ..utils import (
 
 
 class OnetBaseIE(InfoExtractor):
-    def _search_mvp_id(self, webpage):
-        return self._search_regex(
-            r'id=(["\'])mvp:(?P<id>.+?)\1', webpage, 'mvp id', group='id')
+    @staticmethod
+    def _search_mvp_id(webpage, default=NO_DEFAULT):
+        mvp = re.search(
+            r'data-(?:params-)?mvp=["\'](\d+\.\d+)', webpage)
+        if mvp:
+            return mvp.group(1)
+        if default != NO_DEFAULT:
+            return default
+        raise ExtractorError('Could not extract mvp')
 
     def _extract_from_id(self, video_id, webpage=None):
         response = self._download_json(
@@ -106,6 +114,13 @@ class OnetMVPIE(OnetBaseIE):
     def _real_extract(self, url):
         return self._extract_from_id(self._match_id(url))
 
+    @staticmethod
+    def _extract_urls(webpage, **kw):
+        mvp = OnetBaseIE._search_mvp_id(webpage, default=None)
+        if mvp:
+            return ['onetmvp:%s' % mvp]
+        return []
+
 
 class OnetPlIE(InfoExtractor):
     _VALID_URL = r'https?://(?:[^/]+\.)?(?:onet|businessinsider\.com|plejada)\.pl/(?:[^/]+/)+(?P<id>[0-9a-z]+)'
@@ -154,11 +169,6 @@ class OnetPlIE(InfoExtractor):
         'url': 'http://plejada.pl/weronika-rosati-o-swoim-domniemanym-slubie/n2bq89',
         'only_matching': True,
     }]
-
-    def _search_mvp_id(self, webpage, default=NO_DEFAULT):
-        return self._search_regex(
-            r'data-(?:params-)?mvp=["\'](\d+\.\d+)', webpage, 'mvp id',
-            default=default)
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
