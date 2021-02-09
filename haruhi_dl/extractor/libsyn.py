@@ -41,6 +41,12 @@ class LibsynIE(InfoExtractor):
         }
     }]
 
+    @staticmethod
+    def _extract_urls(webpage, **kw):
+        return [m.group('url')
+                for m in re.finditer(
+                    r'<iframe[^>]+src=(["\'])(?P<url>(?:https?:)?//html5-player\.libsyn\.com/embed/.+?)\1', webpage)]
+
     def _real_extract(self, url):
         url, video_id = re.match(self._VALID_URL, url).groups()
         webpage = self._download_webpage(url, video_id)

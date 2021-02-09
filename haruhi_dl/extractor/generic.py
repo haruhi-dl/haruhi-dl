@@ -123,6 +123,7 @@ from .onnetwork import OnNetworkLoaderIE
 from .embetty import EmbettyIE
 from .rtlnl import RtlNlIE
 from .xnews import XLinkIE
+from .libsyn import LibsynIE
 
 
 class GenericIE(InfoExtractor):
@@ -2589,6 +2590,7 @@ class GenericIE(InfoExtractor):
             WistiaIE,
             SVTIE,
             XLinkIE,
+            LibsynIE,
         ):
             try:
                 ie_key = embie.ie_key()
@@ -2642,12 +2644,6 @@ class GenericIE(InfoExtractor):
         mobj = re.search(
             r'<iframe[^>]+src=(["\'])(?P<url>(?:https?:)?//graphics8\.nytimes\.com/bcvideo/[^/]+/iframe/embed\.html.+?)\1>',
             webpage)
-        if mobj is not None:
-            return self.url_result(mobj.group('url'))
-
-        # Look for Libsyn player
-        mobj = re.search(
-            r'<iframe[^>]+src=(["\'])(?P<url>(?:https?:)?//html5-player\.libsyn\.com/embed/.+?)\1', webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'))
 
