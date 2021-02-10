@@ -124,6 +124,7 @@ from .embetty import EmbettyIE
 from .rtlnl import RtlNlIE
 from .xnews import XLinkIE
 from .libsyn import LibsynIE
+from .pulsembed import PulsEmbedIE
 
 
 class GenericIE(InfoExtractor):
@@ -3055,6 +3056,10 @@ class GenericIE(InfoExtractor):
         embetty_entries = EmbettyIE._extract_entries(webpage)
         if embetty_entries:
             return self.playlist_result(embetty_entries, video_id, video_title)
+
+        pulsembed_entries = PulsEmbedIE._extract_entries(webpage)
+        if pulsembed_entries:
+            return self.playlist_result(pulsembed_entries, video_id, video_title)
 
         # Look for HTML5 media
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')

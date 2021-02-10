@@ -922,6 +922,7 @@ from .puhutv import (
     PuhuTVIE,
     PuhuTVSerieIE,
 )
+from .pulsembed import PulsEmbedIE
 from .presstv import PressTVIE
 from .prosiebensat1 import ProSiebenSat1IE
 from .puls4 import Puls4IE
