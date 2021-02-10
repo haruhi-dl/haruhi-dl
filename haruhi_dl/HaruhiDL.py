@@ -401,6 +401,10 @@ class HaruhiDL(object):
                 else:
                     raise
 
+        if sys.version_info[0] == 2:
+            self.report_warning(
+                'Python 2 is not guaranteed to work, please use Python 3 if possible')
+
         if (sys.platform != 'win32'
                 and sys.getfilesystemencoding() in ['ascii', 'ANSI_X3.4-1968']
                 and not params.get('restrictfilenames', False)):
