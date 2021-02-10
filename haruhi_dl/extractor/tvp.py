@@ -318,7 +318,7 @@ class TVPEmbedIE(InfoExtractor):
             m.group('embed')
             for m
             in re.finditer(
-                r'<iframe\b[^>]+?\bsrc=(["\'])(?P<embed>%s)\1' % TVPEmbedIE,
+                r'<iframe[^>]+?src=(["\'])(?P<embed>%s)' % TVPEmbedIE._VALID_URL,
                 webpage)]
 
     def _real_extract(self, url):
