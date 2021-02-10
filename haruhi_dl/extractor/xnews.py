@@ -28,7 +28,7 @@ class XLinkIE(InfoExtractor):
     @staticmethod
     def _extract_urls(webpage, url=None):
         return [smuggle_url(mobj.group('url'), {'referer': url}) for mobj
-                in re.finditer(r'<script\b[^>]+\bdata-url=(["\'])(?P<url>https?://get\.x-link\.pl/(?:[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12},){2}embed\.html)[^"\']*?\1', webpage)]
+                in re.finditer(r'<(?:script\b[^>]+\bdata-url|iframe\b[^>]*\ssrc)=(["\']?)(?P<url>https?://get\.x-link\.pl/(?:[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12},){2}embed\.html)[^"\' ]*?\1', webpage)]
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
