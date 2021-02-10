@@ -84,7 +84,6 @@ class PulsEmbedIE(InfoExtractor):
             for params in paramss:
                 params = json.loads(unescapeHTML(params.group(1)))
                 ext_url = try_get(params, lambda x: x['parameters']['url'], expected_type=compat_str)
-                ext_url = None
                 if ext_url:
                     ext_ie = PulsEmbedIE._get_external_ie_key(ext_url)
                     entries.append({
