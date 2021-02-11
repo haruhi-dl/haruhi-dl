@@ -118,6 +118,7 @@ class PulseVideoIE(InfoExtractor):
             webpage, default=None) if webpage else None) or meta.get('description')
         duration = meta.get('length') or meta.get('lenght')
         timestamp = parse_iso8601(meta.get('addDate'), ' ')
+        age_limit = int_or_none(video['license'].get('rating', '')[len('rating_'):])
 
         return {
             'id': video_id,
@@ -126,6 +127,7 @@ class PulseVideoIE(InfoExtractor):
             'duration': duration,
             'timestamp': timestamp,
             'formats': formats,
+            'age_limit': age_limit,
         }
 
     def _real_extract(self, url):

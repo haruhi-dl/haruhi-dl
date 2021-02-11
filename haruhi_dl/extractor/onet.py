@@ -46,6 +46,18 @@ class OnetPlIE(InfoExtractor):
             'upload_date': '20201204',
         },
     }, {
+        # age limit
+        'url': 'https://www.onet.pl/informacje/onetwiadomosci/krwawy-biznes-futerkowcow-film-janusza-schwertnera/82wy9vs,79cfc278',
+        'info_dict': {
+            'id': '2188984.870201019',
+            'ext': 'mp4',
+            'title': 'Szokujące nagrania. Tak się produkuje futra w Polsce. Film "Krwawy biznes futerkowców" Janusza Schwertnera',
+            'description': 'Film "Krwawy biznes futerkowców" Janusza Schwertnera',
+            'timestamp': 1599558803,
+            'upload_date': '20200908',
+            'age_limit': 18,
+        },
+    }, {
         'url': 'http://film.onet.pl/zwiastuny/ghost-in-the-shell-drugi-zwiastun-pl/5q6yl3',
         'only_matching': True,
     }, {
