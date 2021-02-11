@@ -43,6 +43,10 @@ class PulseVideoIE(InfoExtractor):
             r'data-(?:params-)?mvp=["\'](\d+\.\d+)', webpage)
         if mvp:
             return mvp.group(1)
+        mvp = re.search(
+            r'\sid=(["\']?)mvp:(\d+\.\d+)\1', webpage)
+        if mvp:
+            return mvp.group(2)
         if default != NO_DEFAULT:
             return default
         raise ExtractorError('Could not extract mvp')
@@ -222,7 +226,16 @@ class PulsEmbedIE(InfoExtractor):
                     'url': smuggle_url('pulsembed:%s' % embed.group('id'), {'referer': url}),
                     'ie_key': 'PulsEmbed',
                 })
-        return entries
+
+        ids = []
+
+        def dedupe(entry):
+            if entry['url'] not in ids:
+                ids.append(entry['url'])
+                return True
+            return False
+
+        return list(filter(dedupe, entries))
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
