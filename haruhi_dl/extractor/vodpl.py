@@ -1,10 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from .onet import OnetBaseIE
+from .common import InfoExtractor
+from .pulsembed import PulseVideoIE
 
 
-class VODPlIE(OnetBaseIE):
+class VODPlIE(InfoExtractor):
     _VALID_URL = r'https?://vod\.pl/(?:[^/]+/)+(?P<id>[0-9a-zA-Z]+)'
 
     _TESTS = [{
@@ -27,6 +28,8 @@ class VODPlIE(OnetBaseIE):
     def _real_extract(self, url):
         video_id = self._match_id(url)
         webpage = self._download_webpage(url, video_id)
-        info_dict = self._extract_from_id(self._search_mvp_id(webpage), webpage)
-        info_dict['id'] = video_id
-        return info_dict
+        return {
+            '_type': 'url_transparent',
+            'url': 'pulsevideo:%s' % PulseVideoIE._search_mvp_id(webpage),
+            'ie_key': PulseVideoIE.ie_key(),
+        }

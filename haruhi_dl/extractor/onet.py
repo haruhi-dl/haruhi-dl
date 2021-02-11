@@ -1,125 +1,14 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
-
 from .common import InfoExtractor
 from ..utils import (
-    determine_ext,
     ExtractorError,
-    float_or_none,
-    int_or_none,
-    NO_DEFAULT,
-    parse_iso8601,
 )
-
-
-class OnetBaseIE(InfoExtractor):
-    @staticmethod
-    def _search_mvp_id(webpage, default=NO_DEFAULT):
-        mvp = re.search(
-            r'data-(?:params-)?mvp=["\'](\d+\.\d+)', webpage)
-        if mvp:
-            return mvp.group(1)
-        if default != NO_DEFAULT:
-            return default
-        raise ExtractorError('Could not extract mvp')
-
-    def _extract_from_id(self, video_id, webpage=None):
-        response = self._download_json(
-            'http://qi.ckm.onetapi.pl/', video_id,
-            query={
-                'body[id]': video_id,
-                'body[jsonrpc]': '2.0',
-                'body[method]': 'get_asset_detail',
-                'body[params][ID_Publikacji]': video_id,
-                'body[params][Service]': 'www.onet.pl',
-                'content-type': 'application/jsonp',
-                'x-onet-app': 'player.front.onetapi.pl',
-            })
-
-        error = response.get('error')
-        if error:
-            raise ExtractorError(
-                '%s said: %s' % (self.IE_NAME, error['message']), expected=True)
-
-        video = response['result'].get('0')
-
-        formats = []
-        for format_type, formats_dict in video['formats'].items():
-            if not isinstance(formats_dict, dict):
-                continue
-            for format_id, format_list in formats_dict.items():
-                if not isinstance(format_list, list):
-                    continue
-                for f in format_list:
-                    video_url = f.get('url')
-                    if not video_url:
-                        continue
-                    ext = determine_ext(video_url)
-                    if format_id.startswith('ism'):
-                        formats.extend(self._extract_ism_formats(
-                            video_url, video_id, 'mss', fatal=False))
-                    elif ext == 'mpd':
-                        formats.extend(self._extract_mpd_formats(
-                            video_url, video_id, mpd_id='dash', fatal=False))
-                    elif format_id.startswith('hls'):
-                        formats.extend(self._extract_m3u8_formats(
-                            video_url, video_id, 'mp4', 'm3u8_native',
-                            m3u8_id='hls', fatal=False))
-                    else:
-                        http_f = {
-                            'url': video_url,
-                            'format_id': format_id,
-                            'abr': float_or_none(f.get('audio_bitrate')),
-                        }
-                        if format_type == 'audio':
-                            http_f['vcodec'] = 'none'
-                        else:
-                            http_f.update({
-                                'height': int_or_none(f.get('vertical_resolution')),
-                                'width': int_or_none(f.get('horizontal_resolution')),
-                                'vbr': float_or_none(f.get('video_bitrate')),
-                            })
-                        formats.append(http_f)
-        self._sort_formats(formats)
-
-        meta = video.get('meta', {})
-
-        title = (self._og_search_title(
-            webpage, default=None) if webpage else None) or meta['title']
-        description = (self._og_search_description(
-            webpage, default=None) if webpage else None) or meta.get('description')
-        duration = meta.get('length') or meta.get('lenght')
-        timestamp = parse_iso8601(meta.get('addDate'), ' ')
-
-        return {
-            'id': video_id,
-            'title': title,
-            'description': description,
-            'duration': duration,
-            'timestamp': timestamp,
-            'formats': formats,
-        }
-
-
-class OnetMVPIE(OnetBaseIE):
-    _VALID_URL = r'onetmvp:(?P<id>\d+\.\d+)'
-
-    _TEST = {
-        'url': 'onetmvp:381027.1509591944',
-        'only_matching': True,
-    }
-
-    def _real_extract(self, url):
-        return self._extract_from_id(self._match_id(url))
-
-    @staticmethod
-    def _extract_urls(webpage, **kw):
-        mvp = OnetBaseIE._search_mvp_id(webpage, default=None)
-        if mvp:
-            return ['onetmvp:%s' % mvp]
-        return []
+from .pulsembed import (
+    PulsEmbedIE,
+    PulseVideoIE,
+)
 
 
 class OnetPlIE(InfoExtractor):
@@ -133,11 +22,11 @@ class OnetPlIE(InfoExtractor):
             'ext': 'mp4',
             'description': 'md5:0e70c7be673157c62ca183791d2b7b27',
             'title': 'Podróż służbowa z wypadem na stok? "Załatwiamy wszystko na nartach"',
-            'timestamp': 1607177736,
+            'timestamp': 1607174136,
             'upload_date': '20201205',
         }
     }, {
-        # audio podcast form from libsyn.com via pulsembed.eu (2 iframes fucking nested in each other, who the fuck did this?)
+        # audio podcast form from libsyn.com via pulsembed
         'url': 'https://wiadomosci.onet.pl/tylko-w-onecie/milosc-w-czasach-zarazy/nbqxxwm',
         'info_dict': {
             'id': '12991166',
@@ -153,7 +42,7 @@ class OnetPlIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'Narodowy program szczepień na koronawirusa. Poznaliśmy szczegóły',
             'description': 'md5:44f34f9718714e208797f62d851b58ec',
-            'timestamp': 1607111725,
+            'timestamp': 1607108125,
             'upload_date': '20201204',
         },
     }, {
@@ -176,20 +65,24 @@ class OnetPlIE(InfoExtractor):
         url = url.replace('.amp', '')
         webpage = self._download_webpage(url, video_id)
 
-        mvp_id = self._search_mvp_id(webpage, default=None)
+        info_dict = self._search_json_ld(webpage, video_id, expected_type='NewsArticle')
+        info_dict['id'] = video_id
 
-        if not mvp_id:
-            pulsembed_url = self._search_regex(
-                r'data-src=(["\'])(?P<url>(?:https?:)?//pulsembed\.eu/.+?)\1',
-                webpage, 'pulsembed url', group='url')
-            webpage = self._download_webpage(
-                pulsembed_url, video_id, 'Downloading pulsembed webpage')
-            mvp_id = self._search_mvp_id(webpage, default=None)
-            if not mvp_id:
-                libsyn_url = self._search_regex(r'src=(["\'])(?P<url>(?:https?:)?//html5-player\.libsyn\.com/.+?)\1',
-                                                webpage, 'libsyn url', group='url')
-                if libsyn_url:
-                    return self.url_result(libsyn_url, 'Libsyn')
+        mvp_id = PulseVideoIE._search_mvp_id(webpage, default=None)
+        if mvp_id:
+            info_dict.update({
+                'url': 'pulsevideo:%s' % mvp_id,
+                'ie_key': PulseVideoIE.ie_key(),
+            })
 
-        return self.url_result(
-            'onetmvp:%s' % mvp_id, OnetMVPIE.ie_key(), video_id=mvp_id)
+        p2ems = PulsEmbedIE._extract_entries(webpage)
+        if len(p2ems) > 1:
+            info_dict.update({
+                '_type': 'playlist',
+                'entries': p2ems,
+            })
+        if p2ems:
+            info_dict.update(p2ems[0])
+            return info_dict
+
+        raise ExtractorError('PulsEmbed not found')

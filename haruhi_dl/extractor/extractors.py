@@ -824,10 +824,7 @@ from .odnoklassniki import OdnoklassnikiIE
 from .okopress import OKOPressIE
 from .oktoberfesttv import OktoberfestTVIE
 from .ondemandkorea import OnDemandKoreaIE
-from .onet import (
-    OnetMVPIE,
-    OnetPlIE,
-)
+from .onet import OnetPlIE
 from .onionstudios import OnionStudiosIE
 from .onnetwork import (
     OnNetworkLoaderIE,
@@ -922,7 +919,10 @@ from .puhutv import (
     PuhuTVIE,
     PuhuTVSerieIE,
 )
-from .pulsembed import PulsEmbedIE
+from .pulsembed import (
+    PulsEmbedIE,
+    PulseVideoIE,
+)
 from .presstv import PressTVIE
 from .prosiebensat1 import ProSiebenSat1IE
 from .puls4 import Puls4IE
