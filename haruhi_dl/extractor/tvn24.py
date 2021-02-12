@@ -246,5 +246,5 @@ class TVN24IE(InfoExtractor):
             'title': unescapeHTML(info['episode_title']),
             'description': unescapeHTML(info.get('description')),
             'duration': int_or_none(info.get('total_time')),
-            'age_limit': int_or_none(data.get('options', {}).get('parental_rating', {}).get('rating')),
+            'age_limit': int_or_none(data['movie']['options'].get('parental_rating', {}).get('rating')),
         }
