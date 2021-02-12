@@ -7,6 +7,7 @@ from .common import InfoExtractor
 from ..utils import (
     clean_html,
     extract_attributes,
+    ExtractorError,
     int_or_none,
     NO_DEFAULT,
     unescapeHTML,
@@ -45,6 +46,14 @@ class TVN24IE(InfoExtractor):
         },
         'playlist_count': 2,
     }, {
+        'url': 'https://fakty.tvn24.pl/ogladaj-online,60/akcja-media-bez-wyboru-i-misja-telewizji-publicznej,1048910.html',
+        'info_dict': {
+            'id': '1048910',
+            'ext': 'mp4',
+            'title': '11.02.2021 | Misja telewizji publicznej i reakcja na protest "Media bez wyboru"',
+            'description': 'md5:684d2e09f57c7ed03a277bc5ce295d63',
+        },
+    }, {
         'url': 'http://fakty.tvn24.pl/ogladaj-online,60/53-konferencja-bezpieczenstwa-w-monachium,716431.html',
         'only_matching': True,
     }, {
@@ -64,6 +73,8 @@ class TVN24IE(InfoExtractor):
             return self._handle_magazine_frontend(url, display_id)
         elif domain in ('tvn24.pl', ):
             return self._handle_nextjs_frontend(url, display_id)
+        elif domain in ('fakty.tvn24.pl', ):
+            return self._handle_fakty_frontend(url, display_id)
         else:
             return self._handle_old_frontend(url, display_id)
 
@@ -195,3 +206,45 @@ class TVN24IE(InfoExtractor):
                 'duration': movie['info']['total_time'],
                 'is_live': movie['video']['is_live'],
             }
+
+    def _handle_fakty_frontend(self, url, display_id):
+        webpage = self._download_webpage(url, display_id)
+
+        data = self._parse_json(
+            self._search_regex(
+                r"window\.VideoManager\.initVideo\('[^']+',\s*({.+?})\s*,\s*{.+?}\s*\);",
+                webpage, 'video metadata'), display_id)
+
+        video = data['movie']['video']
+        info = data['movie']['info']
+
+        if video.get('protections'):
+            raise ExtractorError(
+                'This video is protected by %s DRM protection' % '/'.join(video['protections'].keys()),
+                expected=True)
+
+        formats = []
+
+        for fmt_id, fmt_data in video['sources'].items():
+            if fmt_id == 'hls':
+                formats.extend(self._extract_m3u8_formats(fmt_data['url'], display_id))
+            elif fmt_id == 'dash':
+                formats.extend(self._extract_mpd_formats(fmt_data['url'], display_id))
+            elif fmt_id == 'mp4':
+                for quality, mp4_url in fmt_data.items():
+                    formats.append({
+                        'url': mp4_url,
+                        'ext': 'mp4',
+                        'height': int_or_none(quality),
+                    })
+
+        self._sort_formats(formats)
+
+        return {
+            'id': display_id,
+            'formats': formats,
+            'title': unescapeHTML(info['episode_title']),
+            'description': unescapeHTML(info.get('description')),
+            'duration': int_or_none(info.get('total_time')),
+            'age_limit': int_or_none(data.get('options', {}).get('parental_rating', {}).get('rating')),
+        }
