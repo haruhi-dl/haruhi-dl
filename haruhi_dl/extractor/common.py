@@ -2695,14 +2695,19 @@ class InfoExtractor(object):
                 if isinstance(jwplayer_data, dict):
                     return jwplayer_data
 
-    def _extract_jwplayer_data(self, webpage, video_id, *args, **kwargs):
+    def _extract_jwplayer_data(self, webpage, video_id, *args, fatal=True, **kwargs):
         jwplayer_data = self._find_jwplayer_data(
             webpage, video_id, transform_source=js_to_json)
+        if jwplayer_data is None:
+            if fatal:
+                raise ExtractorError("jwplayer data could not be found")
+            else:
+                return None
         return self._parse_jwplayer_data(
             jwplayer_data, video_id, *args, **kwargs)
 
     def _parse_jwplayer_data(self, jwplayer_data, video_id=None, require_title=True,
-                             m3u8_id=None, mpd_id=None, rtmp_params=None, base_url=None):
+                             m3u8_id=None, mpd_id=None, rtmp_params=None, base_url=None):            
         # JWPlayer backward compatibility: flattened playlists
         # https://github.com/jwplayer/jwplayer/blob/v7.4.3/src/js/api/config.js#L81-L96
         if 'playlist' not in jwplayer_data:
