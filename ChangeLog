@@ -1,3 +1,25 @@
+version 2021.02.22
+Extractor
+* [peertube] reduced request amount
+* [youtube] added new URL schemes
+* [tvn24] fix next.js frontend extraction
+* [wp.pl] added extractor
+* [albicla] added extractor
+* [x-news] now detects embeds
+* [lurker] domain update
+* [tiktok] user profile extractor
+* [simplify] libsyn extraction
+* [tvp:embed] new URL scheme
+* [pulsembed] new extractor
+* [vod.pl] fixed extraction
+* [klip.rs] fixed extraction
+* [tvn24] fixed Fakty extractor
+* [youtube] new crypto
+
+Core
+* we no longer support Python2.7
+* jwplayer has a meaningful error if data wasn't found
+
 version 2021.01.24
 Extractor
 * [youtube] (you've guessed it) new crypto
