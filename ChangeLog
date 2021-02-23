@@ -1,3 +1,8 @@
+version 2021.02.23
+Extractor
+* [youtube] new crypto
+* [youtube] fixed automatic crypto extraction
+
 version 2021.02.22
 Extractor
 * [peertube] reduced request amount

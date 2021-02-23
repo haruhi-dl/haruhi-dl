@@ -1077,10 +1077,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     def _decrypt_signature_protected(self, s):
         a = list(s)
+        a = self.mess(a, 17)
         a.reverse()
         a = a[3:]
-        a = self.mess(a, 37)
-        a = a[3:]
+        a = self.mess(a, 12)
+        a = a[1:]
+        a.reverse()
+        a = self.mess(a, 47)
+        a.reverse()
         return "".join(a)
 
     def _get_subtitles(self, video_id, webpage):
