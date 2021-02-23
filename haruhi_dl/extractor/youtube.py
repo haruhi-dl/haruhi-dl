@@ -987,14 +987,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if not shit_parser:
             raise ExtractorError('Signature decryption code not found')
         func, obfuscated_name = shit_parser.group(1, 2)
-        obfuscated_func = re.search(r'%s\s*=\s*{([\s\w(){}[\].,:;=%s]*?})};' % (re.escape(obfuscated_name), '%'),
+        obfuscated_func = re.search(r'%s\s*=\s*{([\s\w(){}[\].,:;=%s"\']*?})};' % (re.escape(obfuscated_name), '%'),
                                     js_player)
         if not obfuscated_func:
             raise ExtractorError('Signature decrypting deobfuscated functions not found')
         obfuscated_stack = obfuscated_func.group(1)
         obf_map = {}
-        for obffun in re.finditer(r'([a-zA-Z_][a-zA-Z\d_]+):function\(a(?:,b)?\){(.*?)}', obfuscated_stack):
-            obfname, obfval = obffun.group(1, 2)
+        for obffun in re.finditer(r'(?P<kp>["\'`]?)([a-zA-Z_][a-zA-Z\d_]+)(?P=kp):function\(a(?:,b)?\){(.*?)}', obfuscated_stack):
+            obfname, obfval = obffun.group(2, 3)
             if 'splice' in obfval:
                 obf_map[obfname] = 'splice'
             elif 'reverse' in obfval:
@@ -1002,9 +1002,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             elif 'var' in obfval and 'length' in obfval:
                 obf_map[obfname] = 'mess'
             else:
+                self.to_screen(obfval)
                 raise ExtractorError('Unknown obfuscation function type: %s.%s' % (obfuscated_name, obfname))
         decryptor_stack = []
-        for instruction in re.finditer(r'%s\.([a-zA-Z_][a-zA-Z\d_]+)\(a,(\d+)\);?' % re.escape(obfuscated_name),
+        for instruction in re.finditer(r'%s(?:\.|\[["\'`])([a-zA-Z_][a-zA-Z\d_]+)(?:["\'`]\])?\(a,(\d+)\);?' % re.escape(obfuscated_name),
                                        func):
             obf_name, obf_arg = instruction.group(1, 2)
             inst = obf_map.get(obf_name)
