@@ -92,6 +92,12 @@ class FakeHDL(HaruhiDL):
 def gettestcases(include_onlymatching=False):
     for ie in haruhi_dl.extractor.gen_extractors():
         for tc in ie.get_testcases(include_onlymatching):
+            # ignore non-playwright tests if HDL_TEST_PLAYWRIGHT_DOWNLOAD=1
+            if os.environ.get('HDL_TEST_PLAYWRIGHT_DOWNLOAD') == '1' and not ie._REQUIRES_PLAYWRIGHT:
+                continue
+            # ignore playwright-requiring tests if not HDL_TEST_PLAYWRIGHT_DOWNLOAD=1
+            if os.environ.get('HDL_TEST_PLAYWRIGHT_DOWNLOAD') != '1' and ie._REQUIRES_PLAYWRIGHT:
+                continue
             yield tc
 
 
