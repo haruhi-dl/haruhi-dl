@@ -896,6 +896,7 @@ from .pluralsight import (
 )
 from .podomatic import PodomaticIE
 from .pokemon import PokemonIE
+from .polskapress import PolskaPressIE
 from .polskieradio import (
     PolskieRadioIE,
     PolskieRadioCategoryIE,
