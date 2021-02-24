@@ -1,0 +1,5 @@
+# https://git.sakamoto.pl/laudompat/copykitku
+
+dest = "https://git.sakamoto.pl/laudompat/haruhi-dl"
+
+patchHook = "devscripts/copykitku-patch-hook.js"
