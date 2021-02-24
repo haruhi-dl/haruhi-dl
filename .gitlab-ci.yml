@@ -52,19 +52,24 @@ py3.9-download:
 #  script:
 #    - ./devscripts/run_tests.sh
 
-# uncomment once the images are available
-# https://github.com/microsoft/playwright-python/issues/338
-# playwright-tests-core:
-#   image: mcr.microsoft.com/playwright-python:focal
-#   variables:
-#     HDL_TEST_SET: core
-#   script:
-#     - ./devscripts/run_tests.sh
+playwright-tests-core:
+  image: mcr.microsoft.com/playwright:focal
+  variables:
+    HDL_TEST_SET: core
+  before_script:
+    - apt-get update && apt-get install -y bash && apt-get clean
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
 
-# playwright-tests-download:
-#   image: mcr.microsoft.com/playwright-python:focal
-#   variables:
-#     HDL_TEST_SET: download
-#     HDL_TEST_PLAYWRIGHT_DOWNLOAD: 1
-#   script:
-#     - ./devscripts/run_tests.sh
+playwright-tests-download:
+  image: mcr.microsoft.com/playwright:focal
+  variables:
+    HDL_TEST_SET: download
+    HDL_TEST_PLAYWRIGHT_DOWNLOAD: 1
+  allow_failure: true
+  before_script:
+    - apt-get update && apt-get install -y bash && apt-get clean
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
