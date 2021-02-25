@@ -12,7 +12,6 @@ from ..utils import (
     NO_DEFAULT,
     unescapeHTML,
 )
-from ..playwright import PlaywrightHelper
 
 
 class TVN24IE(InfoExtractor):
@@ -20,11 +19,10 @@ class TVN24IE(InfoExtractor):
     _TESTS = [{
         'url': 'https://tvn24.pl/polska/edyta-gorniak-napisala-o-statystach-w-szpitalach-udajacych-chorych-na-covid-19-jerzy-polaczek-i-marek-posobkiewicz-odpowiadaja-zapraszamy-4747899',
         'info_dict': {
-            'id': '4744453',
-            'ext': 'm3u8',
+            'id': '4747899',
             'title': '"Nie wszyscy \'statyści\' wychodzą na własnych nogach". Chorzy na COVID-19 odpowiadają Edycie Górniak',
-            'description': 'md5:aa98c393df243a69203cfb6769b8db51',
-        }
+        },
+        'playlist_count': 5,
     }, {
         # different layout
         'url': 'https://tvnmeteo.tvn24.pl/magazyny/maja-w-ogrodzie,13/odcinki-online,1,4,1,0/pnacza-ptaki-i-iglaki-odc-691-hgtv-odc-29,1771763.html',
@@ -63,7 +61,6 @@ class TVN24IE(InfoExtractor):
         'url': 'https://www.tvn24.pl/magazyn-tvn24/angie-w-jednej-czwartej-polka-od-szarej-myszki-do-cesarzowej-europy,119,2158',
         'only_matching': True,
     }]
-    _REQUIRES_PLAYWRIGHT = True
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -163,49 +160,45 @@ class TVN24IE(InfoExtractor):
         }
 
     def _handle_nextjs_frontend(self, url, display_id):
-        # make sure the GDPR consent appears, as we have to accept it so the video can play
-        for cookie_name in ('OptanonAlertBoxClosed', 'OptanonConsent', 'eupubconsent-v2'):
-            try:
-                self._downloader.cookiejar.clear('.tvn24.pl', '/', cookie_name)
-            except KeyError:
-                # ignore, if cookies don't exist
-                pass
+        webpage = self._download_webpage(url, display_id)
 
-        pwh = PlaywrightHelper(self)
-        page = pwh.open_page(url, display_id)
-        page.route(re.compile(r'(\.(png|jpg|svg|css)$)'), lambda route: route.abort())
+        next_data = self._search_nextjs_data(webpage, display_id)
+        context = next_data['props']['initialProps']['pageProps']['context']
 
-        # GDPR consent, required to play video
-        page.wait_for_selector('#onetrust-accept-btn-handler')
-        page.click('#onetrust-accept-btn-handler')
+        videos = []
+        for element in context['mainVideo']:
+            if element['content']['type'] == 'Video':
+                videos.append(element['content'])
+        for element in context['elements']:
+            if element.get('type') == 'video' \
+                    and 'relation' in element \
+                    and element['relation']['type'] == 'Video' \
+                    and not any(video['id'] == element['relation']['id'] for video in videos):
+                videos.append(element['relation'])
 
-        with page.expect_request(
-                lambda r: re.match(r'https?://(?:www\.)?tvn24\.pl/api/[A-Za-z\d+-]+/plst', r.url),
-                timeout=20000) as plst_req:
-            # tip: always collect the request data before closing browser
-            plst_url = plst_req.value.url
-            title = page.eval_on_selector('meta[property="og:title"]', 'el => el.content')
-            description = page.eval_on_selector('meta[property="og:description"]', 'el => el.content')
-            pwh.browser_stop()
-            data = self._download_json(plst_url, display_id)
+        route_name = next_data['props']['initialState']['resolution']['routeName']
+        entries = []
+        for video in videos:
+            fields = video['fields']
+            plst_url = re.sub(r'[?#].+', '', url)
+            plst_url += '/nuviArticle?playlist&id=%s&r=%s' % (video['id'], route_name)
 
-            movie = data['movie']
-            sources = movie['video']['sources']
+            plst = self._download_json(plst_url, display_id)
 
-            formats = []
-            if sources.get('hls'):
-                formats.extend(self._extract_m3u8_formats(sources['hls']['url'], display_id))
+            data = self._parse_nuvi_data(plst, display_id)
+            data.update({
+                'title': fields['title'],
+                'description': fields['description'],
+            })
+            entries.append(data)
 
-            self._sort_formats(formats)
-
-            return {
-                'id': movie['info']['id'],
-                'formats': formats,
-                'title': title,
-                'description': description,
-                'duration': movie['info']['total_time'],
-                'is_live': movie['video']['is_live'],
-            }
+        return {
+            '_type': 'playlist',
+            'entries': entries,
+            'id': display_id,
+            'title': context['title'],
+            'alt_title': context['fields']['title'],
+        }
 
     def _handle_fakty_frontend(self, url, display_id):
         webpage = self._download_webpage(url, display_id)
@@ -215,6 +208,9 @@ class TVN24IE(InfoExtractor):
                 r"window\.VideoManager\.initVideo\('[^']+',\s*({.+?})\s*,\s*{.+?}\s*\);",
                 webpage, 'video metadata'), display_id)
 
+        return self._parse_nuvi_data(data, display_id)
+
+    def _parse_nuvi_data(self, data, display_id):
         video = data['movie']['video']
         info = data['movie']['info']
 
@@ -243,8 +239,9 @@ class TVN24IE(InfoExtractor):
         return {
             'id': display_id,
             'formats': formats,
-            'title': unescapeHTML(info['episode_title']),
+            'title': unescapeHTML(info.get('episode_title')),
             'description': unescapeHTML(info.get('description')),
             'duration': int_or_none(info.get('total_time')),
             'age_limit': int_or_none(data['movie']['options'].get('parental_rating', {}).get('rating')),
+            'is_live': video.get('is_live'),
         }
