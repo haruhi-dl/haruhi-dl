@@ -1343,6 +1343,13 @@ class InfoExtractor(object):
                     break
         return dict((k, v) for k, v in info.items() if v is not None)
 
+    def _search_nextjs_data(self, webpage, video_id, **kw):
+        return self._parse_json(
+            self._search_regex(
+                r'<script id="__NEXT_DATA__"[^>]+>(.+?)</script>',
+                webpage, 'next.js data', **kw),
+            video_id, **kw)
+
     @staticmethod
     def _hidden_inputs(html):
         html = re.sub(r'<!--(?:(?!<!--).)*-->', '', html)
@@ -2707,7 +2714,7 @@ class InfoExtractor(object):
             jwplayer_data, video_id, *args, **kwargs)
 
     def _parse_jwplayer_data(self, jwplayer_data, video_id=None, require_title=True,
-                             m3u8_id=None, mpd_id=None, rtmp_params=None, base_url=None):            
+                             m3u8_id=None, mpd_id=None, rtmp_params=None, base_url=None):
         # JWPlayer backward compatibility: flattened playlists
         # https://github.com/jwplayer/jwplayer/blob/v7.4.3/src/js/api/config.js#L81-L96
         if 'playlist' not in jwplayer_data:
