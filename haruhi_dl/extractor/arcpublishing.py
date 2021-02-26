@@ -74,7 +74,7 @@ class ArcPublishingIE(InfoExtractor):
     ]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kw):
         entries = []
         # https://arcpublishing.atlassian.net/wiki/spaces/POWA/overview
         for powa_el in re.findall(r'(<div[^>]+class="[^"]*\bpowa\b[^"]*"[^>]+data-uuid="%s"[^>]*>)' % ArcPublishingIE._UUID_REGEX, webpage):
