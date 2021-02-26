@@ -1656,5 +1656,6 @@ from .zattoo import (
     ZattooLiveIE,
 )
 from .zdf import ZDFIE, ZDFChannelIE
+from .zhihu import ZhihuIE
 from .zingmp3 import ZingMp3IE
 from .zype import ZypeIE
