@@ -344,7 +344,6 @@ from .eurozet import (
     EurozetPlayerPodcastIE,
     EurozetPlayerMusicStreamIE,
 )
-from .everyonesmixtape import EveryonesMixtapeIE
 from .expotv import ExpoTVIE
 from .expressen import ExpressenIE
 from .extremetube import ExtremeTubeIE
