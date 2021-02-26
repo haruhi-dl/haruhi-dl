@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import unicode_literals
 
 # Execute with
@@ -6,6 +6,9 @@ from __future__ import unicode_literals
 # $ python -m haruhi_dl          (2.7+)
 
 import sys
+
+if sys.version_info[0] == 2:
+    sys.exit('haruhi-dl no longer works on Python 2, use Python 3 instead')
 
 if __package__ is None and not hasattr(sys, 'frozen'):
     # direct call of __main__.py
