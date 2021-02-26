@@ -1287,6 +1287,10 @@ from .transistorfm import (
     TransistorFMShareIE,
 )
 from .trilulilu import TriluliluIE
+from .trovo import (
+    TrovoIE,
+    TrovoVodIE,
+)
 from .trunews import TruNewsIE
 from .trutv import TruTVIE
 from .tubafm import (
