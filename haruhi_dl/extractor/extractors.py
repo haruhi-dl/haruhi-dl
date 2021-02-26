@@ -756,7 +756,10 @@ from .nexx import (
     NexxEmbedIE,
 )
 from .nfl import NFLIE
-from .nhk import NhkVodIE
+from .nhk import (
+    NhkVodIE,
+    NhkVodProgramIE,
+)
 from .nhl import NHLIE
 from .nick import (
     NickIE,
