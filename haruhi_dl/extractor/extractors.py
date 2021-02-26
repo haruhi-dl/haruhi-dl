@@ -684,8 +684,8 @@ from .microsoftvirtualacademy import (
 )
 from .minds import (
     MindsIE,
-    MindsActivityIE,
     MindsChannelIE,
+    MindsGroupIE,
 )
 from .ministrygrid import MinistryGridIE
 from .minoto import MinotoIE
