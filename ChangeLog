@@ -1,3 +1,387 @@
+version 2021.02.26
+A lot of changes merged back from youtube-dl, thanks to the Copykitku project
+
+Core
++ [postprocessor/embedthumbnail] Recognize atomicparsley binary in lowercase
+* Introduce --output-na-placeholder (https://github.com/ytdl-org/youtube-dl/issues/27896)
+* Protect from infinite recursion due to recursively nested
+  playlists (https://github.com/ytdl-org/youtube-dl/issues/27833)
+* Ignore failure to create existing directory (https://github.com/ytdl-org/youtube-dl/issues/27811)
+* Raise syntax error for format selection expressions with multiple
+  + operators (https://github.com/ytdl-org/youtube-dl/issues/27803)
+* [downloader/hls] Disable decryption in tests (https://github.com/ytdl-org/youtube-dl/issues/27660)
++ [utils] Add a function to clean podcast URLs
+* [utils] Accept only supported protocols in url_or_none
+* Allow format filtering using audio language (https://github.com/ytdl-org/youtube-dl/issues/16209)
+* [common] Remove unwanted query params from unsigned akamai manifest URLs
+* [extractor/common] Improve JSON-LD interaction statistic extraction (https://github.com/ytdl-org/youtube-dl/issues/23306)
+* [downloader/hls] Delegate manifests with media initialization to ffmpeg
++ [extractor/common] Document duration meta field for playlists
+* Improve thumbnail filename deducing (https://github.com/ytdl-org/youtube-dl/issues/26010, https://github.com/ytdl-org/youtube-dl/issues/27244)
+* [extractor/common] Fix inline HTML5 media tags processing (https://github.com/ytdl-org/youtube-dl/issues/27345)
+* [extractor/common] Extract timestamp from Last-Modified header
++ [extractor/common] Add support for dl8-* media tags (https://github.com/ytdl-org/youtube-dl/issues/27283)
+* [extractor/common] Fix media type extraction for HTML5 media tags
+  in start/end form
+* [extractor/common] Improve Akamai HTTP format extraction
+  * Allow m3u8 manifest without an additional audio format
+  * Fix extraction for qualities starting with a number
+* Write static debug to stderr and respect quiet for dynamic debug
+  (https://github.com/ytdl-org/youtube-dl/issues/14579, https://github.com/ytdl-org/youtube-dl/issues/22593)
+* [downloader/fragment] Set final file's mtime according to last fragment's
+  Last-Modified header (https://github.com/ytdl-org/youtube-dl/issues/11718, https://github.com/ytdl-org/youtube-dl/issues/18384, https://github.com/ytdl-org/youtube-dl/issues/27138)
++ [extractor/common] Add generic support for akamai HTTP format extraction
+* [downloader/http] Fix crash during urlopen caused by missing reason
+  of URLError
+* Fix --ignore-errors for playlists with generator-based entries
+  of url_transparent (https://github.com/ytdl-org/youtube-dl/issues/27064)
+* [extractor/common] Output error for invalid URLs in _is_valid_url (https://github.com/ytdl-org/youtube-dl/issues/21400,
+  https://github.com/ytdl-org/youtube-dl/issues/24151, https://github.com/ytdl-org/youtube-dl/issues/25617, https://github.com/ytdl-org/youtube-dl/issues/25618, https://github.com/ytdl-org/youtube-dl/issues/25586, https://github.com/ytdl-org/youtube-dl/issues/26068, https://github.com/ytdl-org/youtube-dl/issues/27072)
+
+Extractor
+* [apa] Fix and improve extraction (https://github.com/ytdl-org/youtube-dl/issues/27750)
++ [youporn] Extract duration (https://github.com/ytdl-org/youtube-dl/issues/28019)
++ [samplefocus] Add support for samplefocus.com (https://github.com/ytdl-org/youtube-dl/issues/27763)
++ [vimeo] Add support for unlisted video source format extraction
+* [viki] Improve extraction (https://github.com/ytdl-org/youtube-dl/issues/26522, https://github.com/ytdl-org/youtube-dl/issues/28203)
+    * Extract uploader URL and episode number
+    * Report login required error
+    + Extract 480p formats
+    * Fix API v4 calls
+* [ninegag] Unescape title (https://github.com/ytdl-org/youtube-dl/issues/28201)
++ [dplay] Add support for de.hgtv.com (https://github.com/ytdl-org/youtube-dl/issues/28182)
++ [dplay] Add support for discoveryplus.com (https://github.com/ytdl-org/youtube-dl/issues/24698)
++ [simplecast] Add support for simplecast.com (https://github.com/ytdl-org/youtube-dl/issues/24107)
+* [yandexmusic:playlist] Request missing tracks in chunks (https://github.com/ytdl-org/youtube-dl/issues/27355, https://github.com/ytdl-org/youtube-dl/issues/28184)
++ [storyfire] Add support for storyfire.com (https://github.com/ytdl-org/youtube-dl/issues/25628, https://github.com/ytdl-org/youtube-dl/issues/26349)
++ [zhihu] Add support for zhihu.com (https://github.com/ytdl-org/youtube-dl/issues/28177)
+* [ccma] Fix timestamp parsing in python 2
++ [videopress] Add support for video.wordpress.com
+* [kakao] Improve info extraction and detect geo restriction (https://github.com/ytdl-org/youtube-dl/issues/26577)
+* [xboxclips] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27151)
+* [ard] Improve formats extraction (https://github.com/ytdl-org/youtube-dl/issues/28155)
++ [canvas] Add support for dagelijksekost.een.be (https://github.com/ytdl-org/youtube-dl/issues/28119)
+* [ign] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/24771)
++ [xhamster] Extract format filesize
++ [xhamster] Extract formats from xplayer settings (https://github.com/ytdl-org/youtube-dl/issues/28114)
+* [archiveorg] Fix and improve extraction (https://github.com/ytdl-org/youtube-dl/issues/21330, https://github.com/ytdl-org/youtube-dl/issues/23586, https://github.com/ytdl-org/youtube-dl/issues/25277, https://github.com/ytdl-org/youtube-dl/issues/26780,
+  https://github.com/ytdl-org/youtube-dl/issues/27109, https://github.com/ytdl-org/youtube-dl/issues/27236, https://github.com/ytdl-org/youtube-dl/issues/28063)
+* [urplay] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/28073, https://github.com/ytdl-org/youtube-dl/issues/28074)
+* [azmedien] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/28064)
+* [pornhub] Implement lazy playlist extraction
+* [svtplay] Fix video id extraction (https://github.com/ytdl-org/youtube-dl/issues/28058)
++ [pornhub] Add support for authentication (https://github.com/ytdl-org/youtube-dl/issues/18797, https://github.com/ytdl-org/youtube-dl/issues/21416, https://github.com/ytdl-org/youtube-dl/issues/24294)
+* [pornhub:user] Improve paging
++ [pornhub:user] Add support for URLs unavailable via /videos page (https://github.com/ytdl-org/youtube-dl/issues/27853)
++ [bravotv] Add support for oxygen.com (https://github.com/ytdl-org/youtube-dl/issues/13357, https://github.com/ytdl-org/youtube-dl/issues/22500)
+* [ccma] Improve metadata extraction (https://github.com/ytdl-org/youtube-dl/issues/27994)
+  + Extract age limit, alt title, categories, series and episode number
+  * Fix timestamp multiple subtitles extraction
+* [egghead] Update API domain (https://github.com/ytdl-org/youtube-dl/issues/28038)
+- [vidzi] Remove extractor (https://github.com/ytdl-org/youtube-dl/issues/12629)
+* [vidio] Improve metadata extraction
++ [vvvvid] Add support for youtube embeds (https://github.com/ytdl-org/youtube-dl/issues/27825)
+* [vlive] Fix error message decoding for python 2 (https://github.com/ytdl-org/youtube-dl/issues/28004)
++ [awaan] Extract uploader id (https://github.com/ytdl-org/youtube-dl/issues/27963)
++ [medialaan] Add support DPG Media MyChannels based websites (https://github.com/ytdl-org/youtube-dl/issues/14871, https://github.com/ytdl-org/youtube-dl/issues/15597,
+  https://github.com/ytdl-org/youtube-dl/issues/16106, https://github.com/ytdl-org/youtube-dl/issues/16489)
+* [abcnews] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/12394, https://github.com/ytdl-org/youtube-dl/issues/27920)
+* [AMP] Fix upload date and timestamp extraction (https://github.com/ytdl-org/youtube-dl/issues/27970)
+* [tv4] Relax URL regular expression (https://github.com/ytdl-org/youtube-dl/issues/27964)
++ [tv2] Add support for mtvuutiset.fi (https://github.com/ytdl-org/youtube-dl/issues/27744)
+* [adn] Improve login warning reporting
+* [zype] Fix uplynk id extraction (https://github.com/ytdl-org/youtube-dl/issues/27956)
++ [adn] Add support for authentication (https://github.com/ytdl-org/youtube-dl/issues/17091, https://github.com/ytdl-org/youtube-dl/issues/27841, https://github.com/ytdl-org/youtube-dl/issues/27937)
+* [franceculture] Make thumbnail optional (https://github.com/ytdl-org/youtube-dl/issues/18807)
+* [franceculture] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27891, https://github.com/ytdl-org/youtube-dl/issues/27903)
+* [njpwworld] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27890)
+* [comedycentral] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27905)
+* [wat] Fix format extraction (https://github.com/ytdl-org/youtube-dl/issues/27901)
++ [americastestkitchen:season] Add support for seasons (https://github.com/ytdl-org/youtube-dl/issues/27861)
++ [trovo] Add support for trovo.live (https://github.com/ytdl-org/youtube-dl/issues/26125)
++ [aol] Add support for yahoo videos (https://github.com/ytdl-org/youtube-dl/issues/26650)
+* [yahoo] Fix single video extraction
+* [9gag] Fix and improve extraction (https://github.com/ytdl-org/youtube-dl/issues/23022)
+* [americastestkitchen] Improve metadata extraction for ATK episodes (https://github.com/ytdl-org/youtube-dl/issues/27860)
+* [aljazeera] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/20911, https://github.com/ytdl-org/youtube-dl/issues/27779)
++ [minds] Add support for minds.com (https://github.com/ytdl-org/youtube-dl/issues/17934)
+* [ard] Fix title and description extraction (https://github.com/ytdl-org/youtube-dl/issues/27761)
++ [spotify] Add support for Spotify Podcasts (https://github.com/ytdl-org/youtube-dl/issues/27443)
++ [animeondemand] Add support for lazy playlist extraction (https://github.com/ytdl-org/youtube-dl/issues/27829)
+* [youporn] Restrict fallback download URL (https://github.com/ytdl-org/youtube-dl/issues/27822)
+* [youporn] Improve height and tbr extraction (https://github.com/ytdl-org/youtube-dl/issues/20425, https://github.com/ytdl-org/youtube-dl/issues/23659)
+* [youporn] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27822)
++ [twitter] Add support for unified cards (https://github.com/ytdl-org/youtube-dl/issues/27826)
++ [twitch] Add Authorization header with OAuth token for GraphQL requests
+  (https://github.com/ytdl-org/youtube-dl/issues/27790)
+* [mixcloud:playlist:base] Extract video id in flat playlist mode (https://github.com/ytdl-org/youtube-dl/issues/27787)
+* [cspan] Improve info extraction (https://github.com/ytdl-org/youtube-dl/issues/27791)
+* [adn] Improve info extraction
+* [adn] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/26963, https://github.com/ytdl-org/youtube-dl/issues/27732)
+* [twitch] Improve login error extraction
+* [twitch] Fix authentication (https://github.com/ytdl-org/youtube-dl/issues/27743)
+* [3qsdn] Improve extraction (https://github.com/ytdl-org/youtube-dl/issues/21058)
+* [peertube] Extract formats from streamingPlaylists (https://github.com/ytdl-org/youtube-dl/issues/26002, https://github.com/ytdl-org/youtube-dl/issues/27586, https://github.com/ytdl-org/youtube-dl/issues/27728)
+* [khanacademy] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/2887, https://github.com/ytdl-org/youtube-dl/issues/26803)
+* [spike] Update Paramount Network feed URL (https://github.com/ytdl-org/youtube-dl/issues/27715)
+* [rai] Improve subtitles extraction (https://github.com/ytdl-org/youtube-dl/issues/27698, https://github.com/ytdl-org/youtube-dl/issues/27705)
+* [canvas] Match only supported VRT NU URLs (https://github.com/ytdl-org/youtube-dl/issues/27707)
++ [bibeltv] Add support for bibeltv.de (https://github.com/ytdl-org/youtube-dl/issues/14361)
++ [bfmtv] Add support for bfmtv.com (https://github.com/ytdl-org/youtube-dl/issues/16053, https://github.com/ytdl-org/youtube-dl/issues/26615)
++ [sbs] Add support for ondemand play and news embed URLs (https://github.com/ytdl-org/youtube-dl/issues/17650, https://github.com/ytdl-org/youtube-dl/issues/27629)
+* [twitch] Drop legacy kraken API v5 code altogether and refactor
+* [twitch:vod] Switch to GraphQL for video metadata
+* [canvas] Fix VRT NU extraction (https://github.com/ytdl-org/youtube-dl/issues/26957, https://github.com/ytdl-org/youtube-dl/issues/27053)
+* [twitch] Switch access token to GraphQL and refactor (https://github.com/ytdl-org/youtube-dl/issues/27646)
++ [rai] Detect ContentItem in iframe (https://github.com/ytdl-org/youtube-dl/issues/12652, https://github.com/ytdl-org/youtube-dl/issues/27673)
+* [ketnet] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27662)
++ [dplay] Add suport Discovery+ domains (https://github.com/ytdl-org/youtube-dl/issues/27680)
+* [motherless] Improve extraction (https://github.com/ytdl-org/youtube-dl/issues/26495, https://github.com/ytdl-org/youtube-dl/issues/27450)
+* [motherless] Fix recent videos upload date extraction (https://github.com/ytdl-org/youtube-dl/issues/27661)
+* [nrk] Fix extraction for videos without a legalAge rating
+- [googleplus] Remove extractor (https://github.com/ytdl-org/youtube-dl/issues/4955, https://github.com/ytdl-org/youtube-dl/issues/7400)
++ [applepodcasts] Add support for podcasts.apple.com (https://github.com/ytdl-org/youtube-dl/issues/25918)
++ [googlepodcasts] Add support for podcasts.google.com
++ [iheart] Add support for iheart.com (https://github.com/ytdl-org/youtube-dl/issues/27037)
+* [acast] Clean podcast URLs
+* [stitcher] Clean podcast URLs
++ [xfileshare] Add support for aparat.cam (https://github.com/ytdl-org/youtube-dl/issues/27651)
++ [twitter] Add support for summary card (https://github.com/ytdl-org/youtube-dl/issues/25121)
+* [twitter] Try to use a Generic fallback for unknown twitter cards (https://github.com/ytdl-org/youtube-dl/issues/25982)
++ [stitcher] Add support for shows and show metadata extraction (https://github.com/ytdl-org/youtube-dl/issues/20510)
+* [stv] Improve episode id extraction (https://github.com/ytdl-org/youtube-dl/issues/23083)
+* [nrk] Improve series metadata extraction (https://github.com/ytdl-org/youtube-dl/issues/27473)
++ [nrk] Extract subtitles
+* [nrk] Fix age limit extraction
+* [nrk] Improve video id extraction
++ [nrk] Add support for podcasts (https://github.com/ytdl-org/youtube-dl/issues/27634, https://github.com/ytdl-org/youtube-dl/issues/27635)
+* [nrk] Generalize and delegate all item extractors to nrk
++ [nrk] Add support for mp3 formats
+* [nrktv] Switch to playback endpoint
+* [vvvvid] Fix season metadata extraction (https://github.com/ytdl-org/youtube-dl/issues/18130)
+* [stitcher] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/20811, https://github.com/ytdl-org/youtube-dl/issues/27606)
+* [acast] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/21444, https://github.com/ytdl-org/youtube-dl/issues/27612, https://github.com/ytdl-org/youtube-dl/issues/27613)
++ [arcpublishing] Add support for arcpublishing.com (https://github.com/ytdl-org/youtube-dl/issues/2298, https://github.com/ytdl-org/youtube-dl/issues/9340, https://github.com/ytdl-org/youtube-dl/issues/17200)
++ [sky] Add support for Sports News articles and Brighcove videos (https://github.com/ytdl-org/youtube-dl/issues/13054)
++ [vvvvid] Extract akamai formats
+* [vvvvid] Skip unplayable episodes (https://github.com/ytdl-org/youtube-dl/issues/27599)
+* [yandexvideo] Fix extraction for Python 3.4
++ [redditr] Extract all thumbnails (https://github.com/ytdl-org/youtube-dl/issues/27503)
+* [vvvvid] Improve info extraction
++ [vvvvid] Add support for playlists (https://github.com/ytdl-org/youtube-dl/issues/18130, https://github.com/ytdl-org/youtube-dl/issues/27574)
+* [yandexvideo] Use old API call as fallback
+* [yandexvideo] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/25000)
+- [nbc] Remove CSNNE extractor
+* [nbc] Fix NBCSport VPlayer URL extraction (https://github.com/ytdl-org/youtube-dl/issues/16640)
++ [aenetworks] Add support for biography.com (https://github.com/ytdl-org/youtube-dl/issues/3863)
+* [uktvplay] Match new video URLs (https://github.com/ytdl-org/youtube-dl/issues/17909)
+* [sevenplay] Detect API errors
+* [tenplay] Fix format extraction (https://github.com/ytdl-org/youtube-dl/issues/26653)
+* [brightcove] Raise error for DRM protected videos (https://github.com/ytdl-org/youtube-dl/issues/23467, https://github.com/ytdl-org/youtube-dl/issues/27568)
+* [aparat] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/22285, https://github.com/ytdl-org/youtube-dl/issues/22611, https://github.com/ytdl-org/youtube-dl/issues/23348, https://github.com/ytdl-org/youtube-dl/issues/24354, https://github.com/ytdl-org/youtube-dl/issues/24591, https://github.com/ytdl-org/youtube-dl/issues/24904,
+  https://github.com/ytdl-org/youtube-dl/issues/25418, https://github.com/ytdl-org/youtube-dl/issues/26070, https://github.com/ytdl-org/youtube-dl/issues/26350, https://github.com/ytdl-org/youtube-dl/issues/26738, https://github.com/ytdl-org/youtube-dl/issues/27563)
+- [brightcove] Remove sonyliv specific code
+* [piksel] Improve format extraction
++ [zype] Add support for uplynk videos
++ [toggle] Add support for live.mewatch.sg (https://github.com/ytdl-org/youtube-dl/issues/27555)
++ [go] Add support for fxnow.fxnetworks.com (https://github.com/ytdl-org/youtube-dl/issues/13972, https://github.com/ytdl-org/youtube-dl/issues/22467, https://github.com/ytdl-org/youtube-dl/issues/23754, https://github.com/ytdl-org/youtube-dl/issues/26826)
+* [teachable] Improve embed detection (https://github.com/ytdl-org/youtube-dl/issues/26923)
+* [mitele] Fix free video extraction (https://github.com/ytdl-org/youtube-dl/issues/24624, https://github.com/ytdl-org/youtube-dl/issues/25827, https://github.com/ytdl-org/youtube-dl/issues/26757)
+* [telecinco] Fix extraction
+* [youtube] Update invidious.snopyta.org (https://github.com/ytdl-org/youtube-dl/issues/22667)
+* [amcnetworks] Improve auth only video detection (https://github.com/ytdl-org/youtube-dl/issues/27548)
++ [generic] Add support for VHX Embeds (https://github.com/ytdl-org/youtube-dl/issues/27546)
+* [instagram] Fix comment count extraction
++ [instagram] Add support for reel URLs (https://github.com/ytdl-org/youtube-dl/issues/26234, https://github.com/ytdl-org/youtube-dl/issues/26250)
+* [bbc] Switch to media selector v6 (https://github.com/ytdl-org/youtube-dl/issues/23232, https://github.com/ytdl-org/youtube-dl/issues/23933, https://github.com/ytdl-org/youtube-dl/issues/26303, https://github.com/ytdl-org/youtube-dl/issues/26432, https://github.com/ytdl-org/youtube-dl/issues/26821,
+  https://github.com/ytdl-org/youtube-dl/issues/27538)
+* [instagram] Improve thumbnail extraction
+* [instagram] Fix extraction when authenticated (https://github.com/ytdl-org/youtube-dl/issues/22880, https://github.com/ytdl-org/youtube-dl/issues/26377, https://github.com/ytdl-org/youtube-dl/issues/26981,
+  https://github.com/ytdl-org/youtube-dl/issues/27422)
+* [spankbang:playlist] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/24087)
++ [spankbang] Add support for playlist videos
+* [pornhub] Improve like and dislike count extraction (https://github.com/ytdl-org/youtube-dl/issues/27356)
+* [pornhub] Fix lq formats extraction (https://github.com/ytdl-org/youtube-dl/issues/27386, https://github.com/ytdl-org/youtube-dl/issues/27393)
++ [bongacams] Add support for bongacams.com (https://github.com/ytdl-org/youtube-dl/issues/27440)
+* [theweatherchannel] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/25930, https://github.com/ytdl-org/youtube-dl/issues/26051)
++ [sprout] Add support for Universal Kids (https://github.com/ytdl-org/youtube-dl/issues/22518)
+* [theplatform] Allow passing geo bypass countries from other extractors
++ [wistia] Add support for playlists (https://github.com/ytdl-org/youtube-dl/issues/27533)
++ [ctv] Add support for ctv.ca (https://github.com/ytdl-org/youtube-dl/issues/27525)
+* [9c9media] Improve info extraction
+* [sonyliv] Fix title for movies
+* [sonyliv] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/25667)
+* [streetvoice] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27455, https://github.com/ytdl-org/youtube-dl/issues/27492)
++ [facebook] Add support for watchparty pages (https://github.com/ytdl-org/youtube-dl/issues/27507)
+* [cbslocal] Fix video extraction
++ [brightcove] Add another method to extract policyKey
+* [mewatch] Relax URL regular expression (https://github.com/ytdl-org/youtube-dl/issues/27506)
+- [tastytrade] Remove extractor (https://github.com/ytdl-org/youtube-dl/issues/25716)
+* [niconico] Fix playlist extraction (https://github.com/ytdl-org/youtube-dl/issues/27428)
+- [everyonesmixtape] Remove extractor
+- [kanalplay] Remove extractor
+* [arkena] Fix extraction
+* [nba] Rewrite extractor
+* [turner] Improve info extraction
+* [generic] Improve RSS age limit extraction
+* [generic] Fix RSS itunes thumbnail extraction (https://github.com/ytdl-org/youtube-dl/issues/27405)
++ [redditr] Extract duration (https://github.com/ytdl-org/youtube-dl/issues/27426)
+- [zaq1] Remove extractor
++ [asiancrush] Add support for retrocrush.tv
+* [asiancrush] Fix extraction
+- [noco] Remove extractor (https://github.com/ytdl-org/youtube-dl/issues/10864)
+* [nfl] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/22245)
+* [skysports] Relax URL regular expression (https://github.com/ytdl-org/youtube-dl/issues/27435)
++ [tv5unis] Add support for tv5unis.ca (https://github.com/ytdl-org/youtube-dl/issues/22399, https://github.com/ytdl-org/youtube-dl/issues/24890)
++ [videomore] Add support for more.tv (https://github.com/ytdl-org/youtube-dl/issues/27088)
++ [nhk:program] Add support for audio programs and program clips
++ [nhk] Add support for NHK video programs (https://github.com/ytdl-org/youtube-dl/issues/27230)
+* [mdr] Bypass geo restriction
+* [mdr] Improve extraction (https://github.com/ytdl-org/youtube-dl/issues/24346, https://github.com/ytdl-org/youtube-dl/issues/26873)
+* [eporner] Fix view count extraction and make optional (https://github.com/ytdl-org/youtube-dl/issues/23306)
++ [eporner] Extend URL regular expression
+* [eporner] Fix hash extraction and extend _VALID_URL (https://github.com/ytdl-org/youtube-dl/issues/27396)
+* [slideslive] Use m3u8 entry protocol for m3u8 formats (https://github.com/ytdl-org/youtube-dl/issues/27400)
+* [twitcasting] Fix format extraction and improve info extraction (https://github.com/ytdl-org/youtube-dl/issues/24868)
+* [linuxacademy] Fix authentication and extraction (https://github.com/ytdl-org/youtube-dl/issues/21129, https://github.com/ytdl-org/youtube-dl/issues/26223, https://github.com/ytdl-org/youtube-dl/issues/27402)
+* [itv] Clean description from HTML tags (https://github.com/ytdl-org/youtube-dl/issues/27399)
+* [vlive] Sort live formats (https://github.com/ytdl-org/youtube-dl/issues/27404)
+* [hotstart] Fix and improve extraction
+    * Fix format extraction (https://github.com/ytdl-org/youtube-dl/issues/26690)
+    + Extract thumbnail URL (https://github.com/ytdl-org/youtube-dl/issues/16079, https://github.com/ytdl-org/youtube-dl/issues/20412)
+    + Add support for country specific playlist URLs (https://github.com/ytdl-org/youtube-dl/issues/23496)
+    * Select the last id in video URL (https://github.com/ytdl-org/youtube-dl/issues/26412)
++ [youtube] Add some invidious instances (https://github.com/ytdl-org/youtube-dl/issues/27373)
++ [ruutu] Extract more metadata
++ [ruutu] Detect non-free videos (https://github.com/ytdl-org/youtube-dl/issues/21154)
+* [ruutu] Authenticate format URLs (https://github.com/ytdl-org/youtube-dl/issues/21031, https://github.com/ytdl-org/youtube-dl/issues/26782)
++ [ruutu] Add support for static.nelonenmedia.fi (https://github.com/ytdl-org/youtube-dl/issues/25412)
++ [ruutu] Extend URL regular expression (https://github.com/ytdl-org/youtube-dl/issues/24839)
++ [facebook] Add support archived live video URLs (https://github.com/ytdl-org/youtube-dl/issues/15859)
+* [wdr] Improve overall extraction
++ [wdr] Extend subtitles extraction (https://github.com/ytdl-org/youtube-dl/issues/22672, https://github.com/ytdl-org/youtube-dl/issues/22723)
++ [facebook] Add support for videos attached to Relay based story pages
+  (https://github.com/ytdl-org/youtube-dl/issues/10795)
++ [wdr:page] Add support for kinder.wdr.de (https://github.com/ytdl-org/youtube-dl/issues/27350)
++ [facebook] Add another regular expression for handleServerJS
+* [facebook] Fix embed page extraction
++ [facebook] Add support for Relay post pages (https://github.com/ytdl-org/youtube-dl/issues/26935)
++ [facebook] Add support for watch videos (https://github.com/ytdl-org/youtube-dl/issues/22795, https://github.com/ytdl-org/youtube-dl/issues/27062)
++ [facebook] Add support for group posts with multiple videos (https://github.com/ytdl-org/youtube-dl/issues/19131)
+* [itv] Fix series metadata extraction (https://github.com/ytdl-org/youtube-dl/issues/26897)
+- [itv] Remove old extraction method (https://github.com/ytdl-org/youtube-dl/issues/23177)
+* [facebook] Redirect mobile URLs to desktop URLs (https://github.com/ytdl-org/youtube-dl/issues/24831, https://github.com/ytdl-org/youtube-dl/issues/25624)
++ [facebook] Add support for Relay based pages (https://github.com/ytdl-org/youtube-dl/issues/26823)
+* [facebook] Try to reduce unnecessary tahoe requests
+- [facebook] Remove hardcoded Chrome User-Agent (https://github.com/ytdl-org/youtube-dl/issues/18974, https://github.com/ytdl-org/youtube-dl/issues/25411, https://github.com/ytdl-org/youtube-dl/issues/26958,
+  https://github.com/ytdl-org/youtube-dl/issues/27329)
+- [smotri] Remove extractor (https://github.com/ytdl-org/youtube-dl/issues/27358)
+- [beampro] Remove extractor (https://github.com/ytdl-org/youtube-dl/issues/17290, https://github.com/ytdl-org/youtube-dl/issues/22871, https://github.com/ytdl-org/youtube-dl/issues/23020, https://github.com/ytdl-org/youtube-dl/issues/23061, https://github.com/ytdl-org/youtube-dl/issues/26099)
++ [tubitv] Extract release year (https://github.com/ytdl-org/youtube-dl/issues/27317)
+* [amcnetworks] Fix free content extraction (https://github.com/ytdl-org/youtube-dl/issues/20354)
++ [telequebec] Add support for video.telequebec.tv (https://github.com/ytdl-org/youtube-dl/issues/27339)
+* [telequebec] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/25733, https://github.com/ytdl-org/youtube-dl/issues/26883)
+* [tvplay:home] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/21153)
+* [americastestkitchen] Fix Extraction and add support
+  for Cook's Country and Cook's Illustrated (https://github.com/ytdl-org/youtube-dl/issues/17234, https://github.com/ytdl-org/youtube-dl/issues/27322)
++ [slideslive] Add support for yoda service videos and extract subtitles
+  (https://github.com/ytdl-org/youtube-dl/issues/27323)
+* [aenetworks] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/23363, https://github.com/ytdl-org/youtube-dl/issues/23390, https://github.com/ytdl-org/youtube-dl/issues/26795, https://github.com/ytdl-org/youtube-dl/issues/26985)
+    * Fix Fastly format extraction
+    + Add support for play and watch subdomains
+    + Extract series metadata
++ [generic] Extract RSS video description, timestamp and itunes metadata
+  (https://github.com/ytdl-org/youtube-dl/issues/27177)
+* [nrk] Reduce the number of instalments and episodes requests
+* [nrk] Improve extraction
+    * Improve format extraction for old akamai formats
+    + Add is_live value to entry info dict
+    * Request instalments only when available
+    * Fix skole extraction
++ [peertube] Extract fps
++ [peertube] Recognize audio-only formats (https://github.com/ytdl-org/youtube-dl/issues/27295)
+* [teachable:course] Improve extraction (https://github.com/ytdl-org/youtube-dl/issues/24507, https://github.com/ytdl-org/youtube-dl/issues/27286)
+* [nrk] Improve error extraction
+* [nrktv:series] Improve extraction (https://github.com/ytdl-org/youtube-dl/issues/21926)
+* [nrktv:season] Improve extraction
+* [nrk] Improve format extraction and geo-restriction detection (https://github.com/ytdl-org/youtube-dl/issues/24221)
+* [pornhub] Handle HTTP errors gracefully (https://github.com/ytdl-org/youtube-dl/issues/26414)
+* [nrktv] Relax URL regular expression (https://github.com/ytdl-org/youtube-dl/issues/27299, https://github.com/ytdl-org/youtube-dl/issues/26185)
++ [zdf] Extract webm formats (https://github.com/ytdl-org/youtube-dl/issues/26659)
++ [gamespot] Extract DASH and HTTP formats
++ [tver] Add support for tver.jp (https://github.com/ytdl-org/youtube-dl/issues/26662, https://github.com/ytdl-org/youtube-dl/issues/27284)
++ [pornhub] Add support for pornhub.org (https://github.com/ytdl-org/youtube-dl/issues/27276)
++ [tva] Add support for qub.ca (https://github.com/ytdl-org/youtube-dl/issues/27235)
++ [toggle] Detect DRM protected videos (https://github.com/ytdl-org/youtube-dl/issues/16479, https://github.com/ytdl-org/youtube-dl/issues/20805)
++ [toggle] Add support for new MeWatch URLs (https://github.com/ytdl-org/youtube-dl/issues/27256)
++ [cspan] Extract info from jwplayer data (https://github.com/ytdl-org/youtube-dl/issues/3672, https://github.com/ytdl-org/youtube-dl/issues/3734, https://github.com/ytdl-org/youtube-dl/issues/10638, https://github.com/ytdl-org/youtube-dl/issues/13030,
+  https://github.com/ytdl-org/youtube-dl/issues/18806, https://github.com/ytdl-org/youtube-dl/issues/23148, https://github.com/ytdl-org/youtube-dl/issues/24461, https://github.com/ytdl-org/youtube-dl/issues/26171, https://github.com/ytdl-org/youtube-dl/issues/26800, https://github.com/ytdl-org/youtube-dl/issues/27263)
+* [cspan] Pass Referer header with format's video URL (https://github.com/ytdl-org/youtube-dl/issues/26032, https://github.com/ytdl-org/youtube-dl/issues/25729)
++ [mediaset] Add support for movie URLs (https://github.com/ytdl-org/youtube-dl/issues/27240)
+* [drtv] Extend URL regular expression (https://github.com/ytdl-org/youtube-dl/issues/27243)
++ [ina] Add support for mobile URLs (https://github.com/ytdl-org/youtube-dl/issues/27229)
+* [pornhub] Fix like and dislike count extraction (https://github.com/ytdl-org/youtube-dl/issues/27227, https://github.com/ytdl-org/youtube-dl/issues/27234)
+* [youtube] Improve yt initial player response extraction (https://github.com/ytdl-org/youtube-dl/issues/27216)
+* [videa] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/25650, https://github.com/ytdl-org/youtube-dl/issues/25973, https://github.com/ytdl-org/youtube-dl/issues/26301)
++ [spreaker] Add support for spreaker.com (https://github.com/ytdl-org/youtube-dl/issues/13480, https://github.com/ytdl-org/youtube-dl/issues/13877)
+* [vlive] Improve extraction for geo-restricted videos
++ [vlive] Add support for post URLs (https://github.com/ytdl-org/youtube-dl/issues/27122, https://github.com/ytdl-org/youtube-dl/issues/27123)
+* [viki] Fix video API request (https://github.com/ytdl-org/youtube-dl/issues/27184)
+* [bbc] Fix BBC Three clip extraction
+* [bbc] Fix BBC News videos extraction
++ [medaltv] Add support for medal.tv (https://github.com/ytdl-org/youtube-dl/issues/27149)
+* [nrk] Fix extraction
++ [pinterest] Add support for large collections (more than 25 pins)
++ [franceinter] Extract thumbnail (https://github.com/ytdl-org/youtube-dl/issues/27153)
++ [box] Add support for box.com (https://github.com/ytdl-org/youtube-dl/issues/5949)
++ [nytimes] Add support for cooking.nytimes.com (https://github.com/ytdl-org/youtube-dl/issues/27112, https://github.com/ytdl-org/youtube-dl/issues/27143)
++ [rumble] Add support for embed pages (https://github.com/ytdl-org/youtube-dl/issues/10785)
++ [skyit] Add support for multiple Sky Italia websites (https://github.com/ytdl-org/youtube-dl/issues/26629)
++ [pinterest] Add support for pinterest.com (https://github.com/ytdl-org/youtube-dl/issues/25747)
++ [svtplay] Add support for svt.se/barnkanalen (https://github.com/ytdl-org/youtube-dl/issues/24817)
++ [svt] Extract timestamp (https://github.com/ytdl-org/youtube-dl/issues/27130)
+* [svtplay] Improve thumbnail extraction (https://github.com/ytdl-org/youtube-dl/issues/27130)
+* [infoq] Fix format extraction (https://github.com/ytdl-org/youtube-dl/issues/25984)
+* [francetv] Update to fix thumbnail URL issue (https://github.com/ytdl-org/youtube-dl/issues/27120)
++ [discoverynetworks] Add support new TLC/DMAX URLs (https://github.com/ytdl-org/youtube-dl/issues/27100)
+* [rai] Fix protocol relative relinker URLs (https://github.com/ytdl-org/youtube-dl/issues/22766)
+* [rai] Fix unavailable video format detection
+* [rai] Improve extraction
+* [rai] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27077)
+* [viki] Improve format extraction
+* [viki] Fix stream extraction from MPD (https://github.com/ytdl-org/youtube-dl/issues/27092)
++ [amara] Add support for amara.org (https://github.com/ytdl-org/youtube-dl/issues/20618)
+* [vimeo:album] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27079)
+* [mtv] Fix mgid extraction (https://github.com/ytdl-org/youtube-dl/issues/26841)
+* [youporn] Fix upload date extraction
+* [youporn] Make comment count optional (https://github.com/ytdl-org/youtube-dl/issues/26986)
+* [arte] Rework extractors
+  * Reimplement embed and playlist extractors to delegate to the single
+    entrypoint artetv extractor
+  * Improve embeds detection (https://github.com/ytdl-org/youtube-dl/issues/27057)
++ [arte] Extract m3u8 formats (https://github.com/ytdl-org/youtube-dl/issues/27061)
+* [mgtv] Fix format extraction (https://github.com/ytdl-org/youtube-dl/issues/26415)
+* [francetv] Improve info extraction
++ [francetv] Add fallback video URL extraction (https://github.com/ytdl-org/youtube-dl/issues/27047)
+* [spiegel] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/24206, https://github.com/ytdl-org/youtube-dl/issues/24767)
+* [malltv] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/27035)
++ [bandcamp] Extract playlist description (https://github.com/ytdl-org/youtube-dl/issues/22684)
+* [urplay] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/26828)
+* [lrt] Fix extraction with empty tags (https://github.com/ytdl-org/youtube-dl/issues/20264)
++ [ndr:embed:base] Extract subtitles (https://github.com/ytdl-org/youtube-dl/issues/25447, https://github.com/ytdl-org/youtube-dl/issues/26106)
++ [servus] Add support for pm-wissen.com (https://github.com/ytdl-org/youtube-dl/issues/25869)
+* [servus] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/26872, https://github.com/ytdl-org/youtube-dl/issues/26967, https://github.com/ytdl-org/youtube-dl/issues/26983, https://github.com/ytdl-org/youtube-dl/issues/27000)
+* [xtube] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/26996)
+* [lrt] Fix extraction
++ [condenast] Extract subtitles
+* [condenast] Fix extraction
+* [bandcamp] Fix extraction (https://github.com/ytdl-org/youtube-dl/issues/26681, https://github.com/ytdl-org/youtube-dl/issues/26684)
+* [rai] Fix RaiPlay extraction (https://github.com/ytdl-org/youtube-dl/issues/26064, https://github.com/ytdl-org/youtube-dl/issues/26096)
+* [vlive] Fix extraction
+* [usanetwork] Fix extraction
+* [nbc] Fix NBCNews/Today/MSNBC extraction
+* [cnbc] Fix extraction
+
 version 2021.02.23
 Extractor
 * [youtube] new crypto
