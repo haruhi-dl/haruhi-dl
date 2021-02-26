@@ -817,6 +817,7 @@ from .ntvru import NTVRuIE
 from .nytimes import (
     NYTimesIE,
     NYTimesArticleIE,
+    NYTimesCookingIE,
 )
 from .nuvid import NuvidIE
 from .nzz import NZZIE
