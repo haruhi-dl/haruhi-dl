@@ -933,14 +933,14 @@ class TestHaruhiDL(unittest.TestCase):
     # Test case for https://github.com/hdl-org/haruhi-dl/issues/27064
     def test_ignoreerrors_for_playlist_with_url_transparent_iterable_entries(self):
 
-        class _YDL(YDL):
+        class _HDL(HDL):
             def __init__(self, *args, **kwargs):
-                super(_YDL, self).__init__(*args, **kwargs)
+                super(_HDL, self).__init__(*args, **kwargs)
 
             def trouble(self, s, tb=None):
                 pass
 
-        ydl = _YDL({
+        hdl = _HDL({
             'format': 'extra',
             'ignoreerrors': True,
         })
@@ -984,15 +984,15 @@ class TestHaruhiDL(unittest.TestCase):
             def _real_extract(self, url):
                 return self.playlist_result(self._entries())
 
-        ydl.add_info_extractor(VideoIE(ydl))
-        ydl.add_info_extractor(PlaylistIE(ydl))
-        info = ydl.extract_info('playlist:')
+        hdl.add_info_extractor(VideoIE(hdl))
+        hdl.add_info_extractor(PlaylistIE(hdl))
+        info = hdl.extract_info('playlist:')
         entries = info['entries']
         self.assertEqual(len(entries), 3)
         self.assertTrue(entries[0] is None)
         self.assertTrue(entries[1] is None)
-        self.assertEqual(len(ydl.downloaded_info_dicts), 1)
-        downloaded = ydl.downloaded_info_dicts[0]
+        self.assertEqual(len(hdl.downloaded_info_dicts), 1)
+        downloaded = hdl.downloaded_info_dicts[0]
         self.assertEqual(entries[2], downloaded)
         self.assertEqual(downloaded['url'], TEST_URL)
         self.assertEqual(downloaded['title'], 'Video Transparent 2')
