@@ -132,6 +132,8 @@ class PeerTubeSHIE(SelfhostedInfoExtractor):
                 'format_id': format_id,
                 'filesize': file_size,
             })
+            if format_id == '0p':
+                f['vcodec'] = 'none'
             formats.append(f)
         self._sort_formats(formats)
 
