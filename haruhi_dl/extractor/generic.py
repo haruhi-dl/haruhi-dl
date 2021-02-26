@@ -67,7 +67,10 @@ from .tube8 import Tube8IE
 from .mofosex import MofosexEmbedIE
 from .spankwire import SpankwireIE
 from .youporn import YouPornIE
-from .vimeo import VimeoIE
+from .vimeo import (
+    VimeoIE,
+    VHXEmbedIE,
+)
 from .dailymotion import DailymotionIE
 from .dailymail import DailyMailIE
 from .onionstudios import OnionStudiosIE
@@ -2247,6 +2250,17 @@ class GenericIE(InfoExtractor):
         #         'force_generic_extractor': True,
         #     },
         # }
+        {
+            # VHX Embed
+            'url': 'https://demo.vhx.tv/category-c/videos/file-example-mp4-480-1-5mg-copy',
+            'info_dict': {
+                'id': '858208',
+                'ext': 'mp4',
+                'title': 'Untitled',
+                'uploader_id': 'user80538407',
+                'uploader': 'OTT Videos',
+            },
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -2661,6 +2675,7 @@ class GenericIE(InfoExtractor):
             SVTIE,
             XLinkIE,
             LibsynIE,
+            VHXEmbedIE,
         ):
             try:
                 ie_key = embie.ie_key()
