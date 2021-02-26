@@ -132,6 +132,7 @@ from .blinkx import BlinkxIE
 from .bloomberg import BloombergIE
 from .bokecc import BokeCCIE
 from .bostonglobe import BostonGlobeIE
+from .box import BoxIE
 from .bpb import BpbIE
 from .br import (
     BRIE,
