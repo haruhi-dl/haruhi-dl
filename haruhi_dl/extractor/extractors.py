@@ -493,6 +493,10 @@ from .ign import (
     OneUPIE,
     PCMagIE,
 )
+from .iheart import (
+    IHeartRadioIE,
+    IHeartRadioPodcastIE,
+)
 from .imdb import (
     ImdbIE,
     ImdbListIE
