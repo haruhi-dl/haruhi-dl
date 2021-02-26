@@ -1,7 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
-from __future__ import unicode_literals
+import sys
+
+if sys.version_info[0] == 2:
+    sys.exit('haruhi-dl no longer works on Python 2, use Python 3 instead')
 
 __license__ = 'LGPL-3.0-or-later'
 
@@ -9,7 +12,6 @@ import codecs
 import io
 import os
 import random
-import sys
 
 
 from .options import (
