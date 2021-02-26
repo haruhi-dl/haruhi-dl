@@ -37,6 +37,7 @@ Core
   of url_transparent (https://github.com/ytdl-org/youtube-dl/issues/27064)
 * [extractor/common] Output error for invalid URLs in _is_valid_url (https://github.com/ytdl-org/youtube-dl/issues/21400,
   https://github.com/ytdl-org/youtube-dl/issues/24151, https://github.com/ytdl-org/youtube-dl/issues/25617, https://github.com/ytdl-org/youtube-dl/issues/25618, https://github.com/ytdl-org/youtube-dl/issues/25586, https://github.com/ytdl-org/youtube-dl/issues/26068, https://github.com/ytdl-org/youtube-dl/issues/27072)
++ [extractor/common] next.js data search function
 - Removed Herobrine
 
 Extractor
@@ -382,6 +383,10 @@ Extractor
 * [usanetwork] Fix extraction
 * [nbc] Fix NBCNews/Today/MSNBC extraction
 * [cnbc] Fix extraction
++ [transistorfm] new extractor
+* [x-link] improved embed searching
++ [PolskaPress] new extractor
+* [tvn24] next.js frontend extraction without playwright
 
 version 2021.02.23
 Extractor
