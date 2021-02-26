@@ -424,7 +424,6 @@ from .funkwhale import (
     FunkwhaleRadioSHIE,
 )
 from .fusion import FusionIE
-from .fxnetworks import FXNetworksIE
 from .gaia import GaiaIE
 from .gameinformer import GameInformerIE
 from .gamespot import GameSpotIE
