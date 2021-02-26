@@ -30,6 +30,7 @@ from ..utils import (
     smuggle_url,
     unescapeHTML,
     unified_strdate,
+    unified_timestamp,
     unsmuggle_url,
     UnsupportedError,
     xpath_text,
@@ -2245,6 +2246,8 @@ class GenericIE(InfoExtractor):
                 'url': next_url,
                 'title': it.find('title').text,
                 'description': xpath_text(it, 'description', default=None),
+                'timestamp': unified_timestamp(
+                    xpath_text(it, 'pubDate', default=None)),
             })
 
         return {
