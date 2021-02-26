@@ -36,15 +36,14 @@ class IplaIE(InfoExtractor):
         'type': 'other',
         'value': str(uuid4()),
     }
-    
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
         media = self.get_info(video_id)
-        
+
         formats = []
 
-        for ptrciscute in media['playback']['mediaSources']:        
+        for ptrciscute in media['playback']['mediaSources']:
             formats.append({
                 "url": url_or_none(self.get_url(video_id, ptrciscute['id'])),
                 "height": int_or_none(ptrciscute["quality"][:-1])
@@ -70,7 +69,7 @@ class IplaIE(InfoExtractor):
             'jsonrpc': '2.0',
             'params': params,
         }), encoding='utf-8')
-        
+
     def get_info(self, media_id):
         req = self.rpc('prePlayData', {
             'mediaId': media_id
@@ -79,11 +78,10 @@ class IplaIE(InfoExtractor):
         headers = {
             'Content-type': 'application/json'
         }
-        
+
         res = self._download_json('http://b2c-mobile.redefine.pl/rpc/navigation/', media_id, data=req, headers=headers)
         return res['result']['mediaItem']
-        #return res.json()['result']['mediaItem']['playback']['mediaSources']
-    
+
     def get_url(self, media_id, source_id):
         req = self.rpc('getPseudoLicense', {
             'mediaId': media_id,
@@ -93,6 +91,6 @@ class IplaIE(InfoExtractor):
         headers = {
             'Content-type': 'application/json'
         }
-        
+
         res = self._download_json('https://b2c-mobile.redefine.pl/rpc/drm/', media_id, data=req, headers=headers)
         return res['result']['url']
