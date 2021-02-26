@@ -1085,12 +1085,6 @@ from .sky import (
 from .slideshare import SlideshareIE
 from .slideslive import SlidesLiveIE
 from .slutload import SlutloadIE
-from .smotri import (
-    SmotriIE,
-    SmotriCommunityIE,
-    SmotriUserIE,
-    SmotriBroadcastIE,
-)
 from .snotr import SnotrIE
 from .sohu import SohuIE
 from .sonyliv import SonyLIVIE
