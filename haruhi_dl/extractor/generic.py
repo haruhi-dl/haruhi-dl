@@ -135,6 +135,7 @@ from .libsyn import LibsynIE
 from .pulsembed import PulsEmbedIE
 from .arcpublishing import ArcPublishingIE
 from .medialaan import MedialaanIE
+from .simplecast import SimplecastIE
 
 
 class GenericIE(InfoExtractor):
@@ -2291,6 +2292,15 @@ class GenericIE(InfoExtractor):
                 'duration': 159,
             },
         },
+        {
+            # Simplecast player embed
+            'url': 'https://www.bio.org/podcast',
+            'info_dict': {
+                'id': 'podcast',
+                'title': 'I AM BIO Podcast | BIO',
+            },
+            'playlist_mincount': 52,
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -2711,6 +2721,7 @@ class GenericIE(InfoExtractor):
             VHXEmbedIE,
             ArcPublishingIE,
             MedialaanIE,
+            SimplecastIE,
         ):
             try:
                 ie_key = embie.ie_key()
