@@ -134,6 +134,8 @@ class PeerTubeSHIE(SelfhostedInfoExtractor):
             })
             if format_id == '0p':
                 f['vcodec'] = 'none'
+            else:
+                f['fps'] = int_or_none(file_.get('fps'))
             formats.append(f)
         self._sort_formats(formats)
 
