@@ -72,7 +72,7 @@ class MedialaanIE(InfoExtractor):
     }]
 
     @staticmethod
-    def _extract_urls(webpage):
+    def _extract_urls(webpage, **kw):
         entries = []
         for element in re.findall(r'(<div[^>]+data-mychannels-type="video"[^>]*>)', webpage):
             mychannels_id = extract_attributes(element).get('data-mychannels-id')
