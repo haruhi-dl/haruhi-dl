@@ -20,19 +20,24 @@ from ..utils import (
     ExtractorError,
     float_or_none,
     HEADRequest,
+    int_or_none,
     is_html,
     js_to_json,
     KNOWN_EXTENSIONS,
     merge_dicts,
     mimetype2ext,
     orderedSet,
+    parse_duration,
     sanitized_Request,
     smuggle_url,
     unescapeHTML,
-    unified_strdate,
+    unified_timestamp,
     unsmuggle_url,
     UnsupportedError,
+    url_or_none,
+    xpath_attr,
     xpath_text,
+    xpath_with_ns,
 )
 from .commonprotocols import RtmpIE
 from .brightcove import (
@@ -48,7 +53,6 @@ from .ooyala import OoyalaIE
 from .rutv import RUTVIE
 from .tvc import TVCIE
 from .sportbox import SportBoxIE
-from .smotri import SmotriIE
 from .myvi import MyviIE
 from .condenast import CondeNastIE
 from .udn import UDNEmbedIE
@@ -63,7 +67,10 @@ from .tube8 import Tube8IE
 from .mofosex import MofosexEmbedIE
 from .spankwire import SpankwireIE
 from .youporn import YouPornIE
-from .vimeo import VimeoIE
+from .vimeo import (
+    VimeoIE,
+    VHXEmbedIE,
+)
 from .dailymotion import DailymotionIE
 from .dailymail import DailyMailIE
 from .onionstudios import OnionStudiosIE
@@ -91,6 +98,7 @@ from .piksel import PikselIE
 from .videa import VideaIE
 from .twentymin import TwentyMinutenIE
 from .ustream import UstreamIE
+from .arte import ArteTVEmbedIE
 from .videopress import VideoPressIE
 from .rutube import RutubeIE
 from .limelight import LimelightBaseIE
@@ -125,6 +133,9 @@ from .rtlnl import RtlNlIE
 from .xnews import XLinkIE
 from .libsyn import LibsynIE
 from .pulsembed import PulsEmbedIE
+from .arcpublishing import ArcPublishingIE
+from .medialaan import MedialaanIE
+from .simplecast import SimplecastIE
 
 
 class GenericIE(InfoExtractor):
@@ -203,11 +214,48 @@ class GenericIE(InfoExtractor):
         {
             'url': 'http://podcastfeeds.nbcnews.com/audio/podcast/MSNBC-MADDOW-NETCAST-M4V.xml',
             'info_dict': {
-                'id': 'pdv_maddow_netcast_m4v-02-27-2015-201624',
-                'ext': 'm4v',
-                'upload_date': '20150228',
-                'title': 'pdv_maddow_netcast_m4v-02-27-2015-201624',
-            }
+                'id': 'http://podcastfeeds.nbcnews.com/nbcnews/video/podcast/MSNBC-MADDOW-NETCAST-M4V.xml',
+                'title': 'MSNBC Rachel Maddow (video)',
+                'description': 're:.*her unique approach to storytelling.*',
+            },
+            'playlist': [{
+                'info_dict': {
+                    'ext': 'mov',
+                    'id': 'pdv_maddow_netcast_mov-12-04-2020-224335',
+                    'title': 're:MSNBC Rachel Maddow',
+                    'description': 're:.*her unique approach to storytelling.*',
+                    'timestamp': int,
+                    'upload_date': compat_str,
+                    'duration': float,
+                },
+            }],
+        },
+        # RSS feed with item with description and thumbnails
+        {
+            'url': 'https://anchor.fm/s/dd00e14/podcast/rss',
+            'info_dict': {
+                'id': 'https://anchor.fm/s/dd00e14/podcast/rss',
+                'title': 're:.*100% Hydrogen.*',
+                'description': 're:.*In this episode.*',
+            },
+            'playlist': [{
+                'info_dict': {
+                    'ext': 'm4a',
+                    'id': 'c1c879525ce2cb640b344507e682c36d',
+                    'title': 're:Hydrogen!',
+                    'description': 're:.*In this episode we are going.*',
+                    'timestamp': 1567977776,
+                    'upload_date': '20190908',
+                    'duration': 459,
+                    'thumbnail': r're:^https?://.*\.jpg$',
+                    'episode_number': 1,
+                    'season_number': 1,
+                    'age_limit': 0,
+                },
+            }],
+            'params': {
+                'skip_download': True,
+            },
         },
         # RSS feed with enclosures and unsupported link URLs
         {
@@ -2111,23 +2159,23 @@ class GenericIE(InfoExtractor):
                 'skip_download': True,
             },
         },
-        {
-            # Zype embed
-            'url': 'https://www.cookscountry.com/episode/554-smoky-barbecue-favorites',
-            'info_dict': {
-                'id': '5b400b834b32992a310622b9',
-                'ext': 'mp4',
-                'title': 'Smoky Barbecue Favorites',
-                'thumbnail': r're:^https?://.*\.jpe?g',
-                'description': 'md5:5ff01e76316bd8d46508af26dc86023b',
-                'upload_date': '20170909',
-                'timestamp': 1504915200,
-            },
-            'add_ie': [ZypeIE.ie_key()],
-            'params': {
-                'skip_download': True,
-            },
-        },
+        # {
+        #     # Zype embed
+        #     'url': 'https://www.cookscountry.com/episode/554-smoky-barbecue-favorites',
+        #     'info_dict': {
+        #         'id': '5b400b834b32992a310622b9',
+        #         'ext': 'mp4',
+        #         'title': 'Smoky Barbecue Favorites',
+        #         'thumbnail': r're:^https?://.*\.jpe?g',
+        #         'description': 'md5:5ff01e76316bd8d46508af26dc86023b',
+        #         'upload_date': '20170909',
+        #         'timestamp': 1504915200,
+        #     },
+        #     'add_ie': [ZypeIE.ie_key()],
+        #     'params': {
+        #         'skip_download': True,
+        #     },
+        # },
         {
             # videojs embed
             'url': 'https://video.sibnet.ru/shell.php?videoid=3422904',
@@ -2205,6 +2253,54 @@ class GenericIE(InfoExtractor):
         #         'force_generic_extractor': True,
         #     },
         # }
+        {
+            # VHX Embed
+            'url': 'https://demo.vhx.tv/category-c/videos/file-example-mp4-480-1-5mg-copy',
+            'info_dict': {
+                'id': '858208',
+                'ext': 'mp4',
+                'title': 'Untitled',
+                'uploader_id': 'user80538407',
+                'uploader': 'OTT Videos',
+            },
+        },
+        {
+            # ArcPublishing PoWa video player
+            'url': 'https://www.adn.com/politics/2020/11/02/video-senate-candidates-campaign-in-anchorage-on-eve-of-election-day/',
+            'md5': 'b03b2fac8680e1e5a7cc81a5c27e71b3',
+            'info_dict': {
+                'id': '8c99cb6e-b29c-4bc9-9173-7bf9979225ab',
+                'ext': 'mp4',
+                'title': 'Senate candidates wave to voters on Anchorage streets',
+                'description': 'md5:91f51a6511f090617353dc720318b20e',
+                'timestamp': 1604378735,
+                'upload_date': '20201103',
+                'duration': 1581,
+            },
+        },
+        {
+            # MyChannels SDK embed
+            # https://www.24kitchen.nl/populair/deskundige-dit-waarom-sommigen-gevoelig-zijn-voor-voedselallergieen
+            'url': 'https://www.demorgen.be/nieuws/burgemeester-rotterdam-richt-zich-in-videoboodschap-tot-relschoppers-voelt-het-goed~b0bcfd741/',
+            'md5': '90c0699c37006ef18e198c032d81739c',
+            'info_dict': {
+                'id': '194165',
+                'ext': 'mp4',
+                'title': 'Burgemeester Aboutaleb spreekt relschoppers toe',
+                'timestamp': 1611740340,
+                'upload_date': '20210127',
+                'duration': 159,
+            },
+        },
+        {
+            # Simplecast player embed
+            'url': 'https://www.bio.org/podcast',
+            'info_dict': {
+                'id': 'podcast',
+                'title': 'I AM BIO Podcast | BIO',
+            },
+            'playlist_mincount': 52,
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -2215,6 +2311,10 @@ class GenericIE(InfoExtractor):
         playlist_title = doc.find('./channel/title').text
         playlist_desc_el = doc.find('./channel/description')
         playlist_desc = None if playlist_desc_el is None else playlist_desc_el.text
+
+        NS_MAP = {
+            'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd',
+        }
 
         entries = []
         for it in doc.findall('./channel/item'):
@@ -2231,10 +2331,33 @@ class GenericIE(InfoExtractor):
             if not next_url:
                 continue
 
+            def itunes(key):
+                return xpath_text(
+                    it, xpath_with_ns('./itunes:%s' % key, NS_MAP),
+                    default=None)
+
+            duration = itunes('duration')
+            explicit = (itunes('explicit') or '').lower()
+            if explicit in ('true', 'yes'):
+                age_limit = 18
+            elif explicit in ('false', 'no'):
+                age_limit = 0
+            else:
+                age_limit = None
+
             entries.append({
                 '_type': 'url_transparent',
                 'url': next_url,
                 'title': it.find('title').text,
+                'description': xpath_text(it, 'description', default=None),
+                'timestamp': unified_timestamp(
+                    xpath_text(it, 'pubDate', default=None)),
+                'duration': int_or_none(duration) or parse_duration(duration),
+                'thumbnail': url_or_none(xpath_attr(it, xpath_with_ns('./itunes:image', NS_MAP), 'href')),
+                'episode': itunes('title'),
+                'episode_number': int_or_none(itunes('episode')),
+                'season_number': int_or_none(itunes('season')),
+                'age_limit': age_limit,
             })
 
         return {
@@ -2354,7 +2477,7 @@ class GenericIE(InfoExtractor):
         info_dict = {
             'id': video_id,
             'title': self._generic_title(url),
-            'upload_date': unified_strdate(head_response.headers.get('Last-Modified'))
+            'timestamp': unified_timestamp(head_response.headers.get('Last-Modified'))
         }
 
         # Check for direct link to a video
@@ -2416,6 +2539,9 @@ class GenericIE(InfoExtractor):
 
         webpage = self._webpage_read_content(
             full_response, url, video_id, prefix=first_bytes)
+
+        if '<title>DPG Media Privacy Gate</title>' in webpage:
+            webpage = self._download_webpage(url, video_id)
 
         self.report_extraction(video_id)
 
@@ -2592,6 +2718,10 @@ class GenericIE(InfoExtractor):
             SVTIE,
             XLinkIE,
             LibsynIE,
+            VHXEmbedIE,
+            ArcPublishingIE,
+            MedialaanIE,
+            SimplecastIE,
         ):
             try:
                 ie_key = embie.ie_key()
@@ -2751,11 +2881,9 @@ class GenericIE(InfoExtractor):
             return self.url_result(ustream_url, UstreamIE.ie_key())
 
         # Look for embedded arte.tv player
-        mobj = re.search(
-            r'<(?:script|iframe) [^>]*?src="(?P<url>http://www\.arte\.tv/(?:playerv2/embed|arte_vp/index)[^"]+)"',
-            webpage)
-        if mobj is not None:
-            return self.url_result(mobj.group('url'), 'ArteTVEmbed')
+        arte_urls = ArteTVEmbedIE._extract_urls(webpage)
+        if arte_urls:
+            return self.playlist_from_matches(arte_urls, video_id, video_title)
 
         # Look for embedded francetv player
         mobj = re.search(
@@ -2763,11 +2891,6 @@ class GenericIE(InfoExtractor):
             webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'))
-
-        # Look for embedded smotri.com player
-        smotri_url = SmotriIE._extract_url(webpage)
-        if smotri_url:
-            return self.url_result(smotri_url, 'Smotri')
 
         # Look for embedded Myvi.ru player
         myvi_url = MyviIE._extract_url(webpage)
