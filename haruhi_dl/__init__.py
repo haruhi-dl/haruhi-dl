@@ -426,6 +426,7 @@ def _real_main(argv=None):
         'xattr_set_filesize': opts.xattr_set_filesize,
         'match_filter': match_filter,
         'no_color': opts.no_color,
+        'use_proxy_sites': opts.use_proxy_sites,
         'ffmpeg_location': opts.ffmpeg_location,
         'hls_prefer_native': opts.hls_prefer_native,
         'hls_use_mpegts': opts.hls_use_mpegts,

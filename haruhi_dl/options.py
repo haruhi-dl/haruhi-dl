@@ -198,6 +198,14 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='no_color',
         default=False,
         help='Do not emit color codes in output')
+    general.add_option(
+        '--use-proxy-sites',
+        action='store_true', dest='use_proxy_sites',
+        help='Use proxy sites (like Nitter or Invidious) to download videos')
+    general.add_option(
+        '--no-use-proxy-sites',
+        action='store_false', dest='use_proxy_sites',
+        help='Use source sites to download videos')
 
     network = optparse.OptionGroup(parser, 'Network Options')
     network.add_option(

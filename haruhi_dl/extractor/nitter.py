@@ -8,6 +8,7 @@ from ..utils import (
     unified_timestamp,
     remove_end,
     determine_ext,
+    ExtractorError,
 )
 
 
@@ -76,12 +77,25 @@ class NitterSHIE(SelfhostedInfoExtractor):
         host, video_id = self._match_id_and_host(url)
         base_url = ('http://' if url.startswith('http://') else 'https://') + host
 
+        if self._downloader.params.get('use_proxy_sites') is False:
+            return self.url_result('https://twitter.com/i/web/status/' + video_id, ie='Twitter')
+
         if not webpage or '>Enable hls playback<' in webpage:
+            if self._downloader.params.get('use_proxy_sites') is None and not url.startswith('nitter:'):
+                return self.url_result('https://twitter.com/i/web/status/' + video_id, ie='Twitter')
+
             self._set_cookie(host, 'hlsPlayback', 'on')
             if url.startswith('nitter:'):
                 url = base_url + '/hdl/status/' + video_id
             webpage = self._download_webpage(url, video_id,
-                                             note='Re-downloading webpage for HLS data' if webpage else 'Downloading webpage')
+                                             note='Re-downloading webpage for HLS data' if webpage else 'Downloading webpage',
+                                             expected_status=(200, 429))
+
+        if '>Instance has been rate limited.<' in webpage:
+            if self._downloader.params.get('use_proxy_sites') is False:
+                raise ExtractorError('Instance has been rate limited', expected=True)
+            self.report_warning('Instance has been rate limited, falling back to Twitter')
+            return self.url_result('https://twitter.com/i/web/status/' + video_id, ie='Twitter')
 
         video_url = base_url + self._html_search_regex(r'(?:<video[^>]+data-url|<source[^>]+src)="([^"]+)"', webpage, 'video url')
         ext = determine_ext(video_url)
