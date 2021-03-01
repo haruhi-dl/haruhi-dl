@@ -1,3 +1,8 @@
+version 2021.03.01
+Extractor
+* [cda] logging in with a user account
+* [peertube] playlist, channel and account extractor
+
 version 2021.02.27
 Core
 + Use proxy sites option
