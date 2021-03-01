@@ -1,7 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import base64
 import datetime
+import hashlib
+import hmac
 
 from .common import InfoExtractor
 from ..utils import (
@@ -21,6 +24,7 @@ class CDABaseExtractor(InfoExtractor):
         # apparently the token is hardcoded in the app
         'Authorization': 'Basic YzU3YzBlZDUtYTIzOC00MWQwLWI2NjQtNmZmMWMxY2Y2YzVlOklBTm95QlhRRVR6U09MV1hnV3MwMW0xT2VyNWJNZzV4clRNTXhpNGZJUGVGZ0lWUlo5UGVYTDhtUGZaR1U1U3Q',
     }
+    _NETRC_MACHINE = 'cda'
     _bearer = None
 
     # logs into cda.pl and returns _BASE_HEADERS with the Bearer token
@@ -33,8 +37,27 @@ class CDABaseExtractor(InfoExtractor):
             })
             return headers
 
-        token_res = self._download_json(self._BASE_URL + '/oauth/token?grant_type=password&login=niezesrajciesiecda&password=VD3QbYWSb_uwAShBZKN7F1DwEg_tRTdb4Xd3JvFsx6Y',
-                                        video_id, 'Logging into cda.pl', headers=headers, data=bytes(''.encode('utf-8')))
+        username, password = self._get_login_info()
+        if username is None or password is None:
+            username = 'niezesrajciesiecda'
+            password_hash = 'VD3QbYWSb_uwAShBZKN7F1DwEg_tRTdb4Xd3JvFsx6Y'
+            account_type = 'shared'
+        else:
+            pwd_md5 = ""
+            for byte in hashlib.md5(password.encode('utf-8')).digest():
+                # bytes() param must be iterable of ints and not int
+                hexik = bytes((byte & 255, )).hex()
+                while len(hexik) < 2:
+                    hexik = "0" + hexik
+                pwd_md5 += hexik
+            digest = hmac.new(
+                's01m1Oer5IANoyBXQETzSOLWXgWs01m1Oer5bMg5xrTMMxRZ9Pi4fIPeFgIVRZ9PeXL8mPfXQETZGUAN5StRZ9P'.encode('utf-8'),
+                pwd_md5.encode('utf-8'), hashlib.sha256).digest()
+            password_hash = base64.urlsafe_b64encode(digest).decode('utf-8').replace('=', '')
+            account_type = 'user'
+
+        token_res = self._download_json('%s/oauth/token?grant_type=password&login=%s&password=%s' % (self._BASE_URL, username, password_hash),
+                                        video_id, 'Logging into cda.pl with a %s account' % account_type, headers=headers, data=bytes(''.encode('utf-8')))
 
         self._bearer = {
             'token': token_res['access_token'],
