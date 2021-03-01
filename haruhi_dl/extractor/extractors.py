@@ -913,7 +913,12 @@ from .parliamentliveuk import ParliamentLiveUKIE
 from .patreon import PatreonIE
 from .pbs import PBSIE
 from .pearvideo import PearVideoIE
-from .peertube import PeerTubeSHIE
+from .peertube import (
+    PeerTubeSHIE,
+    PeerTubePlaylistSHIE,
+    PeerTubeAccountSHIE,
+    PeerTubeChannelSHIE,
+)
 from .people import PeopleIE
 from .performgroup import PerformGroupIE
 from .periscope import (

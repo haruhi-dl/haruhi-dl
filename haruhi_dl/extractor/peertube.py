@@ -16,16 +16,111 @@ from ..utils import (
 )
 
 
-class PeerTubeSHIE(SelfhostedInfoExtractor):
+class PeerTubeBaseExtractor(SelfhostedInfoExtractor):
     _UUID_RE = r'[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
-    _API_BASE = 'https://%s/api/v1/videos/%s/%s'
-    _VALID_URL = r'peertube:(?P<host>[^:]+):(?P<id>%s)' % (_UUID_RE)
-    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos)/(?P<id>%s)' % _UUID_RE
+    _API_BASE = 'https://%s/api/v1/%s/%s/%s'
     _SH_VALID_CONTENT_STRINGS = (
         '<title>PeerTube<',
         'There will be other non JS-based clients to access PeerTube',
+        '>There are other non JS-based unofficial clients to access PeerTube',
         '>We are sorry but it seems that PeerTube is not compatible with your web browser.<',
+        '<meta property="og:platform" content="PeerTube"',
     )
+
+    def _call_api(self, host, resource, resource_id, path, note=None, errnote=None, fatal=True):
+        return self._download_json(
+            self._API_BASE % (host, resource, resource_id, path), resource_id,
+            note=note, errnote=errnote, fatal=fatal)
+
+    def _parse_video(self, video, url):
+        host, display_id = self._match_id_and_host(url)
+        info_dict = {}
+
+        formats = []
+        files = video.get('files') or []
+        for playlist in (video.get('streamingPlaylists') or []):
+            if not isinstance(playlist, dict):
+                continue
+            playlist_files = playlist.get('files')
+            if not (playlist_files and isinstance(playlist_files, list)):
+                continue
+            files.extend(playlist_files)
+        for file_ in files:
+            if not isinstance(file_, dict):
+                continue
+            file_url = url_or_none(file_.get('fileUrl'))
+            if not file_url:
+                continue
+            file_size = int_or_none(file_.get('size'))
+            format_id = try_get(
+                file_, lambda x: x['resolution']['label'], compat_str)
+            f = parse_resolution(format_id)
+            f.update({
+                'url': file_url,
+                'format_id': format_id,
+                'filesize': file_size,
+            })
+            if format_id == '0p':
+                f['vcodec'] = 'none'
+            else:
+                f['fps'] = int_or_none(file_.get('fps'))
+            formats.append(f)
+        if files:
+            self._sort_formats(formats)
+            info_dict['formats'] = formats
+        else:
+            info_dict.update({
+                '_type': 'url_transparent',
+                'url': 'peertube:%s:%s' % (host, video['uuid']),
+                'ie_key': 'PeerTubeSH',
+            })
+
+        def data(section, field, type_):
+            return try_get(video, lambda x: x[section][field], type_)
+
+        def account_data(field, type_):
+            return data('account', field, type_)
+
+        def channel_data(field, type_):
+            return data('channel', field, type_)
+
+        category = data('category', 'label', compat_str)
+        categories = [category] if category else None
+
+        nsfw = video.get('nsfw')
+        if nsfw is bool:
+            age_limit = 18 if nsfw else 0
+        else:
+            age_limit = None
+
+        info_dict.update({
+            'id': video['uuid'],
+            'title': video['name'],
+            'description': video.get('description'),
+            'thumbnail': urljoin(url, video.get('thumbnailPath')),
+            'timestamp': unified_timestamp(video.get('publishedAt')),
+            'uploader': account_data('displayName', compat_str),
+            'uploader_id': str_or_none(account_data('id', int)),
+            'uploader_url': url_or_none(account_data('url', compat_str)),
+            'channel': channel_data('displayName', compat_str),
+            'channel_id': str_or_none(channel_data('id', int)),
+            'channel_url': url_or_none(channel_data('url', compat_str)),
+            'language': data('language', 'id', compat_str),
+            'license': data('licence', 'label', compat_str),
+            'duration': int_or_none(video.get('duration')),
+            'view_count': int_or_none(video.get('views')),
+            'like_count': int_or_none(video.get('likes')),
+            'dislike_count': int_or_none(video.get('dislikes')),
+            'age_limit': age_limit,
+            'tags': try_get(video, lambda x: x['tags'], list),
+            'categories': categories,
+        })
+        return info_dict
+
+
+class PeerTubeSHIE(PeerTubeBaseExtractor):
+    _VALID_URL = r'peertube:(?P<host>[^:]+):(?P<id>%s)' % (PeerTubeBaseExtractor._UUID_RE)
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos)/(?P<id>%s)' % (PeerTubeBaseExtractor._UUID_RE)
 
     _TESTS = [{
         'url': 'https://framatube.org/videos/watch/9c9de5e8-0a1e-484a-b099-e80766180a6d',
@@ -91,14 +186,9 @@ class PeerTubeSHIE(SelfhostedInfoExtractor):
         return ['peertube:%s:%s' % (mobj.group('host'), mobj.group('video_id'))
                 for mobj in entries]
 
-    def _call_api(self, host, video_id, path, note=None, errnote=None, fatal=True):
-        return self._download_json(
-            self._API_BASE % (host, video_id, path), video_id,
-            note=note, errnote=errnote, fatal=fatal)
-
     def _get_subtitles(self, host, video_id):
         captions = self._call_api(
-            host, video_id, 'captions', note='Downloading captions JSON',
+            host, 'videos', video_id, 'captions', note='Downloading captions JSON',
             fatal=False)
         if not isinstance(captions, dict):
             return
@@ -117,101 +207,162 @@ class PeerTubeSHIE(SelfhostedInfoExtractor):
         return subtitles
 
     def _selfhosted_extract(self, url, webpage=None):
-        mobj = re.match(self._VALID_URL, url)
-        if not mobj:
-            mobj = re.match(self._SH_VALID_URL, url)
-        host = mobj.group('host')
-        video_id = mobj.group('id')
+        host, video_id = self._match_id_and_host(url)
 
         video = self._call_api(
-            host, video_id, '', note='Downloading video JSON')
+            host, 'videos', video_id, '', note='Downloading video JSON')
 
-        title = video['name']
+        info_dict = self._parse_video(video, url)
 
-        formats = []
-        files = video.get('files') or []
-        for playlist in (video.get('streamingPlaylists') or []):
-            if not isinstance(playlist, dict):
-                continue
-            playlist_files = playlist.get('files')
-            if not (playlist_files and isinstance(playlist_files, list)):
-                continue
-            files.extend(playlist_files)
-        for file_ in files:
-            if not isinstance(file_, dict):
-                continue
-            file_url = url_or_none(file_.get('fileUrl'))
-            if not file_url:
-                continue
-            file_size = int_or_none(file_.get('size'))
-            format_id = try_get(
-                file_, lambda x: x['resolution']['label'], compat_str)
-            f = parse_resolution(format_id)
-            f.update({
-                'url': file_url,
-                'format_id': format_id,
-                'filesize': file_size,
-            })
-            if format_id == '0p':
-                f['vcodec'] = 'none'
-            else:
-                f['fps'] = int_or_none(file_.get('fps'))
-            formats.append(f)
-        self._sort_formats(formats)
+        info_dict['subtitles'] = self.extract_subtitles(host, video_id)
 
         description = None
         if webpage:
             description = self._og_search_description(webpage)
         if not description:
             full_description = self._call_api(
-                host, video_id, 'description', note='Downloading description JSON',
+                host, 'videos', video_id, 'description', note='Downloading description JSON',
                 fatal=False)
             if isinstance(full_description, dict):
                 description = str_or_none(full_description.get('description'))
         if not description:
             description = video.get('description')
+        info_dict['description'] = description
 
-        subtitles = self.extract_subtitles(host, video_id)
+        return info_dict
 
-        def data(section, field, type_):
-            return try_get(video, lambda x: x[section][field], type_)
 
-        def account_data(field, type_):
-            return data('account', field, type_)
+class PeerTubePlaylistSHIE(PeerTubeBaseExtractor):
+    _VALID_URL = r'peertube:playlist:(?P<host>[^:]+):(?P<id>.+)'
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:videos/(?:watch|embed)/playlist|api/v\d/video-playlists)/(?P<id>%s)' % (PeerTubeBaseExtractor._UUID_RE)
 
-        def channel_data(field, type_):
-            return data('channel', field, type_)
+    _TESTS = [{
+        'url': 'https://video.internet-czas-dzialac.pl/videos/watch/playlist/3c81b894-acde-4539-91a2-1748b208c14c?playlistPosition=1',
+        'info_dict': {
+            'id': '3c81b894-acde-4539-91a2-1748b208c14c',
+            'title': 'Podcast Internet. Czas Działać!',
+            'uploader_id': 3,
+            'uploader': 'Internet. Czas działać!',
+        },
+        'playlist_mincount': 14,
+    }]
 
-        category = data('category', 'label', compat_str)
-        categories = [category] if category else None
+    def _selfhosted_extract(self, url, webpage=None):
+        host, display_id = self._match_id_and_host(url)
 
-        nsfw = video.get('nsfw')
-        if nsfw is bool:
-            age_limit = 18 if nsfw else 0
-        else:
-            age_limit = None
+        playlist_data = self._call_api(host, 'video-playlists', display_id, '', 'Downloading playlist metadata')
+        entries = []
+        i = 0
+        videos = {'total': 0}
+        while len(entries) < videos['total'] or i == 0:
+            videos = self._call_api(host, 'video-playlists', display_id,
+                                    'videos?start=%d&count=25' % (i * 25),
+                                    note=('Downloading playlist video list (page #%d)' % i))
+            i += 1
+            for video in videos['data']:
+                entries.append(self._parse_video(video['video'], url))
 
         return {
-            'id': video_id,
-            'title': title,
-            'description': description,
-            'thumbnail': urljoin(url, video.get('thumbnailPath')),
-            'timestamp': unified_timestamp(video.get('publishedAt')),
-            'uploader': account_data('displayName', compat_str),
-            'uploader_id': str_or_none(account_data('id', int)),
-            'uploader_url': url_or_none(account_data('url', compat_str)),
-            'channel': channel_data('displayName', compat_str),
-            'channel_id': str_or_none(channel_data('id', int)),
-            'channel_url': url_or_none(channel_data('url', compat_str)),
-            'language': data('language', 'id', compat_str),
-            'license': data('licence', 'label', compat_str),
-            'duration': int_or_none(video.get('duration')),
-            'view_count': int_or_none(video.get('views')),
-            'like_count': int_or_none(video.get('likes')),
-            'dislike_count': int_or_none(video.get('dislikes')),
-            'age_limit': age_limit,
-            'tags': try_get(video, lambda x: x['tags'], list),
-            'categories': categories,
-            'formats': formats,
-            'subtitles': subtitles
+            '_type': 'playlist',
+            'entries': entries,
+            'id': playlist_data['uuid'],
+            'title': playlist_data['displayName'],
+            'description': playlist_data.get('description'),
+            'channel': playlist_data['videoChannel']['displayName'],
+            'channel_id': playlist_data['videoChannel']['id'],
+            'channel_url': playlist_data['videoChannel']['url'],
+            'uploader': playlist_data['ownerAccount']['displayName'],
+            'uploader_id': playlist_data['ownerAccount']['id'],
+            'uploader_url': playlist_data['ownerAccount']['url'],
+        }
+
+
+class PeerTubeChannelSHIE(PeerTubeBaseExtractor):
+    _VALID_URL = r'peertube:channel:(?P<host>[^:]+):(?P<id>.+)'
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:api/v\d/)?video-channels/(?P<id>[^/?#]+)(?:/videos)?'
+
+    _TESTS = [{
+        'url': 'https://video.internet-czas-dzialac.pl/video-channels/internet_czas_dzialac/videos',
+        'info_dict': {
+            'id': '2',
+            'title': 'internet_czas_dzialac',
+            'description': 'md5:4d2e215ea0d9ae4501a556ef6e9a5308',
+            'uploader_id': 3,
+            'uploader': 'Internet. Czas działać!',
+        },
+        'playlist_mincount': 14,
+    }]
+
+    def _selfhosted_extract(self, url, webpage=None):
+        host, display_id = self._match_id_and_host(url)
+
+        channel_data = self._call_api(host, 'video-channels', display_id, '', 'Downloading channel metadata')
+        entries = []
+        i = 0
+        videos = {'total': 0}
+        while len(entries) < videos['total'] or i == 0:
+            videos = self._call_api(host, 'video-channels', display_id,
+                                    'videos?start=%d&count=25&sort=publishedAt' % (i * 25),
+                                    note=('Downloading channel video list (page #%d)' % i))
+            i += 1
+            for video in videos['data']:
+                entries.append(self._parse_video(video, url))
+
+        return {
+            '_type': 'playlist',
+            'entries': entries,
+            'id': str(channel_data['id']),
+            'title': channel_data['displayName'],
+            'display_id': channel_data['name'],
+            'description': channel_data.get('description'),
+            'channel': channel_data['displayName'],
+            'channel_id': channel_data['id'],
+            'channel_url': channel_data['url'],
+            'uploader': channel_data['ownerAccount']['displayName'],
+            'uploader_id': channel_data['ownerAccount']['id'],
+            'uploader_url': channel_data['ownerAccount']['url'],
+        }
+
+
+class PeerTubeAccountSHIE(PeerTubeBaseExtractor):
+    _VALID_URL = r'peertube:account:(?P<host>[^:]+):(?P<id>.+)'
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:api/v\d/)?accounts/(?P<id>[^/?#]+)(?:/video(?:s|-channels))?'
+
+    _TESTS = [{
+        'url': 'https://video.internet-czas-dzialac.pl/accounts/icd/video-channels',
+        'info_dict': {
+            'id': '3',
+            'description': 'md5:ab3c9b934dd39030eea1c9fe76079870',
+            'uploader': 'Internet. Czas działać!',
+            'title': 'Internet. Czas działać!',
+            'uploader_id': 3,
+        },
+        'playlist_mincount': 14,
+    }]
+
+    def _selfhosted_extract(self, url, webpage=None):
+        host, display_id = self._match_id_and_host(url)
+
+        account_data = self._call_api(host, 'accounts', display_id, '', 'Downloading account metadata')
+        entries = []
+        i = 0
+        videos = {'total': 0}
+        while len(entries) < videos['total'] or i == 0:
+            videos = self._call_api(host, 'accounts', display_id,
+                                    'videos?start=%d&count=25&sort=publishedAt' % (i * 25),
+                                    note=('Downloading account video list (page #%d)' % i))
+            i += 1
+            for video in videos['data']:
+                entries.append(self._parse_video(video, url))
+
+        return {
+            '_type': 'playlist',
+            'entries': entries,
+            'id': str(account_data['id']),
+            'title': account_data['displayName'],
+            'display_id': account_data['name'],
+            'description': account_data.get('description'),
+            'uploader': account_data['displayName'],
+            'uploader_id': account_data['id'],
+            'uploader_url': account_data['url'],
         }
