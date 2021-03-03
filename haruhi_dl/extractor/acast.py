@@ -7,8 +7,12 @@ from .common import InfoExtractor
 from ..utils import (
     clean_html,
     clean_podcast_url,
+    float_or_none,
     int_or_none,
+    js_to_json,
     parse_iso8601,
+    urljoin,
+    ExtractorError,
 )
 
 
@@ -124,3 +128,76 @@ class ACastChannelIE(ACastBaseIE):
             entries.append(self._extract_episode(episode, show_info))
         return self.playlist_result(
             entries, show.get('id'), show.get('title'), show.get('description'))
+
+
+class ACastPlayerIE(InfoExtractor):
+    IE_NAME = 'acast:player'
+    _VALID_URL = r'https?://player\.acast\.com/(?:[^/]+/episodes/)?(?P<id>[^/?#]+)'
+
+    _TESTS = [{
+        'url': 'https://player.acast.com/600595844cac453f8579eca0/episodes/maciej-konieczny-podatek-medialny-to-mechanizm-kontroli?theme=default&latest=1',
+        'info_dict': {
+            'id': '601dc897fb37095537d48e6f',
+            'ext': 'mp3',
+            'title': 'Maciej Konieczny: "Podatek medialny to bardziej mechanizm kontroli niż podatkowy”',
+            'upload_date': '20210208',
+            'timestamp': 1612764000,
+        },
+    }, {
+        'url': 'https://player.acast.com/5d09057251a90dcf7fa8e985?theme=default&latest=1',
+        'info_dict': {
+            'id': '5d09057251a90dcf7fa8e985',
+            'title': 'DGPtalk: Obiektywnie o biznesie',
+        },
+        'playlist_mincount': 5,
+    }]
+
+    @staticmethod
+    def _extract_urls(webpage, **kw):
+        return [mobj.group('url')
+                for mobj in re.finditer(
+                    r'(?x)<iframe\b[^>]+\bsrc=(["\'])(?P<url>%s(?:\?[^#]+)?(?:\#.+?)?)\1' % ACastPlayerIE._VALID_URL,
+                    webpage)]
+
+    def _real_extract(self, url):
+        display_id = self._match_id(url)
+        webpage = self._download_webpage(url, display_id)
+
+        data = self._parse_json(
+            js_to_json(
+                self._search_regex(
+                    r'(?s)var _global\s*=\s*({.+?});',
+                    webpage, 'podcast data')), display_id)
+
+        show = data['show']
+
+        players = [{
+            'id': player['_id'],
+            'title': player['title'],
+            'url': player['audio'],
+            'duration': float_or_none(player.get('duration')),
+            'timestamp': parse_iso8601(player.get('publishDate')),
+            'thumbnail': urljoin('https://player.acast.com/', player.get('cover')),
+            'series': show['title'],
+            'episode': player['title'],
+        } for player in data['player']]
+
+        if len(players) > 1:
+            info_dict = {
+                '_type': 'playlist',
+                'entries': players,
+                'id': show['_id'],
+                'title': show['title'],
+                'series': show['title'],
+            }
+            if show.get('cover'):
+                info_dict['thumbnails'] = [{
+                    'url': urljoin('https://player.acast.com/', show['cover']['url']),
+                    'filesize': int_or_none(show['cover'].get('size')),
+                }]
+            return info_dict
+
+        if len(players) == 1:
+            return players[0]
+
+        raise ExtractorError('No podcast episodes found')

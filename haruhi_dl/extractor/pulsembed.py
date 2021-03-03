@@ -23,6 +23,7 @@ from ..utils import (
 from .libsyn import LibsynIE
 from .xnews import XLinkIE
 from .tvp import TVPEmbedIE
+from .acast import ACastPlayerIE
 
 
 class PulseVideoIE(InfoExtractor):
@@ -180,6 +181,15 @@ class PulsEmbedIE(InfoExtractor):
             'timestamp': 1607174136,
             'upload_date': '20201205',
         },
+    }, {
+        'url': 'pulsembed:q31qhd1LC',
+        'info_dict': {
+            'id': '601dc897fb37095537d48e6f',
+            'ext': 'mp3',
+            'title': 'Maciej Konieczny: "Podatek medialny to bardziej mechanizm kontroli niż podatkowy”',
+            'upload_date': '20210208',
+            'timestamp': 1612764000,
+        },
     }]
 
     @staticmethod
@@ -260,6 +270,7 @@ class PulsEmbedIE(InfoExtractor):
                 LibsynIE,
                 XLinkIE,
                 TVPEmbedIE,
+                ACastPlayerIE,
                 PulseVideoIE,
             ):
                 embie_urls = embie._extract_urls(webpage, url=referer)

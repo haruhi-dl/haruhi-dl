@@ -17,6 +17,7 @@ from .academicearth import AcademicEarthCourseIE
 from .acast import (
     ACastIE,
     ACastChannelIE,
+    ACastPlayerIE,
 )
 from .adn import ADNIE
 from .adobeconnect import AdobeConnectIE
