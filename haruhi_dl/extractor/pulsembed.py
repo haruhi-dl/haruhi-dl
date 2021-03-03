@@ -24,6 +24,7 @@ from .libsyn import LibsynIE
 from .xnews import XLinkIE
 from .tvp import TVPEmbedIE
 from .acast import ACastPlayerIE
+from .videotarget import VideoTargetIE
 
 
 class PulseVideoIE(InfoExtractor):
@@ -190,6 +191,13 @@ class PulsEmbedIE(InfoExtractor):
             'upload_date': '20210208',
             'timestamp': 1612764000,
         },
+    }, {
+        'url': 'pulsembed:P_Q2gen3E',
+        'info_dict': {
+            'id': '16028',
+            'ext': 'mp4',
+            'title': 'Słabe szanse na taki wzrost gospodarczy o jakim mówi rząd',
+        },
     }]
 
     @staticmethod
@@ -202,6 +210,10 @@ class PulsEmbedIE(InfoExtractor):
             return 'TVP'
         if '//html5-player.libsyn.com/' in ext_url:
             return 'Libsyn'
+        if '//player.acast.com/' in ext_url:
+            return 'ACastPlayer'
+        if '//videotarget.pl/' in ext_url:
+            return 'VideoTarget'
         return None
 
     @staticmethod
@@ -271,6 +283,7 @@ class PulsEmbedIE(InfoExtractor):
                 XLinkIE,
                 TVPEmbedIE,
                 ACastPlayerIE,
+                VideoTargetIE,
                 PulseVideoIE,
             ):
                 embie_urls = embie._extract_urls(webpage, url=referer)
