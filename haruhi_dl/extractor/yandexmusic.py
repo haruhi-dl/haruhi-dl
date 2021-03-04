@@ -242,7 +242,7 @@ class YandexMusicPlaylistIE(YandexMusicPlaylistBaseIE):
         'skip': 'Travis CI servers blocked by YandexMusic',
     }, {
         # playlist exceeding the limit of 150 tracks shipped with webpage (see
-        # https://github.com/ytdl-org/haruhi-dl/issues/6666)
+        # https://github.com/ytdl-org/youtube-dl/issues/6666)
         'url': 'https://music.yandex.ru/users/ya.playlist/playlists/1036',
         'info_dict': {
             'id': '1036',

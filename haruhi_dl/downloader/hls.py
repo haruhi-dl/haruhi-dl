@@ -154,8 +154,8 @@ class HlsFD(FragmentFD):
                         except compat_urllib_error.HTTPError as err:
                             # Unavailable (possibly temporary) fragments may be served.
                             # First we try to retry then either skip or abort.
-                            # See https://github.com/ytdl-org/haruhi-dl/issues/10165,
-                            # https://github.com/ytdl-org/haruhi-dl/issues/10448).
+                            # See https://github.com/ytdl-org/youtube-dl/issues/10165,
+                            # https://github.com/ytdl-org/youtube-dl/issues/10448).
                             count += 1
                             if count <= fragment_retries:
                                 self.report_retry_fragment(err, frag_index, count, fragment_retries)
@@ -173,7 +173,7 @@ class HlsFD(FragmentFD):
                         decrypt_info['KEY'] = decrypt_info.get('KEY') or self.hdl.urlopen(
                             self._prepare_url(info_dict, info_dict.get('_decryption_key_url') or decrypt_info['URI'])).read()
                         # Don't decrypt the content in tests since the data is explicitly truncated and it's not to a valid block
-                        # size (see https://github.com/hdl-org/haruhi-dl/pull/27660). Tests only care that the correct data downloaded,
+                        # size (see https://github.com/ytdl-org/youtube-dl/pull/27660). Tests only care that the correct data downloaded,
                         # not what it decrypts to.
                         if not test:
                             frag_content = AES.new(

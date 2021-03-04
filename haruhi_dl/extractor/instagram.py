@@ -141,7 +141,7 @@ class InstagramIE(InfoExtractor):
                  lambda x: x['entry_data']['PostPage'][0]['media']),
                 dict)
         # _sharedData.entry_data.PostPage is empty when authenticated (see
-        # https://github.com/hdl-org/haruhi-dl/pull/22880)
+        # https://github.com/ytdl-org/youtube-dl/pull/22880)
         if not media:
             additional_data = self._parse_json(
                 self._search_regex(
