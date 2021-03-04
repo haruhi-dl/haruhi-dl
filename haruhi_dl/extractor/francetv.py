@@ -164,7 +164,7 @@ class FranceTVIE(InfoExtractor):
             ext = determine_ext(video_url)
             if ext == 'f4m':
                 if georestricted:
-                    # See https://github.com/ytdl-org/haruhi-dl/issues/3963
+                    # See https://github.com/ytdl-org/youtube-dl/issues/3963
                     # m3u8 urls work fine
                     continue
                 formats.extend(self._extract_f4m_formats(

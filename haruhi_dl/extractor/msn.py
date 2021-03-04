@@ -111,7 +111,7 @@ class MSNIE(InfoExtractor):
                     continue
                 if 'format=m3u8-aapl' in format_url:
                     # m3u8_native should not be used here until
-                    # https://github.com/ytdl-org/haruhi-dl/issues/9913 is fixed
+                    # https://github.com/ytdl-org/youtube-dl/issues/9913 is fixed
                     formats.extend(self._extract_m3u8_formats(
                         format_url, display_id, 'mp4',
                         m3u8_id='hls', fatal=False))

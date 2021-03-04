@@ -414,7 +414,7 @@ class TestFormatSelection(unittest.TestCase):
         # For extractors with incomplete formats (all formats are audio-only or
         # video-only) best and worst should fallback to corresponding best/worst
         # video-only or audio-only formats (as per
-        # https://github.com/ytdl-org/haruhi-dl/pull/5556)
+        # https://github.com/ytdl-org/youtube-dl/pull/5556)
         formats = [
             {'format_id': 'low', 'ext': 'mp3', 'preference': 1, 'vcodec': 'none', 'url': TEST_URL},
             {'format_id': 'high', 'ext': 'mp3', 'preference': 2, 'vcodec': 'none', 'url': TEST_URL},
@@ -445,7 +445,7 @@ class TestFormatSelection(unittest.TestCase):
         self.assertRaises(ExtractorError, hdl.process_ie_result, info_dict.copy())
 
     def test_format_selection_issue_10083(self):
-        # See https://github.com/ytdl-org/haruhi-dl/issues/10083
+        # See https://github.com/ytdl-org/youtube-dl/issues/10083
         formats = [
             {'format_id': 'regular', 'height': 360, 'url': TEST_URL},
             {'format_id': 'video', 'height': 720, 'acodec': 'none', 'url': TEST_URL},
@@ -867,7 +867,7 @@ class TestHaruhiDL(unittest.TestCase):
         result = get_ids({'playlist_items': '2-4,3-4,3'})
         self.assertEqual(result, [2, 3, 4])
 
-        # Tests for https://github.com/ytdl-org/haruhi-dl/issues/10591
+        # Tests for https://github.com/ytdl-org/youtube-dl/issues/10591
         # @{
         result = get_downloaded_info_dicts({'playlist_items': '2-4,3-4,3'})
         self.assertEqual(result[0]['playlist_index'], 2)
@@ -884,7 +884,7 @@ class TestHaruhiDL(unittest.TestCase):
         # @}
 
     def test_urlopen_no_file_protocol(self):
-        # see https://github.com/ytdl-org/haruhi-dl/issues/8227
+        # see https://github.com/ytdl-org/youtube-dl/issues/8227
         hdl = HDL()
         self.assertRaises(compat_urllib_error.URLError, hdl.urlopen, 'file:///etc/passwd')
 
@@ -930,7 +930,7 @@ class TestHaruhiDL(unittest.TestCase):
         self.assertEqual(downloaded['extractor'], 'testex')
         self.assertEqual(downloaded['extractor_key'], 'TestEx')
 
-    # Test case for https://github.com/hdl-org/haruhi-dl/issues/27064
+    # Test case for https://github.com/ytdl-org/youtube-dl/issues/27064
     def test_ignoreerrors_for_playlist_with_url_transparent_iterable_entries(self):
 
         class _HDL(HDL):

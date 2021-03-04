@@ -99,7 +99,7 @@ class TestInfoExtractor(unittest.TestCase):
         self.assertRaises(RegexNotFoundError, ie._html_search_meta, ('z', 'x'), html, None, fatal=True)
 
     def test_search_json_ld_realworld(self):
-        # https://github.com/hdl-org/haruhi-dl/issues/23306
+        # https://github.com/ytdl-org/youtube-dl/issues/23306
         expect_dict(
             self,
             self.ie._search_json_ld(r'''<script type="application/ld+json">
@@ -428,7 +428,7 @@ jwplayer("mediaplayer").setup({"abouttext":"Visit Indie DB","aboutlink":"http:\/
     def test_parse_m3u8_formats(self):
         _TEST_CASES = [
             (
-                # https://github.com/ytdl-org/haruhi-dl/issues/11507
+                # https://github.com/ytdl-org/youtube-dl/issues/11507
                 # http://pluzz.francetv.fr/videos/le_ministere.html
                 'pluzz_francetv_11507',
                 'http://replayftv-vh.akamaihd.net/i/streaming-adaptatif_france-dom-tom/2017/S16/J2/156589847-58f59130c1f52-,standard1,standard2,standard3,standard4,standard5,.mp4.csmil/master.m3u8?caption=2017%2F16%2F156589847-1492488987.m3u8%3Afra%3AFrancais&audiotrack=0%3Afra%3AFrancais',
@@ -490,7 +490,7 @@ jwplayer("mediaplayer").setup({"abouttext":"Visit Indie DB","aboutlink":"http:\/
                 }]
             ),
             (
-                # https://github.com/ytdl-org/haruhi-dl/issues/11995
+                # https://github.com/ytdl-org/youtube-dl/issues/11995
                 # http://teamcoco.com/video/clueless-gamer-super-bowl-for-honor
                 'teamcoco_11995',
                 'http://ak.storage-w.teamcococdn.com/cdn/2017-02/98599/ed8f/main.m3u8',
@@ -564,7 +564,7 @@ jwplayer("mediaplayer").setup({"abouttext":"Visit Indie DB","aboutlink":"http:\/
                 }]
             ),
             (
-                # https://github.com/ytdl-org/haruhi-dl/issues/12211
+                # https://github.com/ytdl-org/youtube-dl/issues/12211
                 # http://video.toggle.sg/en/series/whoopie-s-world/ep3/478601
                 'toggle_mobile_12211',
                 'http://cdnapi.kaltura.com/p/2082311/sp/208231100/playManifest/protocol/http/entryId/0_89q6e8ku/format/applehttp/tags/mobile_sd/f/a.m3u8',
@@ -728,7 +728,7 @@ jwplayer("mediaplayer").setup({"abouttext":"Visit Indie DB","aboutlink":"http:\/
                 }]
             ),
             (
-                # https://github.com/ytdl-org/haruhi-dl/issues/18923
+                # https://github.com/ytdl-org/youtube-dl/issues/18923
                 # https://www.ted.com/talks/boris_hesser_a_grassroots_healthcare_revolution_in_africa
                 'ted_18923',
                 'http://hls.ted.com/talks/31241.m3u8',
@@ -797,9 +797,9 @@ jwplayer("mediaplayer").setup({"abouttext":"Visit Indie DB","aboutlink":"http:\/
     def test_parse_mpd_formats(self):
         _TEST_CASES = [
             (
-                # https://github.com/ytdl-org/haruhi-dl/issues/13919
+                # https://github.com/ytdl-org/youtube-dl/issues/13919
                 # Also tests duplicate representation ids, see
-                # https://github.com/ytdl-org/haruhi-dl/issues/15111
+                # https://github.com/ytdl-org/youtube-dl/issues/15111
                 'float_duration',
                 'http://unknown/manifest.mpd',  # mpd_url
                 None,  # mpd_base_url
@@ -880,7 +880,7 @@ jwplayer("mediaplayer").setup({"abouttext":"Visit Indie DB","aboutlink":"http:\/
                     'height': 1080,
                 }]
             ), (
-                # https://github.com/ytdl-org/haruhi-dl/pull/14844
+                # https://github.com/ytdl-org/youtube-dl/pull/14844
                 'urls_only',
                 'http://unknown/manifest.mpd',  # mpd_url
                 None,  # mpd_base_url
@@ -963,7 +963,7 @@ jwplayer("mediaplayer").setup({"abouttext":"Visit Indie DB","aboutlink":"http:\/
                     'height': 1080,
                 }]
             ), (
-                # https://github.com/ytdl-org/haruhi-dl/issues/20346
+                # https://github.com/ytdl-org/youtube-dl/issues/20346
                 # Media considered unfragmented even though it contains
                 # Initialization tag
                 'unfragmented',
@@ -1023,7 +1023,7 @@ jwplayer("mediaplayer").setup({"abouttext":"Visit Indie DB","aboutlink":"http:\/
     def test_parse_f4m_formats(self):
         _TEST_CASES = [
             (
-                # https://github.com/ytdl-org/haruhi-dl/issues/14660
+                # https://github.com/ytdl-org/youtube-dl/issues/14660
                 'custom_base_url',
                 'http://api.new.livestream.com/accounts/6115179/events/6764928/videos/144884262.f4m',
                 [{
