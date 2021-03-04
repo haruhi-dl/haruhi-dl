@@ -3,6 +3,26 @@ default:
     - apk add bash
     - pip install nose
 
+pypy3.6-core:
+  image: pypy:3.6-slim
+  variables:
+    HDL_TEST_SET: core
+  before_script:
+    - apt-get update && apt-get install -y bash && apt-get clean
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
+
+pypy3.7-core:
+  image: pypy:3.7-slim
+  variables:
+    HDL_TEST_SET: core
+  before_script:
+    - apt-get update && apt-get install -y bash && apt-get clean
+    - pip install nose
+  script:
+    - ./devscripts/run_tests.sh
+
 py3.6-core:
   image: python:3.6-alpine
   variables:
@@ -39,18 +59,6 @@ py3.9-download:
   script:
     - ./devscripts/run_tests.sh
 
-#jython-core:
-#  image: openjdk:11-slim
-#  variables:
-#    HDL_TEST_SET: core
-#  allow_failure: true
-#  before_script:
-#    - apt-get update
-#    - apt-get install -y wget
-#    - ./devscripts/install_jython.sh
-#    - export PATH="$HOME/jython/bin:$PATH"
-#  script:
-#    - ./devscripts/run_tests.sh
 
 playwright-tests-core:
   image: mcr.microsoft.com/playwright:focal
