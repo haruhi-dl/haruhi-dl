@@ -958,15 +958,9 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         player_id = self._extract_player_info(player_url)
 
         # Read from filesystem cache
-        func_id = '%s_%s' % (
-            player_id, self._signature_cache_id(example_sig))
-        assert os.path.basename(func_id) == func_id
-
-        """
-        cache_spec = self._downloader.cache.load('youtube-sigfuncs', func_id)
+        cache_spec = self._downloader.cache.load('youtube-sigfuncs', player_id)
         if cache_spec is not None:
-            return lambda s: ''.join(s[i] for i in cache_spec)
-        """
+            return cache_spec
 
         if not player_url.startswith('http'):
             player_url = 'https://www.youtube.com' + player_url
@@ -981,13 +975,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             errnote='Download of js player %s failed' % player_url)
         res = self._parse_sig_js(code)
 
-        """
-        test_string = ''.join(map(compat_chr, range(len(example_sig))))
-        cache_res = self._do_decrypt_signature(test_string, res)
-        cache_spec = [ord(c) for c in cache_res]
-
-        self._downloader.cache.store('youtube-sigfuncs', func_id, cache_spec)
-        """
+        self._downloader.cache.store('youtube-sigfuncs', player_id, res)
         return res
 
     def _parse_sig_js(self, js_player):
