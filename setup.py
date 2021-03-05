@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 from __future__ import print_function
@@ -28,7 +28,7 @@ py2exe_options = {
     'bundle_files': 1,
     'compressed': 1,
     'optimize': 2,
-    'dist_dir': '.',
+    'dist_dir': './build/bdist.win32/winexe/bundle-3.8/',
     'dll_excludes': ['w9xpopen.exe', 'crypt32.dll'],
 }
 

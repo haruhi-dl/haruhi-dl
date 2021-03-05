@@ -2,7 +2,8 @@
 
 # Run with as parameter a setup.py that works in the current directory
 # e.g. no os.chdir()
-# It will run twice, the first time will crash
+
+# Wine >=6.3 required: https://bugs.winehq.org/show_bug.cgi?id=3591
 
 set -e
 
@@ -10,36 +11,30 @@ SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 if [ ! -d wine-py2exe ]; then
 
-    sudo apt-get install wine1.3 axel bsdiff
-
     mkdir wine-py2exe
     cd wine-py2exe
     export WINEPREFIX=`pwd`
 
-    axel -a "http://www.python.org/ftp/python/2.7/python-2.7.msi"
-    axel -a "http://downloads.sourceforge.net/project/py2exe/py2exe/0.6.9/py2exe-0.6.9.win32-py2.7.exe"
-    #axel -a "http://winetricks.org/winetricks"
+    echo "Downloading Python 3.8.8"
+    aria2c "https://www.python.org/ftp/python/3.8.8/python-3.8.8.exe"
+
+    # this will need to be upgraded when switching to a newer version of python
+    winetricks win7
 
     # http://appdb.winehq.org/objectManager.php?sClass=version&iId=21957
-    echo "Follow python setup on screen"
-    wine msiexec /i python-2.7.msi
+    echo "Installing Python 3.8.8"
+    wine python-3.8.8.exe /quiet InstallAllUsers=1 'DefaultAllUsersTargetDir=C:\\python38'
     
-    echo "Follow py2exe setup on screen"
-    wine py2exe-0.6.9.win32-py2.7.exe
+    echo "Installing py2exe"
+    wine 'C:\\python38\\python.exe' -m pip install wheel
+    wine 'C:\\python38\\python.exe' -m pip install py2exe
+    #wine 'C:\\python38\\python.exe' -m pip install playwright===1.9.0
+    #wine 'C:\\python38\\python.exe' -m playwright install
     
     #echo "Follow Microsoft Visual C++ 2008 Redistributable Package setup on screen"
     #bash winetricks vcrun2008
 
-    rm py2exe-0.6.9.win32-py2.7.exe
-    rm python-2.7.msi
-    #rm winetricks
-    
-    # http://bugs.winehq.org/show_bug.cgi?id=3591
-    
-    mv drive_c/Python27/Lib/site-packages/py2exe/run.exe drive_c/Python27/Lib/site-packages/py2exe/run.exe.backup
-    bspatch drive_c/Python27/Lib/site-packages/py2exe/run.exe.backup drive_c/Python27/Lib/site-packages/py2exe/run.exe "$SCRIPT_DIR/SizeOfImage.patch"
-    mv drive_c/Python27/Lib/site-packages/py2exe/run_w.exe drive_c/Python27/Lib/site-packages/py2exe/run_w.exe.backup
-    bspatch drive_c/Python27/Lib/site-packages/py2exe/run_w.exe.backup drive_c/Python27/Lib/site-packages/py2exe/run_w.exe "$SCRIPT_DIR/SizeOfImage_w.patch"
+    rm python-3.8.8.exe
 
     cd -
     
@@ -49,8 +44,8 @@ else
 
 fi
 
-wine "C:\\Python27\\python.exe" "$1" py2exe > "py2exe.log" 2>&1 || true
-echo '# Copying python27.dll' >> "py2exe.log"
-cp "$WINEPREFIX/drive_c/windows/system32/python27.dll" build/bdist.win32/winexe/bundle-2.7/
-wine "C:\\Python27\\python.exe" "$1" py2exe >> "py2exe.log" 2>&1
-
+mkdir -p build/bdist.win32/winexe/bundle-3.8/
+# cp "$WINEPREFIX/drive_c/python38/python38.dll" build/bdist.win32/winexe/bundle-3.8/
+echo "Making the exe file"
+# cannot be piped into a file: https://forum.winehq.org/viewtopic.php?t=33992
+wine 'C:\\python38\\python.exe' "$1" py2exe | tee py2exe.log
