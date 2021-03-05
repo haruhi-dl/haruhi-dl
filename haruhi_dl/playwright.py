@@ -37,8 +37,10 @@ class PlaywrightHelper():
     def _import_pw(cls, fatal=True):
         try:
             cls._real_import_pw()
-        except ImportError:
+        except ImportError as err:
             if fatal is True:
+                if cls._extractor and cls._extractor._downloader.params.get('verbose'):
+                    raise err
                 raise ExtractorError('Playwright could not be imported', expected=True)
         except ExtractorError as err:
             if fatal is True:
