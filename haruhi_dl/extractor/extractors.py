@@ -961,6 +961,8 @@ from .polskieradio import (
     PolskieRadioIE,
     PolskieRadioCategoryIE,
     PolskieRadioPlayerIE,
+    PolskieRadioPodcastIE,
+    PolskieRadioPodcastListIE,
 )
 from .popcorntimes import PopcorntimesIE
 from .popcorntv import PopcornTVIE
