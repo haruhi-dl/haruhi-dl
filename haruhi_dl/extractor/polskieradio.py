@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import itertools
+import json
 import re
 
 from .common import InfoExtractor
@@ -14,9 +15,11 @@ from ..utils import (
     extract_attributes,
     ExtractorError,
     int_or_none,
+    parse_iso8601,
     strip_or_none,
     unescapeHTML,
     unified_timestamp,
+    url_or_none,
 )
 
 
@@ -297,3 +300,86 @@ class PolskieRadioPlayerIE(InfoExtractor):
             'thumbnail': '%s/images/%s-color-logo.png' % (self._BASE_URL, channel_url),
             'is_live': True,
         }
+
+
+class PolskieRadioPodcastBaseExtractor(InfoExtractor):
+    _API_BASE = 'https://apipodcasts.polskieradio.pl/api'
+
+    def _parse_episode(self, data):
+        return {
+            'id': data['guid'],
+            'formats': [{
+                'url': data['url'],
+                'filesize': int_or_none(data.get('fileSize')),
+            }],
+            'title': data['title'],
+            'description': data.get('description'),
+            'duration': int_or_none(data.get('length')),
+            'timestamp': parse_iso8601(data.get('publishDate')),
+            'thumbnail': url_or_none(data.get('image')),
+            'series': data.get('podcastTitle'),
+            'episode': data['title'],
+        }
+
+
+class PolskieRadioPodcastListIE(PolskieRadioPodcastBaseExtractor):
+    IE_NAME = 'polskieradio:podcast:list'
+    _VALID_URL = r'https?://podcasty\.polskieradio\.pl/podcast/(?P<id>\d+)'
+    _TESTS = [{
+        'url': 'https://podcasty.polskieradio.pl/podcast/19/',
+        'info_dict': {
+            'id': '19',
+            'title': 'Raport o stanie świata',
+            'description': 'Autorski wybór najważniejszych wydarzeń politycznych, społecznych i kulturalnych ostatnich 7 dni na świecie. Z udziałem dziennikarzy, ekspertów, uczestników życia politycznego. Plus dobra muzyka i do tego na temat.',
+            'uploader': 'Dariusz Rosiak',
+        },
+        'playlist_count': 704,
+    }]
+
+    def _real_extract(self, url):
+        podcast_id = self._match_id(url)
+        data = self._download_json(
+            '%s/Podcasts/%s/?pageSize=10&page=1' % (self._API_BASE, podcast_id),
+            podcast_id, 'Downloading page #1')
+        entries = [self._parse_episode(ep) for ep in data['items']]
+        if len(entries) < data['itemCount']:
+            for page in range(2, data['itemCount'] // 10 + 2):
+                data = self._download_json(
+                    '%s/Podcasts/%s/?pageSize=10&page=%d' % (self._API_BASE, podcast_id, page),
+                    podcast_id, 'Downloading page #%d' % page)
+                entries.extend(self._parse_episode(ep) for ep in data['items'])
+        return {
+            '_type': 'playlist',
+            'entries': entries,
+            'id': str(data['id']),
+            'title': data['title'],
+            'description': data.get('description'),
+            'uploader': data.get('announcer'),
+        }
+
+
+class PolskieRadioPodcastIE(PolskieRadioPodcastBaseExtractor):
+    IE_NAME = 'polskieradio:podcast'
+    _VALID_URL = r'https?://podcasty\.polskieradio\.pl/track/(?P<id>[a-f\d]{8}(?:-[a-f\d]{4}){4}[a-f\d]{8})'
+    _TESTS = [{
+        'url': 'https://podcasty.polskieradio.pl/track/6eafe403-cb8f-4756-b896-4455c3713c32',
+        'info_dict': {
+            'id': '6eafe403-cb8f-4756-b896-4455c3713c32',
+            'ext': 'mp3',
+            'title': 'Theresa May rezygnuje. Co dalej z brexitem?',
+            'description': 'Brytyjska premier Theresa May zapowiedziała w piątek (24.05), że 7 czerwca ustąpi ze stanowiska szefowej Partii Konserwatywnej, uruchamiając proces wyboru jej następcy. Nowy szef torysów przejmie po niej także urząd premiera. ',
+        },
+    }]
+
+    def _real_extract(self, url):
+        podcast_id = self._match_id(url)
+        data = self._download_json(
+            '%s/audio' % (self._API_BASE),
+            podcast_id, 'Downloading podcast metadata',
+            data=json.dumps({
+                'guids': [podcast_id],
+            }).encode('utf-8'),
+            headers={
+                'Content-Type': 'application/json',
+            })
+        return self._parse_episode(data[0])
