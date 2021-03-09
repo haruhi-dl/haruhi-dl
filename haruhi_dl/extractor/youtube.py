@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from datetime import datetime
 import json
 import hashlib
-import os.path
 import random
 import re
 import time
@@ -29,6 +28,7 @@ from ..utils import (
     float_or_none,
     get_element_by_id,
     int_or_none,
+    list_geoblocked_countres,
     mimetype2ext,
     parse_codecs,
     parse_duration,
@@ -1849,15 +1849,34 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     a_format.setdefault('http_headers', {})['Youtubedl-no-compression'] = 'True'
                     formats.append(a_format)
             else:
-                error_message = extract_unavailable_message()
+                error_message = None
+                error_desc = None
                 if not error_message:
-                    error_message = clean_html(try_get(
+                    error_message = try_get(
                         player_response, lambda x: x['playabilityStatus']['reason'],
-                        compat_str))
+                        compat_str)
+                    error_desc = try_get(
+                        player_response, lambda x: x['playabilityStatus']['errorScreen']['playerErrorMessageRenderer']['subreason']['runs'],
+                        list)
+                    if error_desc:
+                        error_desc = ''.join(er['text'] for er in error_desc)
                 if not error_message:
                     error_message = clean_html(
                         try_get(video_info, lambda x: x['reason'][0], compat_str))
                 if error_message:
+                    if error_desc \
+                        and (error_desc == 'The uploader has not made this video available in your country.'
+                             or ', who has blocked it on copyright grounds' in error_desc
+                             or 'It is not available in your country.' in error_desc
+                             or ', who has blocked it in your country on copyright grounds.' in error_desc):
+                        raise ExtractorError(
+                            list_geoblocked_countres(
+                                self._search_regex(
+                                    r'<meta itemprop="regionsAllowed" content="((?:(?:[A-Z]{2},)*[A-Z]{2})?)">',
+                                    video_webpage, 'allowed region list').split(',')),
+                            expected=True)
+                    if error_message == 'Video unavailable' and error_desc:
+                        raise ExtractorError(error_desc, expected=True)
                     raise ExtractorError(error_message, expected=True)
                 raise ExtractorError('no conn, hlsvp, hlsManifestUrl or url_encoded_fmt_stream_map information found in video info')
 
