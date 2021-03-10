@@ -3,10 +3,10 @@ from __future__ import unicode_literals
 from .common import InfoExtractor
 from ..utils import (
     int_or_none,
+    js_to_json,
 )
 
 import re
-import datetime
 
 
 class OnNetworkLoaderIE(InfoExtractor):
@@ -45,51 +45,46 @@ class OnNetworkLoaderIE(InfoExtractor):
 
 class OnNetworkFrameIE(InfoExtractor):
     IE_NAME = 'onnetwork:frame'
-    _VALID_URL = r'https?://video\.onnetwork\.tv/frame84\.php\?(?:[^&]+&)*?mid=(?P<mid>[^&]+)&(?:[^&]+&)*?id=(?P<vid>[^&]+)'
+    _VALID_URL = r'https?://video\.onnetwork\.tv/frame\d+\.php\?(?:[^&]+&)*?mid=(?P<mid>[^&]+)&(?:[^&]+&)*?id=(?P<vid>[^&]+)'
     _TESTS = [{
         'url': 'https://video.onnetwork.tv/frame84.php?mid=MCwxNng5LDAsMCwxNzU1LDM3MjksMSwwLDEsMzYsNSwwLDIsMCw0LDEsMCwxLDEsMiwwLDAsMSwwLDAsMCwwLC0xOy0xOzIwOzIwLDAsNTAsMA==&preview=0&iid=0&e=1&widget=524&id=ffEXS991c5f8f4dbb502b540687287098d2d8',
         'only_matching': True,
     }]
-
-    _BASE_OBJECT_RE = r'''var onplayer\s*=\s*new tUIPlayer\(\s*{\s*videos\s*:\s*\[\s*{.*?'''
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
         vid = mobj.group('vid')
         webpage = self._download_webpage(url, vid, 'Downloading video frame')
 
-        video_id = self._search_regex(
-            self._BASE_OBJECT_RE + r'id\s*:\s*(\d+)',
-            webpage, 'video id')
-        m3u_url = self._search_regex(
-            self._BASE_OBJECT_RE + r'(?:urls\s*:\[{[^}]+}\],)?url\s*:"([^"]+)"',
-            webpage, 'm3u url')
-        title = self._search_regex(
-            self._BASE_OBJECT_RE + r"(?<!p)title\s*:\s*'([^']+)'",
-            webpage, 'title')
-        thumbnail = self._search_regex(
-            self._BASE_OBJECT_RE + r"""(?<![a-z])poster\s*:\s*'([^']+)'""",
-            webpage, 'thumbnail', fatal=False)
-        duration = self._search_regex(
-            self._BASE_OBJECT_RE + r'duration\s*:\s*(\d+)',
-            webpage, 'duration', fatal=False)
-        age_limit = self._search_regex(
-            self._BASE_OBJECT_RE + r'ageallow\s*:\s*(\d+)',
-            webpage, 'age limit', fatal=False)
-        upload_date_unix = self._search_regex(
-            self._BASE_OBJECT_RE + r'adddate\s*:\s*(\d+)',
-            webpage, 'upload date', fatal=False)
-        if upload_date_unix:
-            upload_date = datetime.datetime.fromtimestamp(int(upload_date_unix)).strftime('%Y%m%d')
+        data = self._search_regex(
+            r'(?s)var onplayer\s*=\s*new tUIPlayer\(\s*({\s*videos\s*:\s*\[\s*{.*?})\s*,\s*OnPlayerUI',
+            webpage, 'video data')
+        data = js_to_json(data)
+        data = re.sub(
+            r'\((?P<value>\d+(?:\.\d+)?|(["\']).+?\2)(?:\s*\|\|\s*.+?)?\)',
+            lambda x: x.group('value'), data)
+        data = re.sub(r'"\s*\+\s*"', '', data)
+        data = self._parse_json(data, vid)
 
-        formats = self._extract_m3u8_formats(m3u_url, video_id)
+        entries = []
+        for video in data['videos']:
+            video_id = str(video['id'])
+
+            formats = self._extract_m3u8_formats(video['url'], video_id)
+            self._sort_formats(formats)
+
+            entries.append({
+                'id': video_id,
+                'title': video['title'],
+                'formats': formats,
+                'thumbnail': video.get('poster'),
+                'duration': int_or_none(video.get('duration')),
+                'age_limit': int_or_none(video.get('ageallow')),
+                'timestamp': int_or_none(video.get('adddate')),
+            })
 
         return {
-            'id': video_id,
-            'title': title,
-            'formats': formats,
-            'thumbnail': thumbnail,
-            'duration': int_or_none(duration),
-            'age_limit': int_or_none(age_limit),
-            'upload_date': upload_date,
+            '_type': 'playlist',
+            'entries': entries,
+            'id': vid,
         }

@@ -2212,12 +2212,12 @@ class GenericIE(InfoExtractor):
             # OnNetwork.tv embed
             'url': 'https://wiadomosci.gazeta.pl/wiadomosci/7,114883,26377890,panstwo-polskie-nie-uznaje-takich-rodzin-jak-nasza-i-krzywdzi.html',
             'info_dict': {
-                'id': '337382',
-                'title': 'Rodzina+ odc. 1. Karolina i Ania',
-                'ext': 'm3u8',
-                'age_limit': 16,
-                'upload_date': '20200929',
+                'id': '7,114883,26377890,panstwo-polskie-nie-uznaje-takich-rodzin-jak-nasza-i-krzywdzi',
+                'title': '"Państwo polskie nie uznaje takich rodzin jak nasza i krzywdzi w ten sposób dzieci" [RODZINA+]',
+                'uploader': 'wiadomosci.gazeta.pl',
             },
+            # 1x onnetwork:script, which resolves to onnetwork:frame
+            'playlist_count': 1,
         },
         {
             # Embetty video embeds (youtube, vimeo, facebook)
