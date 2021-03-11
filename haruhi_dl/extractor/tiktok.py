@@ -10,6 +10,7 @@ from ..utils import (
     str_or_none,
     try_get,
     url_or_none,
+    ExtractorError,
 )
 
 
@@ -151,7 +152,43 @@ class TikTokIE(TikTokBaseIE):
         return self._extract_video(data['props']['pageProps']['itemInfo']['itemStruct'], data, url)
 
 
-class TikTokUserIE(TikTokBaseIE):
+class TikTokPlaywrightBaseIE(TikTokBaseIE):
+    def _scroll_the_page(self, page, item_list_re, display_id):
+        if page.title() == 'tiktok-verify-page':
+            raise ExtractorError('TikTok requires captcha, use --cookies')
+        items = []
+        more = True
+        pages = 0
+        while more:
+            # if pages > 0:
+            page.evaluate('() => window.scrollTo(0, document.body.scrollHeight)')
+            with page.expect_response(
+                    lambda r: re.match(item_list_re, r.url)) as item_list_res:
+                item_list = item_list_res.value.json()
+                status_code = try_get(item_list, (
+                    lambda x: x['code'],
+                    lambda x: x['statusCode']
+                ))
+                if status_code is None:
+                    raise ExtractorError('Unknown error returned by TikTok')
+                status_code = int(status_code)
+                if status_code == 10000:
+                    raise ExtractorError('Captcha required by TikTok', expected=True)
+                if status_code != 0:
+                    raise ExtractorError('Unknown error code (%s) returned by TikTok' % str(item_list['code']))
+                if 'itemList' not in item_list:
+                    # TikTok returns invalid .hasMore value
+                    more = False
+                    continue
+                items.extend(item_list['itemList'])
+                more = item_list['hasMore'] is True
+                if not self._downloader.params.get('quiet', False):
+                    self.to_screen('%s: Fetched video list page %d' % (display_id, pages))
+                pages += 1
+        return items
+
+
+class TikTokUserIE(TikTokPlaywrightBaseIE):
     IE_NAME = 'tiktok:user'
     _VALID_URL = r'https?://(?:www\.)?tiktok\.com/@(?P<id>[\w.]+)/?(?:\?.+)?$'
     _TESTS = [{
@@ -173,22 +210,9 @@ class TikTokUserIE(TikTokBaseIE):
         pwh = PlaywrightHelper(self)
         page = pwh.open_page(url, display_id)
 
-        items = []
         item_list_re = re.compile(r'^https?://(?:[^/]+\.)?tiktok\.com/api/post/item_list/?\?')
 
-        more = True
-        pages = 0
-        while more:
-            # if pages > 0:
-            page.evaluate('() => window.scrollTo(0, document.body.scrollHeight)')
-            with page.expect_response(
-                    lambda r: re.match(item_list_re, r.url)) as item_list_res:
-                item_list = item_list_res.value.json()
-                items.extend(item_list['itemList'])
-                more = item_list['hasMore'] is True
-                if not self._downloader.params.get('quiet', False):
-                    self.to_screen('%s: Fetched video list page %d' % (display_id, pages))
-                pages += 1
+        items = self._scroll_the_page(page, item_list_re, display_id)
 
         data = page.eval_on_selector('script#__NEXT_DATA__', 'el => JSON.parse(el.textContent)')
         pwh.browser_stop()
@@ -206,4 +230,113 @@ class TikTokUserIE(TikTokBaseIE):
             'entries': [self._extract_video(item, data, url) for item in items],
         }
         info_dict.update(self._extract_author_data(page_props['userInfo']['user']))
+        return info_dict
+
+
+class TikTokHashtagIE(TikTokPlaywrightBaseIE):
+    IE_NAME = 'tiktok:tag'
+    _VALID_URL = r'https?://(?:www\.)?tiktok\.com/tag/(?P<id>[\w.]+)/?(?:\?.+)?$'
+    _TESTS = [{
+        'url': 'https://www.tiktok.com/tag/mlodzirazem',
+        'info_dict': {
+            'id': '1649821463999493',
+            'title': 'mlodzirazem',
+        },
+        'playlist_mincount': 10,
+    }]
+    _REQUIRES_PLAYWRIGHT = True
+
+    def _real_extract(self, url):
+        display_id = self._match_id(url)
+
+        pwh = PlaywrightHelper(self)
+        page = pwh.open_page(url, display_id)
+
+        item_list_re = re.compile(r'^https?://(?:[^/]+\.)?tiktok\.com/api/challenge/item_list/?\?')
+
+        items = self._scroll_the_page(page, item_list_re, display_id)
+
+        data = page.eval_on_selector('script#__NEXT_DATA__', 'el => JSON.parse(el.textContent)')
+        pwh.browser_stop()
+
+        page_props = data['props']['pageProps']
+        next_data_items = try_get(page_props, lambda x: x['items'], expected_type=list)
+        if next_data_items:
+            items = next_data_items + items
+
+        return {
+            '_type': 'playlist',
+            'id': page_props['challengeInfo']['challenge']['id'],
+            'title': page_props['challengeInfo']['challenge']['title'],
+            'description': page_props['challengeInfo']['challenge']['desc'],
+            'entries': [self._extract_video(item, data, url) for item in items],
+        }
+
+
+class TikTokMusicIE(TikTokPlaywrightBaseIE):
+    IE_NAME = 'tiktok:music'
+    _VALID_URL = r'https?://(?:www\.)?tiktok\.com/music/[^/\?#]+-(?P<id>\d+)/?(?:\?.+)?$'
+    _TESTS = [{
+        'url': 'https://www.tiktok.com/music/Anime-Vibes-6858829832269171462',
+        'info_dict': {
+            'id': '6858829832269171462',
+            'title': 'Anime Vibes',
+            'uploader': 'San 🇲🇲🇬🇧',
+            'uploader_id': '108936360073281536',
+        },
+        'playlist_mincount': 84,
+    }, {
+        'url': 'https://www.tiktok.com/music/dźwięk-oryginalny-6840124395780934405?',
+        'info_dict': {
+            'id': '6840124395780934405',
+            'ext': 'mp3',
+            'title': 'dźwięk oryginalny',
+            'uploader': 'jwhsbdh j',
+            'uploader_id': '6776617973493203973',
+        },
+        'params': {
+            'noplaylist': True,
+        },
+    }]
+    _REQUIRES_PLAYWRIGHT = True
+
+    def _real_extract(self, url):
+        display_id = self._match_id(url)
+
+        if self._downloader.params.get('noplaylist'):
+            # extract just the music file
+            webpage = self._download_webpage(url, display_id)
+            data = self._search_nextjs_data(webpage, display_id)
+            page_props = data['props']['pageProps']
+            info_dict = {
+                'url': page_props['musicInfo']['music']['playUrl'],
+                'id': page_props['musicInfo']['music']['id'],
+                'title': page_props['musicInfo']['music']['title'],
+                'duration': page_props['musicInfo']['music']['duration'],
+            }
+            info_dict.update(self._extract_author_data(page_props['musicInfo']['author']))
+            return info_dict
+
+        pwh = PlaywrightHelper(self)
+        page = pwh.open_page(url, display_id)
+
+        item_list_re = re.compile(r'^https?://(?:[^/]+\.)?tiktok\.com/api/music/item_list/?\?')
+
+        items = self._scroll_the_page(page, item_list_re, display_id)
+
+        data = page.eval_on_selector('script#__NEXT_DATA__', 'el => JSON.parse(el.textContent)')
+        pwh.browser_stop()
+
+        page_props = data['props']['pageProps']
+        next_data_items = try_get(page_props, lambda x: x['items'], expected_type=list)
+        if next_data_items:
+            items = next_data_items + items
+
+        info_dict = {
+            '_type': 'playlist',
+            'id': page_props['musicInfo']['music']['id'],
+            'title': page_props['musicInfo']['music']['title'],
+            'entries': [self._extract_video(item, data, url) for item in items],
+        }
+        info_dict.update(self._extract_author_data(page_props['musicInfo']['author']))
         return info_dict
