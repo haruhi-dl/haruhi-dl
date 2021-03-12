@@ -252,6 +252,7 @@ from .comedycentral import (
 )
 from .commonmistakes import CommonMistakesIE, UnicodeBOMIE
 from .commonprotocols import (
+    BitTorrentMagnetIE,
     MmsIE,
     RtmpIE,
 )
