@@ -2482,7 +2482,7 @@ class GenericIE(InfoExtractor):
 
         # Check for direct link to a video
         content_type = head_response.headers.get('Content-Type', '').lower()
-        m = re.match(r'^(?P<type>audio|video|application(?=/(?:ogg$|(?:vnd\.apple\.|x-)?mpegurl)))/(?P<format_id>[^;\s]+)', content_type)
+        m = re.match(r'^(?P<type>audio|video|application(?=/(?:ogg$|(?:vnd\.apple\.|x-)?(?:mpegurl|bittorrent))))/(?P<format_id>[^;\s]+)', content_type)
         if m:
             format_id = compat_str(m.group('format_id'))
             if format_id.endswith('mpegurl'):
@@ -2493,6 +2493,7 @@ class GenericIE(InfoExtractor):
                 formats = [{
                     'format_id': format_id,
                     'url': url,
+                    'protocol': 'bittorrent' if format_id.endswith('bittorrent') else None,
                     'vcodec': 'none' if m.group('type') == 'audio' else None
                 }]
                 info_dict['direct'] = True
@@ -2524,6 +2525,20 @@ class GenericIE(InfoExtractor):
         if first_bytes.startswith(b'#EXTM3U'):
             info_dict['formats'] = self._extract_m3u8_formats(url, video_id, 'mp4')
             self._sort_formats(info_dict['formats'])
+            return info_dict
+
+        # Is it a BitTorrent manifest file?
+        if any(first_bytes.startswith(byt) for byt in (
+            b'd8:announce',
+            b'd13:announce-list',
+            b'd7:comment',
+            b'd4:info',
+        )):
+            info_dict['formats'] = [{
+                'url': url,
+                'protocol': 'bittorrent',
+            }]
+            # info_dict['direct'] = True
             return info_dict
 
         # Maybe it's a direct link to a video?
