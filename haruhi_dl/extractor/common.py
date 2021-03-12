@@ -1410,7 +1410,19 @@ class InfoExtractor(object):
                     preference -= 0.5
 
             protocol = f.get('protocol') or determine_protocol(f)
-            proto_preference = 0 if protocol in ['http', 'https'] else (-0.5 if protocol == 'rtsp' else -0.1)
+            if protocol in ['http', 'https']:
+                proto_preference = 0
+            elif protocol == 'rtsp':
+                proto_preference = -0.5
+            elif protocol == 'bittorrent':
+                if self._downloader.params.get('prefer_p2p') is True:
+                    proto_preference = 1
+                elif self._downloader.params.get('allow_p2p') is True:
+                    proto_preference = -0.1
+                else:
+                    proto_preference = -2
+            else:
+                proto_preference = -0.1
 
             if f.get('vcodec') == 'none':  # audio only
                 preference -= 50
