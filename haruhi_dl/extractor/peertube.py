@@ -6,6 +6,7 @@ import re
 from .common import SelfhostedInfoExtractor
 from ..compat import compat_str
 from ..utils import (
+    determine_ext,
     int_or_none,
     parse_resolution,
     str_or_none,
@@ -65,6 +66,15 @@ class PeerTubeBaseExtractor(SelfhostedInfoExtractor):
             else:
                 f['fps'] = int_or_none(file_.get('fps'))
             formats.append(f)
+            if file_.get('torrentDownloadUrl'):
+                f = f.copy()
+                f.update({
+                    'url': file_['torrentDownloadUrl'],
+                    'ext': determine_ext(file_url),
+                    'format_id': '%s-torrent' % format_id,
+                    'protocol': 'bittorrent',
+                })
+                formats.append(f)
         if files:
             self._sort_formats(formats)
             info_dict['formats'] = formats
