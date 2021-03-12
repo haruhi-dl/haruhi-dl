@@ -60,6 +60,7 @@ from .utils import (
     format_bytes,
     formatSeconds,
     GeoRestrictedError,
+    HaruhiDLError,
     int_or_none,
     ISO3166Utils,
     locked_file,
@@ -1903,6 +1904,10 @@ class HaruhiDL(object):
                         fd.add_progress_hook(ph)
                     if self.params.get('verbose'):
                         self.to_screen('[debug] Invoking downloader on %r' % info.get('url'))
+                    if info.get('protocol') == 'bittorrent' and not self.params.get('allow_p2p'):
+                        raise HaruhiDLError('Peer-to-peer format got selected, but peer-to-peer '
+                                            'downloads are not allowed. '
+                                            'Choose different format or add --allow-p2p option')
                     return fd.download(name, info)
 
                 if info_dict.get('requested_formats') is not None:

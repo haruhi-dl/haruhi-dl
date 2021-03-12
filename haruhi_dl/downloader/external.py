@@ -182,15 +182,16 @@ class Aria2cFD(ExternalFD):
     AVAILABLE_OPT = '-v'
 
     def _make_cmd(self, tmpfilename, info_dict):
-        cmd = [self.exe, '-c']
+        cmd = [self.exe or 'aria2c', '-c']
         cmd += self._configuration_args([
             '--min-split-size', '1M', '--max-connection-per-server', '4'])
         dn = os.path.dirname(tmpfilename)
         if dn:
             cmd += ['--dir', dn]
         cmd += ['--out', os.path.basename(tmpfilename)]
-        for key, val in info_dict['http_headers'].items():
-            cmd += ['--header', '%s: %s' % (key, val)]
+        if info_dict['protocol'] != 'bittorrent':
+            for key, val in info_dict['http_headers'].items():
+                cmd += ['--header', '%s: %s' % (key, val)]
         cmd += self._option('--interface', 'source_address')
         cmd += self._option('--all-proxy', 'proxy')
         cmd += self._bool_option('--check-certificate', 'nocheckcertificate', 'false', 'true', '=')

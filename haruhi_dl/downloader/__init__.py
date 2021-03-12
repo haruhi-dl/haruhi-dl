@@ -10,6 +10,7 @@ from .rtsp import RtspFD
 from .ism import IsmFD
 from .external import (
     get_external_downloader,
+    Aria2cFD,
     FFmpegFD,
 )
 
@@ -26,6 +27,7 @@ PROTOCOL_MAP = {
     'f4m': F4mFD,
     'http_dash_segments': DashSegmentsFD,
     'ism': IsmFD,
+    'bittorrent': Aria2cFD,
 }
 
 

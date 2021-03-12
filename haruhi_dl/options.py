@@ -533,6 +533,19 @@ def parseOpts(overrideArguments=None):
         '--external-downloader-args',
         dest='external_downloader_args', metavar='ARGS',
         help='Give these arguments to the external downloader')
+    downloader.add_option(
+        '--allow-p2p',
+        dest='allow_p2p', action='store_true', default=None,
+        help='Allow downloading by peer-to-peer protocols (BitTorrent). '
+        'May be a violation of your local laws on file sharing in some cases')
+    downloader.add_option(
+        '--forbid-p2p',
+        dest='allow_p2p', action='store_false', default=None,
+        help='Explicitly forbid downloading by peer-to-peer protocols')
+    downloader.add_option(
+        '--prefer-p2p',
+        dest='prefer_p2p', action='store_true', default=None,
+        help='Prefer peer-to-peer formats (implies --allow-p2p)')
 
     workarounds = optparse.OptionGroup(parser, 'Workarounds')
     workarounds.add_option(
