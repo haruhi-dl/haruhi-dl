@@ -1080,6 +1080,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         a = a[3:]
         return "".join(a)
 
+    def _full_signature_handling(self, sig, player_url, video_id):
+        signature = self._decrypt_signature_protected(sig)
+        if re.match(self._VALID_SIG_VALUE_RE, signature):
+            return signature
+        if self._downloader.params.get('verbose'):
+            self.to_screen("Built-in signature decryption failed, trying dynamic")
+        sig_decrypt_stack = self._extract_signature_function(video_id, player_url, sig)
+        return self._do_decrypt_signature(sig, sig_decrypt_stack)
+
     def _get_subtitles(self, video_id, webpage):
         try:
             subs_doc = self._download_xml(
@@ -1680,7 +1689,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     'width': int_or_none(fmt.get('width')),
                 }
 
-            sig_decrypt_stack = None
             for fmt in streaming_formats:
                 if fmt.get('drmFamilies') or fmt.get('drm_families'):
                     continue
@@ -1746,14 +1754,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             self.to_screen('{%s} signature length %s, %s' %
                                            (format_id, parts_sizes, player_desc))
 
-                        signature = self._decrypt_signature_protected(encrypted_sig)
-                        if not re.match(self._VALID_SIG_VALUE_RE, signature):
-                            if not sig_decrypt_stack:
-                                if self._downloader.params.get('verbose'):
-                                    self.to_screen("Built-in signature decryption failed, trying dynamic")
-                                sig_decrypt_stack = self._extract_signature_function(video_id, player_url, encrypted_sig)
-                            signature = self._do_decrypt_signature(encrypted_sig, sig_decrypt_stack)
-
+                        signature = self._full_signature_handling(encrypted_sig, player_url, video_id)
                         sp = try_get(url_data, lambda x: x['sp'][0], compat_str) or 'signature'
                         url += '&%s=%s' % (sp, signature)
                 if 'ratebypass' not in url:
@@ -2102,7 +2103,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 try:
                     def decrypt_sig(mobj):
                         s = mobj.group(1)
-                        dec_s = self._decrypt_signature_protected(s)
+                        dec_s = self._full_signature_handling(s, player_url, video_id)
                         return '/signature/%s' % dec_s
 
                     mpd_url = re.sub(r'/s/([a-fA-F0-9\.]+)', decrypt_sig, mpd_url)
