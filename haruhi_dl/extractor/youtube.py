@@ -2113,6 +2113,16 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             formats_dict=self._formats):
                         if not df.get('filesize'):
                             df['filesize'] = _extract_filesize(df['url'])
+                        # Despite that the audio file is fragmented by every ~10 seconds,
+                        # YouTube doesn't care if you just request the byte range of a whole file,
+                        # so we just make it the HTTPS file instead of fragmented DASH
+                        bytesize = self._search_regex(r'^range/\d+-(\d+)', df['fragments'][-1]['path'], 'filesize', default=None)
+                        if bytesize:
+                            df['url'] = '%srange/0-%s' % (df['fragment_base_url'], bytesize)
+                            df['protocol'] = 'https'
+                            df['fragments'] = None
+                            df['format_note'] = None
+                            df['container'] = None
                         # Do not overwrite DASH format found in some previous DASH manifest
                         if df['format_id'] not in dash_formats:
                             dash_formats[df['format_id']] = df
