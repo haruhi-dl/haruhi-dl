@@ -1531,6 +1531,19 @@ class HaruhiDL(object):
             if info_dict.get('%s_number' % field) is not None and not info_dict.get(field):
                 info_dict[field] = '%s %d' % (field.capitalize(), info_dict['%s_number' % field])
 
+        # Some fragmented media manifests like m3u8 allow embedding subtitles
+        # This is a weird hack to provide these subtitles to users without a very huge refactor of extractors
+        if 'formats' in info_dict:
+            formats_subtitles = list(filter(lambda x: x.get('_subtitle'), info_dict['formats']))
+            if formats_subtitles:
+                info_dict.setdefault('subtitles', {})
+                for sub in formats_subtitles:
+                    if sub['_key'] not in info_dict['subtitles']:
+                        info_dict['subtitles'][sub['_key']] = []
+                    info_dict['subtitles'][sub['_key']].append(sub['_subtitle'])
+                # remove these subtitles from formats now
+                info_dict['formats'] = list(filter(lambda x: '_subtitle' not in x, info_dict['formats']))
+
         for cc_kind in ('subtitles', 'automatic_captions'):
             cc = info_dict.get(cc_kind)
             if cc:
@@ -1538,6 +1551,12 @@ class HaruhiDL(object):
                     for subtitle_format in subtitle:
                         if subtitle_format.get('url'):
                             subtitle_format['url'] = sanitize_url(subtitle_format['url'])
+                            if subtitle_format.get('protocol') is None:
+                                subtitle_format['protocol'] = determine_protocol(subtitle_format['url'])
+                            if subtitle_format.get('http_headers') is None:
+                                full_info = info_dict.copy()
+                                full_info.update(subtitle_format)
+                                subtitle_format['http_headers'] = self._calc_headers(full_info)
                         if subtitle_format.get('ext') is None:
                             subtitle_format['ext'] = determine_ext(subtitle_format['url']).lower()
 
@@ -1854,7 +1873,6 @@ class HaruhiDL(object):
             # subtitles download errors are already managed as troubles in relevant IE
             # that way it will silently go on when used with unsupporting IE
             subtitles = info_dict['requested_subtitles']
-            ie = self.get_info_extractor(info_dict['extractor_key'])
             for sub_lang, sub_info in subtitles.items():
                 sub_format = sub_info['ext']
                 sub_filename = subtitles_filename(filename, sub_lang, sub_format, info_dict.get('ext'))
@@ -1873,10 +1891,8 @@ class HaruhiDL(object):
                             return
                     else:
                         try:
-                            sub_data = ie._request_webpage(
-                                sub_info['url'], info_dict['id'], note=False).read()
-                            with io.open(encodeFilename(sub_filename), 'wb') as subfile:
-                                subfile.write(sub_data)
+                            subd = get_suitable_downloader(sub_info, self.params)(self, self.params)
+                            subd.download(sub_filename, sub_info)
                         except (ExtractorError, IOError, OSError, ValueError) as err:
                             self.report_warning('Unable to download subtitle for "%s": %s' %
                                                 (sub_lang, error_to_compat_str(err)))
