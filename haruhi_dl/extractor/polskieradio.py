@@ -23,7 +23,36 @@ from ..utils import (
 )
 
 
-class PolskieRadioIE(InfoExtractor):
+class PolskieRadioBaseExtractor(InfoExtractor):
+    def _extract_webpage_player_entries(self, webpage, playlist_id, base_data):
+        entries = []
+
+        media_urls = set()
+
+        for data_media in re.findall(r'<[^>]+data-media=(["\']?)({[^>]+})\1', webpage):
+            media = self._parse_json(unescapeHTML(data_media[1]), playlist_id, fatal=False)
+            if not media.get('file'):
+                continue
+            media_url = self._proto_relative_url(media['file'], 'https:')
+            if media_url in media_urls:
+                continue
+            media_urls.add(media_url)
+            entry = base_data.copy()
+            entry.update({
+                'id': compat_str(media['id']),
+                'url': media_url,
+                'duration': int_or_none(media.get('length')),
+                'vcodec': 'none' if media.get('provider') == 'audio' else None,
+            })
+            entry_title = compat_urllib_parse_unquote(media['desc'])
+            if entry_title:
+                entry['title'] = entry_title
+            entries.append(entry)
+
+        return entries
+
+
+class PolskieRadioIE(PolskieRadioBaseExtractor):
     _VALID_URL = r'https?://(?:www\.)?polskieradio(?:24)?\.pl/\d+/\d+/Artykul/(?P<id>[0-9]+)'
     _TESTS = [{
         # like data-media={"type":"muzyka"}
@@ -92,29 +121,13 @@ class PolskieRadioIE(InfoExtractor):
 
         thumbnail_url = self._og_search_thumbnail(webpage)
 
-        entries = []
-
-        media_urls = set()
-
         title = self._og_search_title(webpage).strip()
 
-        for data_media in re.findall(r'<[^>]+data-media=(["\']?)({[^>]+})\1', content):
-            media = self._parse_json(unescapeHTML(data_media[1]), playlist_id, fatal=False)
-            if not media.get('file'):
-                continue
-            media_url = self._proto_relative_url(media['file'], 'http:')
-            if media_url in media_urls:
-                continue
-            media_urls.add(media_url)
-            entries.append({
-                'id': compat_str(media['id']),
-                'url': media_url,
-                'title': compat_urllib_parse_unquote(media['desc']) or title,
-                'duration': int_or_none(media.get('length')),
-                'vcodec': 'none' if media.get('provider') == 'audio' else None,
-                'timestamp': timestamp,
-                'thumbnail': thumbnail_url
-            })
+        entries = self._extract_webpage_player_entries(content, playlist_id, {
+            'title': title,
+            'timestamp': timestamp,
+            'thumbnail': thumbnail_url,
+        })
 
         description = strip_or_none(self._og_search_description(webpage))
 
@@ -383,3 +396,39 @@ class PolskieRadioPodcastIE(PolskieRadioPodcastBaseExtractor):
                 'Content-Type': 'application/json',
             })
         return self._parse_episode(data[0])
+
+
+class PolskieRadioRadioKierowcowIE(PolskieRadioBaseExtractor):
+    _VALID_URL = r'https?://(?:www\.)?radiokierowcow\.pl/artykul/(?P<id>[0-9]+)'
+    IE_NAME = 'polskieradio:kierowcow'
+
+    _TESTS = [{
+        'url': 'https://radiokierowcow.pl/artykul/2694529',
+        'info_dict': {
+            'id': '2694529',
+            'title': 'Zielona fala reliktem przeszłości?',
+            'description': 'md5:343950a8717c9818fdfd4bd2b8ca9ff2',
+        },
+        'playlist_count': 3,
+    }]
+
+    def _real_extract(self, url):
+        media_id = self._match_id(url)
+        webpage = self._download_webpage(url, media_id)
+        nextjs_build = self._search_nextjs_data(webpage, media_id)['buildId']
+        article = self._download_json(
+            'https://radiokierowcow.pl/_next/data/%s/artykul/%s.json?articleId=%s' % (nextjs_build, media_id, media_id),
+            media_id)
+        data = article['pageProps']['data']
+        title = data['title']
+        entries = self._extract_webpage_player_entries(data['content'], media_id, {
+            'title': title,
+        })
+
+        return {
+            '_type': 'playlist',
+            'id': media_id,
+            'entries': entries,
+            'title': title,
+            'description': data['lead'],
+        }
