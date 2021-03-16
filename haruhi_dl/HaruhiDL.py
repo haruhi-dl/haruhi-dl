@@ -1552,7 +1552,7 @@ class HaruhiDL(object):
                         if subtitle_format.get('url'):
                             subtitle_format['url'] = sanitize_url(subtitle_format['url'])
                             if subtitle_format.get('protocol') is None:
-                                subtitle_format['protocol'] = determine_protocol(subtitle_format['url'])
+                                subtitle_format['protocol'] = determine_protocol(subtitle_format)
                             if subtitle_format.get('http_headers') is None:
                                 full_info = info_dict.copy()
                                 full_info.update(subtitle_format)
