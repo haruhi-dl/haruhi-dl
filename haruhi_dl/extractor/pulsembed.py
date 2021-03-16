@@ -55,13 +55,13 @@ class PulseVideoIE(InfoExtractor):
 
     def _extract_from_id(self, video_id, webpage=None):
         response = self._download_json(
-            'http://qi.ckm.onetapi.pl/', video_id,
+            'https://player-api.dreamlab.pl/', video_id,
             query={
                 'body[id]': video_id,
                 'body[jsonrpc]': '2.0',
                 'body[method]': 'get_asset_detail',
                 'body[params][ID_Publikacji]': video_id,
-                'body[params][Service]': 'www.onet.pl',
+                'body[params][version]': '2.0',
                 'content-type': 'application/jsonp',
                 'x-onet-app': 'player.front.onetapi.pl',
             })
@@ -83,6 +83,10 @@ class PulseVideoIE(InfoExtractor):
                 for f in format_list:
                     video_url = f.get('url')
                     if not video_url:
+                        continue
+                    # UHD formats are bullshit, they are just duplicates
+                    # https://git.sakamoto.pl/laudompat/haruhi-dl/-/issues/45
+                    if format_id.endswith('-uhd') and formats_dict.get(format_id[:-len('-uhd')]):
                         continue
                     ext = determine_ext(video_url)
                     if format_id.startswith('ism'):
