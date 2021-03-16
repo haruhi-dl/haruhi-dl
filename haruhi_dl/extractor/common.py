@@ -1391,6 +1391,10 @@ class InfoExtractor(object):
                 f['tbr'] = f['abr'] + f['vbr']
 
         def _formats_key(f):
+            # manifest subtitle workaround
+            if '_subtitle' in f:
+                return (-1,)
+
             # TODO remove the following workaround
             from ..utils import determine_ext
             if not f.get('ext') and 'url' in f:
@@ -1726,7 +1730,7 @@ class InfoExtractor(object):
             if not (media_type and group_id and name):
                 return
             groups.setdefault(group_id, []).append(media)
-            if media_type not in ('VIDEO', 'AUDIO'):
+            if media_type not in ('VIDEO', 'AUDIO', 'SUBTITLES'):
                 return
             media_url = media.get('URI')
             if media_url:
@@ -1734,17 +1738,27 @@ class InfoExtractor(object):
                 for v in (m3u8_id, group_id, name):
                     if v:
                         format_id.append(v)
-                f = {
-                    'format_id': '-'.join(format_id),
-                    'url': format_url(media_url),
-                    'manifest_url': m3u8_url,
-                    'language': media.get('LANGUAGE'),
-                    'ext': ext,
-                    'protocol': entry_protocol,
-                    'preference': preference,
-                }
-                if media_type == 'AUDIO':
-                    f['vcodec'] = 'none'
+                if media_type == 'SUBTITLES':
+                    f = {
+                        '_subtitle': {
+                            'url': format_url(media_url),
+                            'ext': 'vtt',
+                            'protocol': entry_protocol,
+                        },
+                        '_key': media.get('LANGUAGE'),
+                    }
+                else:
+                    f = {
+                        'format_id': '-'.join(format_id),
+                        'url': format_url(media_url),
+                        'manifest_url': m3u8_url,
+                        'language': media.get('LANGUAGE'),
+                        'ext': ext,
+                        'protocol': entry_protocol,
+                        'preference': preference,
+                    }
+                    if media_type == 'AUDIO':
+                        f['vcodec'] = 'none'
                 formats.append(f)
 
         def build_stream_name():

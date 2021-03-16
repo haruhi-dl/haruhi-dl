@@ -318,7 +318,9 @@ class FFmpegFD(ExternalFD):
             args += ['-fs', compat_str(self._TEST_FILE_SIZE)]
 
         if protocol in ('m3u8', 'm3u8_native'):
-            if self.params.get('hls_use_mpegts', False) or tmpfilename == '-':
+            if info_dict['ext'] == 'vtt':
+                args += ['-f', 'webvtt']
+            elif self.params.get('hls_use_mpegts', False) or tmpfilename == '-':
                 args += ['-f', 'mpegts']
             else:
                 args += ['-f', 'mp4']
