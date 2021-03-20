@@ -1376,10 +1376,6 @@ from .tver import TVerIE
 from .tvigle import TvigleIE
 from .tvland import TVLandIE
 from .tvn24 import TVN24IE
-from .tvnplayer import (
-    TVNPlayerIE,
-    TVNPlayerSeriesIE,
-)
 from .tvnet import TVNetIE
 from .tvnoe import TVNoeIE
 from .tvnow import (
