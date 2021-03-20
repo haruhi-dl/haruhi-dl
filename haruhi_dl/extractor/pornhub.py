@@ -169,6 +169,7 @@ class PornHubIE(PornHubBaseIE):
         'params': {
             'skip_download': True,
         },
+        'skip': 'Video has been flagged for verification in accordance with our trust and safety policy',
     }, {
         # subtitles
         'url': 'https://www.pornhub.com/view_video.php?viewkey=ph5a0daf3c370f6',
@@ -267,7 +268,8 @@ class PornHubIE(PornHubBaseIE):
         webpage = dl_webpage('pc')
 
         error_msg = self._html_search_regex(
-            r'(?s)<div[^>]+class=(["\'])(?:(?!\1).)*\b(?:removed|userMessageSection)\b(?:(?!\1).)*\1[^>]*>(?P<error>.+?)</div>',
+            (r'(?s)<div[^>]+class=(["\'])(?:(?!\1).)*\b(?:removed|userMessageSection)\b(?:(?!\1).)*\1[^>]*>(?P<error>.+?)</div>',
+             r'(?s)<section[^>]+class=["\']noVideo["\'][^>]*>(?P<error>.+?)</section>'),
             webpage, 'error message', default=None, group='error')
         if error_msg:
             error_msg = re.sub(r'\s+', ' ', error_msg)
