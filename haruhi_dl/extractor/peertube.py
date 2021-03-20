@@ -103,11 +103,13 @@ class PeerTubeBaseExtractor(SelfhostedInfoExtractor):
         else:
             age_limit = None
 
+        webpage_url = 'https://%s/videos/watch/%s' % (host, display_id)
+
         info_dict.update({
             'id': video['uuid'],
             'title': video['name'],
             'description': video.get('description'),
-            'thumbnail': urljoin(url, video.get('thumbnailPath')),
+            'thumbnail': urljoin(webpage_url, video.get('thumbnailPath')),
             'timestamp': unified_timestamp(video.get('publishedAt')),
             'uploader': account_data('displayName', compat_str),
             'uploader_id': str_or_none(account_data('id', int)),
