@@ -930,7 +930,7 @@ class VimeoAlbumIE(VimeoBaseInfoExtractor):
     }]
     _PAGE_SIZE = 100
 
-    def _fetch_page(self, album_id, authorizaion, hashed_pass, page):
+    def _fetch_page(self, album_id, authorization, hashed_pass, page):
         api_page = page + 1
         query = {
             'fields': 'link,uri',
@@ -939,11 +939,15 @@ class VimeoAlbumIE(VimeoBaseInfoExtractor):
         }
         if hashed_pass:
             query['_hashed_pass'] = hashed_pass
-        videos = self._download_json(
-            'https://api.vimeo.com/albums/%s/videos' % album_id,
-            album_id, 'Downloading page %d' % api_page, query=query, headers={
-                'Authorization': 'jwt ' + authorizaion,
-            })['data']
+        try:
+            videos = self._download_json(
+                'https://api.vimeo.com/albums/%s/videos' % album_id,
+                album_id, 'Downloading page %d' % api_page, query=query, headers={
+                    'Authorization': 'jwt ' + authorization,
+                })['data']
+        except ExtractorError as e:
+            if isinstance(e.cause, compat_HTTPError) and e.cause.code == 400:
+                return
         for video in videos:
             link = video.get('link')
             if not link:
