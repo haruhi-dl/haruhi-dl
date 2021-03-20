@@ -14,7 +14,7 @@ module.exports = function patchHook(patchContent) {
         [/ydl/g, 'hdl'],
 
         // prevent from linking to non-existent repository
-        [/github\.com\/ytdl-org\/haruhi-dl/g, 'github.com/ytdl-org/youtube-dl'],
+        [/github\.com\/(?:yt|h)dl-org\/haruhi-dl/g, 'github.com/ytdl-org/youtube-dl'],
         [/github\.com\/rg3\/haruhi-dl/g, 'github.com/ytdl-org/youtube-dl'],
         // prevent changing the smuggle URLs (for compatibility with ytdl)
         [/__haruhidl_smuggle/g, '__youtubedl_smuggle'],
