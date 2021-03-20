@@ -398,6 +398,14 @@ class TVPEmbedIE(InfoExtractor):
         is_live = try_get(info, lambda x: x['isLive'], bool)
         duration = try_get(info, lambda x: x['duration'], int) if not is_live else None
 
+        subtitles = {}
+        for sub in content.get('subtitles', []):
+            subtitles.setdefault(sub['lang'], [])
+            subtitles[sub['lang']].append({
+                'url': sub['url'],
+                'ext': sub.get('type'),
+            })
+
         info_dict = {
             'id': video_id,
             'title': title,
@@ -407,6 +415,7 @@ class TVPEmbedIE(InfoExtractor):
             'is_live': is_live,
             'duration': duration,
             'formats': formats,
+            'subtitles': subtitles,
         }
 
         # vod.tvp.pl
