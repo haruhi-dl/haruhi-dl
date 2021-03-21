@@ -1,3 +1,64 @@
+version 2021.03.21
+Core
+* [playwright] More verbose errors
+- Removed a lot of deprecated platform support code
+* New win32 exe build system
++ Support for BitTorrent formats
++ Support for VTT subtitles in m3u8 (HLS) manifests
++ `release_timestamp` meta field
+
+Extractor
++ [acast:player] new extractor
++ [videotarget] new extractor
+* [youtube] caching extracted signature functions
+* [go] fix extraction
+* [youtube] more descriptive geo-lock messages (with countries)
+* [polskieradio] podcast support
+* [onnetwork] refactored extraction
++ [tiktok] hashtag and music extractors
+* [peertube] bittorrent formats
+* [generic] detecting bittorrent manifest files
++ bittorrent magnet extractor
+* [generic] extracting mpd manifests properly
+* [youtube] better signature handling for DASH formats
+* [youtube] some DASH formats are now just static files
++ [polskieradio] radiokierowcow.pl extractor
+* [pulsevideo] unduplicating formats
++ [tvp:embed] extracting video subtitles
++ [bandaichannel] Add new extractor
+* [urplay] fix episode data extraction
+* [stretchinternet] Fix extraction
+* [zdf] Rework extractors
++ [bbc] add support for BBC Reel videos
+* [9c9media] fix extraction for videos with multiple ContentPackages
+* [voxmedia] fix volume embed extraction
+* [trovo] Add Origin header to VOD formats
+* [cbs] add support for Paramount+
+* [bilibili] fix video info extraction
+* [pornhub] Extract formats from get_media end point
+* [pornhub] Detect flagged videos
+* [bandcamp] Extract release_timestamp
+* [shahid] fix format extraction
+* [fujitv] fix HLS formats extension
+* [tver] improve title extraction
+* [pinterest] reduce the number of HLS format requests
+* [sportdeutschland] fix extraction
+* [southpark] Fix extraction and add support for southparkstudios.com
+* [rtve] improve extraction
+* [applepodcasts] fix extraction
+* [svtplay] Improve extraction
+* [mlb] fix video extracion
+* [vvvvid] fix kenc format extraction
+* [vimeo:album] Fix extraction for albums with number of videos multiple to page size
+* [peertube] improve thumbnail extraction
+* [yandexmusic] Refactor and add support for artist's tracks and albums
+* [yandexmusic:album] Improve album title extraction
+* [yandexmusic] DRY _VALID_URL base
+* [yandexmusic] Add support for music.yandex.com
+* [yandexmusic:playlist] Request missing tracks in chunks
+- [tvnplayer] removed extractor
+* [youtube] meaningful error for age-gated no-embed videos
+
 version 2021.03.01
 Extractor
 * [cda] logging in with a user account
