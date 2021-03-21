@@ -1073,11 +1073,14 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
     def _decrypt_signature_protected(self, s):
         a = list(s)
-        a = self.mess(a, 20)
-        a = a[2:]
-        a = self.mess(a, 13)
-        a.reverse()
         a = a[3:]
+        a = self.mess(a, 54)
+        a = self.mess(a, 21)
+        a = self.mess(a, 23)
+        a = self.mess(a, 57)
+        a = self.mess(a, 2)
+        a.reverse()
+        a = self.mess(a, 22)
         return "".join(a)
 
     def _full_signature_handling(self, sig, player_url, video_id):
