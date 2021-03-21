@@ -1876,6 +1876,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                                     r'<meta itemprop="regionsAllowed" content="((?:(?:[A-Z]{2},)*[A-Z]{2})?)">',
                                     video_webpage, 'allowed region list').split(',')),
                             expected=True)
+                    if error_desc and 'Playback on other websites has been disabled' in error_desc:
+                        raise ExtractorError(
+                            'Embeds disabled for this video, account (with passed credit card or photo ID check, if in EU/EEA/CH/UK) is required',
+                            expected=True)
                     if error_message == 'Video unavailable' and error_desc:
                         raise ExtractorError(error_desc, expected=True)
                     raise ExtractorError(error_message, expected=True)
