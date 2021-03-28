@@ -1,15 +1,57 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+
 from .common import InfoExtractor
 from ..utils import (
     int_or_none,
+    smuggle_url,
     unified_strdate,
+    unsmuggle_url,
+    ExtractorError,
 )
-from ..compat import compat_urlparse
 
 
-class DWIE(InfoExtractor):
+class DWVideoIE(InfoExtractor):
+    IE_NAME = 'dw:video'
+    _VALID_URL = r'dw:(?P<id>\d+)'
+
+    def _get_dw_formats(self, media_id, hidden_inputs):
+        if hidden_inputs.get('player_type') == 'video':
+            # https://www.dw.com/smil/v-{video_id} returns more formats,
+            # but they are all RTMP. ytdl used to do this:
+            #   url.replace('rtmp://tv-od.dw.de/flash/', 'http://tv-download.dw.de/dwtv_video/flv/')
+            # this returns formats, but it's completely random if they work or not.
+            formats = [{
+                'url': fmt['file'],
+                'format_code': fmt['label'],
+                'height': int_or_none(fmt['label']),
+            } for fmt in self._download_json(
+                'https://www.dw.com/playersources/v-%s' % media_id,
+                media_id, 'Downloading JSON formats')]
+            self._sort_formats(formats)
+        else:
+            formats = [{'url': hidden_inputs['file_name']}]
+        return {
+            'id': media_id,
+            'title': hidden_inputs['media_title'],
+            'formats': formats,
+            'duration': int_or_none(hidden_inputs.get('file_duration')),
+            'upload_date': hidden_inputs.get('display_date'),
+            'thumbnail': hidden_inputs.get('preview_image'),
+            'is_live': hidden_inputs.get('isLiveVideo'),
+        }
+
+    def _real_extract(self, url):
+        media_id = self._match_id(url)
+        _, hidden_inputs = unsmuggle_url(url)
+        if not hidden_inputs:
+            return self.url_result('https://www.dw.com/en/av-%s' % media_id, 'DW', media_id)
+        return self._get_dw_formats(media_id, hidden_inputs)
+
+
+class DWIE(DWVideoIE):
     IE_NAME = 'dw'
     _VALID_URL = r'https?://(?:www\.)?dw\.com/(?:[^/]+/)+(?:av|e)-(?P<id>\d+)'
     _TESTS = [{
@@ -21,7 +63,7 @@ class DWIE(InfoExtractor):
             'ext': 'mp4',
             'title': 'Intelligent light',
             'description': 'md5:90e00d5881719f2a6a5827cb74985af1',
-            'upload_date': '20160311',
+            'upload_date': '20160605',
         }
     }, {
         # audio
@@ -52,57 +94,57 @@ class DWIE(InfoExtractor):
         media_id = self._match_id(url)
         webpage = self._download_webpage(url, media_id)
         hidden_inputs = self._hidden_inputs(webpage)
-        title = hidden_inputs['media_title']
         media_id = hidden_inputs.get('media_id') or media_id
 
-        if hidden_inputs.get('player_type') == 'video' and hidden_inputs.get('stream_file') == '1':
-            formats = self._extract_smil_formats(
-                'http://www.dw.com/smil/v-%s' % media_id, media_id,
-                transform_source=lambda s: s.replace(
-                    'rtmp://tv-od.dw.de/flash/',
-                    'http://tv-download.dw.de/dwtv_video/flv/'))
-            self._sort_formats(formats)
-        else:
-            formats = [{'url': hidden_inputs['file_name']}]
+        info_dict = {
+            'description': self._og_search_description(webpage),
+        }
+        info_dict.update(self._get_dw_formats(media_id, hidden_inputs))
 
-        upload_date = hidden_inputs.get('display_date')
-        if not upload_date:
+        if info_dict.get('upload_date') is None:
             upload_date = self._html_search_regex(
                 r'<span[^>]+class="date">([0-9.]+)\s*\|', webpage,
                 'upload date', default=None)
-            upload_date = unified_strdate(upload_date)
+            info_dict['upload_date'] = unified_strdate(upload_date)
 
-        return {
-            'id': media_id,
-            'title': title,
-            'description': self._og_search_description(webpage),
-            'thumbnail': hidden_inputs.get('preview_image'),
-            'duration': int_or_none(hidden_inputs.get('file_duration')),
-            'upload_date': upload_date,
-            'formats': formats,
-        }
+        return info_dict
 
 
-class DWArticleIE(InfoExtractor):
+class DWArticleIE(DWVideoIE):
     IE_NAME = 'dw:article'
     _VALID_URL = r'https?://(?:www\.)?dw\.com/(?:[^/]+/)+a-(?P<id>\d+)'
     _TEST = {
-        'url': 'http://www.dw.com/en/no-hope-limited-options-for-refugees-in-idomeni/a-19111009',
-        'md5': '8ca657f9d068bbef74d6fc38b97fc869',
+        'url': 'https://www.dw.com/pl/zalecenie-ema-szczepmy-si%C4%99-astrazenec%C4%85/a-56919770',
         'info_dict': {
-            'id': '19105868',
+            'id': '56911196',
             'ext': 'mp4',
-            'title': 'The harsh life of refugees in Idomeni',
-            'description': 'md5:196015cc7e48ebf474db9399420043c7',
-            'upload_date': '20160310',
-        }
+            'title': 'Czy AstraZeneca jest bezpieczna?',
+            'upload_date': '20210318',
+        },
     }
 
     def _real_extract(self, url):
         article_id = self._match_id(url)
         webpage = self._download_webpage(url, article_id)
-        hidden_inputs = self._hidden_inputs(webpage)
-        media_id = hidden_inputs['media_id']
-        media_path = self._search_regex(r'href="([^"]+av-%s)"\s+class="overlayLink"' % media_id, webpage, 'media url')
-        media_url = compat_urlparse.urljoin(url, media_path)
-        return self.url_result(media_url, 'DW', media_id)
+        videos = re.finditer(
+            r'<div class="mediaItem" data-media-id="(?P<id>\d+)">(?P<hidden_inputs>.+?)<div',
+            webpage)
+        if not videos:
+            raise ExtractorError('No videos found')
+        entries = []
+        for video in videos:
+            video_id, hidden_inputs = video.group('id', 'hidden_inputs')
+            hidden_inputs = self._hidden_inputs(hidden_inputs)
+            entries.append({
+                '_type': 'url_transparent',
+                'title': hidden_inputs['media_title'],
+                'url': smuggle_url('dw:%s' % video_id, hidden_inputs),
+                'ie_key': 'DWVideo',
+            })
+        return {
+            '_type': 'playlist',
+            'entries': entries,
+            'id': article_id,
+            'title': self._html_search_regex(r'<h1>([^>]+)</h1>', webpage, 'article title'),
+            'description': self._og_search_description(webpage),
+        }

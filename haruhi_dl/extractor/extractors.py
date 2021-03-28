@@ -330,6 +330,7 @@ from .dropbox import DropboxIE
 from .dw import (
     DWIE,
     DWArticleIE,
+    DWVideoIE,
 )
 from .eagleplatform import EaglePlatformIE
 from .ebaumsworld import EbaumsWorldIE
