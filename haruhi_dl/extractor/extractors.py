@@ -1696,4 +1696,5 @@ from .zingmp3 import (
     ZingMp3IE,
     ZingMp3AlbumIE,
 )
+from .zoom import ZoomIE
 from .zype import ZypeIE
