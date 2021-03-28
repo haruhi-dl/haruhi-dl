@@ -787,6 +787,9 @@ class HaruhiDL(object):
         if not ie_key and force_generic_extractor:
             ie_key = 'Generic'
 
+        if not ie_key:
+            ie_key = self.params.get('ie_key')
+
         if ie_key:
             ies = [self.get_info_extractor(ie_key)]
         else:

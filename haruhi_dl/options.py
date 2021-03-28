@@ -166,6 +166,10 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='force_generic_extractor', default=False,
         help='Force extraction to use the generic extractor')
     general.add_option(
+        '--ie-key',
+        action='store', dest='ie_key', default=None,
+        help='Use the specified extractor (for performance improvements on some automated commands)')
+    general.add_option(
         '--default-search',
         dest='default_search', metavar='PREFIX',
         help='Use this prefix for unqualified URLs. For example "gvsearch2:" downloads two videos from google videos for haruhi-dl "large apple". Use the value "auto" to let haruhi-dl guess ("auto_warning" to emit a warning when guessing). "error" just throws an error. The default value "fixup_error" repairs broken URLs, but emits an error if this is not possible instead of searching.')
