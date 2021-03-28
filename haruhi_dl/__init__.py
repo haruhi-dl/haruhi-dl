@@ -348,6 +348,7 @@ def _real_main(argv=None):
         'restrictfilenames': opts.restrictfilenames,
         'ignoreerrors': opts.ignoreerrors,
         'force_generic_extractor': opts.force_generic_extractor,
+        'ie_key': opts.ie_key,
         'ratelimit': opts.ratelimit,
         'nooverwrites': opts.nooverwrites,
         'retries': opts.retries,
