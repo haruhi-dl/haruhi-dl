@@ -1435,8 +1435,12 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         video_id = self.extract_id(url)
 
         # Get video webpage
-        url = proto + '://www.youtube.com/watch?v=%s&gl=US&hl=en&has_verified=1&bpctr=9999999999' % video_id
-        video_webpage, urlh = self._download_webpage_handle(url, video_id)
+        url = proto + '://www.youtube.com/watch?v=%s&gl=US&hl=en' % video_id
+        video_webpage, urlh = self._download_webpage_handle(url, video_id, headers={
+            # consent.youtube.com appears if user sends no Cookie header or the ytdl default one
+            # fuck that shit, UwU
+            'Cookie': 'UwU=OwO',
+        })
 
         qs = compat_parse_qs(compat_urllib_parse_urlparse(urlh.geturl()).query)
         video_id = qs.get('v', [None])[0] or video_id
