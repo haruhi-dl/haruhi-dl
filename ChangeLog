@@ -1,3 +1,20 @@
+version 2021.03.30
+Core
+* `--ie-key` commandline option for selecting specific extractor
+
+Extractor
+* [tiktok] detect private videos
+* [dw:article] fix extractor
++ [patroniteaudio] added extractor
++ [sbs] Add support for ondemand watch URLs
+* [picarto] Fix live stream extraction
+* [vimeo] Fix unlisted video extraction
+* [ard] Improve clip id extraction
++ [zoom] Add support for zoom.us
+* [bbc] Fix BBC IPlayer Episodes/Group extraction
+* [zingmp3] Fix extraction
+* [youtube] added workaround for cookie consent
+
 version 2021.03.21
 Core
 * [playwright] More verbose errors
