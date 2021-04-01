@@ -69,10 +69,9 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
 
     _YOUTUBE_API_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8'
 
-    def _set_language(self):
+    def _set_consent(self):
         self._set_cookie(
-            '.youtube.com', 'PREF', 'f1=50000000&f6=8&hl=en',
-            # YouTube sets the expire time to about two months
+            '.youtube.com', 'CONSENT', 'YES+0x557755',
             expire_time=time.time() + 2 * 30 * 24 * 3600)
 
     def _ids_to_results(self, ids):
@@ -270,7 +269,7 @@ class YoutubeBaseInfoExtractor(InfoExtractor):
     def _real_initialize(self):
         if self._downloader is None:
             return
-        self._set_language()
+        self._set_consent()
         if not self._login():
             return
 
@@ -1435,11 +1434,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         # Get video webpage
         url = proto + '://www.youtube.com/watch?v=%s&gl=US&hl=en' % video_id
-        video_webpage, urlh = self._download_webpage_handle(url, video_id, headers={
-            # consent.youtube.com appears if user sends no Cookie header or the ytdl default one
-            # fuck that shit, UwU
-            'Cookie': 'UwU=OwO',
-        })
+        video_webpage, urlh = self._download_webpage_handle(url, video_id)
 
         qs = compat_parse_qs(compat_urllib_parse_urlparse(urlh.geturl()).query)
         video_id = qs.get('v', [None])[0] or video_id
