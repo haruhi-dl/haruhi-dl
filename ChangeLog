@@ -1,3 +1,13 @@
+version 2021.04.01
+Core
+- Removed Herobrine
+
+Extractor
+* [youtube] fixed GDPR consent workaround
+* [instagram] improve title extraction and extract duration
+* [francetvinfo] improve video ID extraction
+* [vlive] merge all updates from YTDL
+
 version 2021.03.30
 Core
 * `--ie-key` commandline option for selecting specific extractor
