@@ -13,6 +13,7 @@ from ..utils import (
     str_or_none,
     try_get,
     unescapeHTML,
+    urljoin,
 )
 
 
@@ -458,6 +459,15 @@ class TVPWebsiteIE(InfoExtractor):
         },
         'add_ie': ['TVPEmbed'],
     }, {
+        # series unavailable via API
+        'url': 'https://vod.tvp.pl/website/panorama-opinii,39001978/video',
+        'info_dict': {
+            'id': '39001978',
+            'title': 'Panorama opinii',
+        },
+        'playlist_mincount': 300,
+        'expected_warnings': ['not available through API'],
+    }, {
         'url': 'https://vod.tvp.pl/website/lzy-cennet,38678312',
         'only_matching': True,
     }]
@@ -474,6 +484,14 @@ class TVPWebsiteIE(InfoExtractor):
         }
         data = self._download_json(self._API_BASE + '/tv/v2/website/%s' % playlist_id,
                                    playlist_id, 'Downloading series metadata', headers=headers)
+
+        if data.get('error'):
+            if data['error'] == 4005:
+                self.report_warning('Series not available through API, falling back to website')
+                return self._workaround_android_lock(display_id, playlist_id)
+            raise ExtractorError(
+                'TVP said: %s (error %d)' % (data.get('message'), data['error']),
+                expected=True, video_id=playlist_id)
 
         info_dict = {}
         entries = []
@@ -536,4 +554,56 @@ class TVPWebsiteIE(InfoExtractor):
             'description': unescapeHTML(ep.get('lead')),
             'is_live': ep.get('is_live', False),
             'age_limit': age_limit,
+        }
+
+    def _workaround_android_lock(self, display_id, playlist_id):
+        url = 'https://vod.tvp.pl/website/%s,%s/video' % (display_id, playlist_id)
+        webpage = self._download_webpage(url, playlist_id, 'Downloading page #1', query={
+            'order': 'oldest',
+            'page': 1,
+        })
+
+        page_count = int_or_none(
+            self._search_regex(
+                r'<li class="lastItem">\s*<a href="[^"]+&page=(\d+)',
+                webpage, 'page count')) or 1
+        current_page = 1
+        series_title = self._html_search_regex(
+            r'<div class="strefa-abo__listing-header-title">\s*<a[^>]+>\s*(.+?)\s*<i',
+            webpage, 'series title')
+        entries = []
+
+        def _web_ep_to_entry(ep):
+            return {
+                '_type': 'url',
+                'url': urljoin('https://vod.tvp.pl', ep['episodeLink']),
+                'ie_key': 'TVP',
+                'title': '%s, %s' % (series_title, ep['episodeCount']),
+                'description': ep.get('description'),
+                'thumbnail': ep.get('image'),
+                'series': series_title,
+                'episode_id': ep['episodeCount'],
+            }
+
+        while current_page <= page_count:
+            if current_page != 1:
+                webpage = self._download_webpage(url, playlist_id,
+                                                 'Downloading page #%d' % current_page,
+                                                 query={
+                                                     'order': 'oldest',
+                                                     'page': current_page,
+                                                 })
+            episodes = re.finditer(r'data-hover="([^"]+)"', webpage)
+            for ep in episodes:
+                entries.append(
+                    _web_ep_to_entry(
+                        self._parse_json(
+                            ep.group(1), playlist_id, transform_source=unescapeHTML)))
+            current_page += 1
+
+        return {
+            '_type': 'playlist',
+            'entries': entries,
+            'id': playlist_id,
+            'title': series_title,
         }
