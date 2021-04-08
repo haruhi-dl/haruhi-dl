@@ -1377,7 +1377,10 @@ from .tvc import (
 from .tver import TVerIE
 from .tvigle import TvigleIE
 from .tvland import TVLandIE
-from .tvn24 import TVN24IE
+from .tvn24 import (
+    TVN24IE,
+    TVN24NuviIE,
+)
 from .tvnet import TVNetIE
 from .tvnoe import TVNoeIE
 from .tvnow import (
