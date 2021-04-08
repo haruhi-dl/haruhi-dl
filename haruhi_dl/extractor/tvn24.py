@@ -2,6 +2,10 @@
 from __future__ import unicode_literals
 
 import re
+from urllib.parse import (
+    parse_qs,
+    urlparse,
+)
 
 from .common import InfoExtractor
 from ..utils import (
@@ -14,7 +18,45 @@ from ..utils import (
 )
 
 
-class TVN24IE(InfoExtractor):
+class TVNBaseIE(InfoExtractor):
+    def _parse_nuvi_data(self, data, display_id):
+        video = data['movie']['video']
+        info = data['movie']['info']
+
+        if video.get('protections'):
+            raise ExtractorError(
+                'This video is protected by %s DRM protection' % '/'.join(video['protections'].keys()),
+                expected=True)
+
+        formats = []
+
+        for fmt_id, fmt_data in video['sources'].items():
+            if fmt_id == 'hls':
+                formats.extend(self._extract_m3u8_formats(fmt_data['url'], display_id, ext='mp4'))
+            elif fmt_id == 'dash':
+                formats.extend(self._extract_mpd_formats(fmt_data['url'], display_id))
+            elif fmt_id == 'mp4':
+                for quality, mp4_url in fmt_data.items():
+                    formats.append({
+                        'url': mp4_url,
+                        'ext': 'mp4',
+                        'height': int_or_none(quality),
+                    })
+
+        self._sort_formats(formats)
+
+        return {
+            'id': display_id,
+            'formats': formats,
+            'title': unescapeHTML(info.get('episode_title')),
+            'description': unescapeHTML(info.get('description')),
+            'duration': int_or_none(info.get('total_time')),
+            'age_limit': int_or_none(data['movie']['options'].get('parental_rating', {}).get('rating')),
+            'is_live': video.get('is_live'),
+        }
+
+
+class TVN24IE(TVNBaseIE):
     _VALID_URL = r'https?://(?:www\.)?(?P<domain>(?:(?:[^/]+)\.)?tvn24\.pl)/(?:[^/]+/)*[^/?#\s]+[,-](?P<id>\d+)(?:\.html)?'
     _TESTS = [{
         'url': 'https://tvn24.pl/polska/edyta-gorniak-napisala-o-statystach-w-szpitalach-udajacych-chorych-na-covid-19-jerzy-polaczek-i-marek-posobkiewicz-odpowiadaja-zapraszamy-4747899',
@@ -183,14 +225,13 @@ class TVN24IE(InfoExtractor):
             plst_url = re.sub(r'[?#].+', '', url)
             plst_url += '/nuviArticle?playlist&id=%s&r=%s' % (video['id'], route_name)
 
-            plst = self._download_json(plst_url, display_id)
-
-            data = self._parse_nuvi_data(plst, display_id)
-            data.update({
+            entries.append({
+                '_type': 'url_transparent',
+                'url': plst_url,
+                'ie_key': 'TVN24Nuvi',
                 'title': fields['title'],
                 'description': fields['description'],
             })
-            entries.append(data)
 
         return {
             '_type': 'playlist',
@@ -210,38 +251,15 @@ class TVN24IE(InfoExtractor):
 
         return self._parse_nuvi_data(data, display_id)
 
-    def _parse_nuvi_data(self, data, display_id):
-        video = data['movie']['video']
-        info = data['movie']['info']
 
-        if video.get('protections'):
-            raise ExtractorError(
-                'This video is protected by %s DRM protection' % '/'.join(video['protections'].keys()),
-                expected=True)
+class TVN24NuviIE(TVNBaseIE):
+    # handles getting specific videos from the list of nuvi urls
+    _VALID_URL = r'https?://(?:www\.)?(?P<domain>(?:(?:[^/]+)\.)?tvn24\.pl)/(?:[^/]+/)*[^/?#\s]+[,-](?P<id>\d+)(?:\.html)?/nuviArticle'
+    IE_NAME = 'tvn24:nuvi'
+    IE_DESC = False  # do not list
 
-        formats = []
-
-        for fmt_id, fmt_data in video['sources'].items():
-            if fmt_id == 'hls':
-                formats.extend(self._extract_m3u8_formats(fmt_data['url'], display_id))
-            elif fmt_id == 'dash':
-                formats.extend(self._extract_mpd_formats(fmt_data['url'], display_id))
-            elif fmt_id == 'mp4':
-                for quality, mp4_url in fmt_data.items():
-                    formats.append({
-                        'url': mp4_url,
-                        'ext': 'mp4',
-                        'height': int_or_none(quality),
-                    })
-
-        self._sort_formats(formats)
-
-        return {
-            'id': display_id,
-            'formats': formats,
-            'title': unescapeHTML(info.get('episode_title')),
-            'description': unescapeHTML(info.get('description')),
-            'duration': int_or_none(info.get('total_time')),
-            'age_limit': int_or_none(data['movie']['options'].get('parental_rating', {}).get('rating')),
-            'is_live': video.get('is_live'),
-        }
+    def _real_extract(self, url):
+        qs = parse_qs(urlparse(url).query)
+        video_id = qs['id'][0]
+        plst = self._download_json(url, video_id)
+        return self._parse_nuvi_data(plst, video_id)
