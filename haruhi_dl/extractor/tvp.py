@@ -52,7 +52,7 @@ class TVPIE(InfoExtractor):
             'age_limit': 12,
         },
     }, {
-        # TVPlayer 2 in client-side rendered website (regional)
+        # TVPlayer 2 in client-side rendered website (regional; window.__newsData)
         'url': 'https://warszawa.tvp.pl/25804446/studio-yayo',
         'md5': '883c409691c6610bdc8f464fab45a9a9',
         'info_dict': {
@@ -62,6 +62,14 @@ class TVPIE(InfoExtractor):
             'upload_date': '20160616',
             'timestamp': 1466075700,
         }
+    }, {
+        # TVPlayer 2 in client-side rendered website (tvp.info; window.__videoData)
+        'url': 'https://www.tvp.info/52880236/09042021-0800',
+        'info_dict': {
+            'id': '52880236',
+            'ext': 'mp4',
+            'title': '09.04.2021, 08:00',
+        },
     }, {
         # client-side rendered (regional) program (playlist) page
         'url': 'https://opole.tvp.pl/9660819/rozmowa-dnia',
@@ -146,73 +154,82 @@ class TVPIE(InfoExtractor):
             'thumbnails': thumbnails,
         }
 
+    def _handle_vuejs_page(self, url, webpage, page_id):
+        # vue client-side rendered sites (all regional pages + tvp.info)
+        video_data = self._search_regex([
+            r'window\.__(?:news|video)Data\s*=\s*({(?:.|\s)+?});',
+        ], webpage, 'video data', default=None)
+        if video_data:
+            return self._extract_vue_video(
+                self._parse_json(video_data, page_id),
+                page_id=page_id)
+        # paged playlists
+        website_data = self._parse_vue_website_data(webpage, page_id)
+        if website_data:
+            entries = []
+            if website_data.get('latestVideo'):
+                entries.append(self._extract_vue_video(website_data['latestVideo']))
+            for video in website_data.get('videos') or []:
+                entries.append(self._extract_vue_video(video))
+            items_total_count = int_or_none(website_data.get('items_total_count'))
+            items_per_page = int_or_none(website_data.get('items_per_page'))
+            if items_total_count > len(entries) - 1:
+                pages = items_total_count / items_per_page
+                if pages != int(pages):
+                    pages = int(pages) + 1
+                for page in range(2, pages):
+                    page_website_data = self._parse_vue_website_data(
+                        # seriously, this thing is rendered on the client and requires to reload page
+                        # when flipping the page, instead of just loading new pages with xhr or sth
+                        # (they already even import axios!)
+                        self._download_webpage(url, page_id, note='Downloading page #%d' % page,
+                                               query={'page': page}),
+                        page_id)
+                    for video in page_website_data.get('videos') or []:
+                        entries.append(self._extract_vue_video(video))
+
+            return {
+                '_type': 'playlist',
+                'id': page_id,
+                'title': str_or_none(website_data.get('title')),
+                'description': str_or_none(website_data.get('lead')),
+                'entries': entries,
+            }
+        raise ExtractorError('Could not extract video/website data')
+
     def _real_extract(self, url):
         page_id = self._match_id(url)
         webpage = self._download_webpage(url, page_id)
+
+        # regional pages are always vue.js
         if '//s.tvp.pl/files/portale-v4/regiony-tvp-pl' in webpage:
-            # vue client-side rendered sites (all regional pages)
-            video_data = self._search_regex([
-                r'window\.__newsData\s*=\s*({(?:.|\s)+?});',
-            ], webpage, 'video data', default=None)
-            if video_data:
-                return self._extract_vue_video(
-                    self._parse_json(video_data, page_id),
-                    page_id=page_id)
-            # paged playlists
-            website_data = self._parse_vue_website_data(webpage, page_id)
-            if website_data:
-                entries = []
-                if website_data.get('latestVideo'):
-                    entries.append(self._extract_vue_video(website_data['latestVideo']))
-                for video in website_data.get('videos') or []:
-                    entries.append(self._extract_vue_video(video))
-                items_total_count = int_or_none(website_data.get('items_total_count'))
-                items_per_page = int_or_none(website_data.get('items_per_page'))
-                if items_total_count > len(entries) - 1:
-                    pages = items_total_count / items_per_page
-                    if pages != int(pages):
-                        pages = int(pages) + 1
-                    for page in range(2, pages):
-                        page_website_data = self._parse_vue_website_data(
-                            # seriously, this thing is rendered on the client and requires to reload page
-                            # when flipping the page, instead of just loading new pages with xhr or sth
-                            # (they already even import axios!)
-                            self._download_webpage(url, page_id, note='Downloading page #%d' % page,
-                                                   query={'page': page}),
-                            page_id)
-                        for video in page_website_data.get('videos') or []:
-                            entries.append(self._extract_vue_video(video))
+            return self._handle_vuejs_page(url, webpage, page_id)
 
-                return {
-                    '_type': 'playlist',
-                    'id': page_id,
-                    'title': str_or_none(website_data.get('title')),
-                    'description': str_or_none(website_data.get('lead')),
-                    'entries': entries,
-                }
-            raise ExtractorError('Could not extract video/website data')
-        else:
-            # classic server-site rendered sites
-            video_id = self._search_regex([
-                r'<iframe[^>]+src="[^"]*?embed\.php\?(?:[^&]+&)*ID=(\d+)',
-                r'<iframe[^>]+src="[^"]*?object_id=(\d+)',
-                r"object_id\s*:\s*'(\d+)'",
-                r'data-video-id="(\d+)"',
+        # some tvp.info pages are vue.js, some are not
+        if 'window.__videoData' in webpage or 'window.__websiteData' in webpage:
+            return self._handle_vuejs_page(url, webpage, page_id)
 
-                # abc.tvp.pl - somehow there are more than one video IDs that seem to be the same video?
-                # the first one is referenced to as "copyid", and seems to be unused by the website
-                r'<script>\s*tvpabc\.video\.init\(\s*\d+,\s*(\d+)\s*\)\s*</script>',
-            ], webpage, 'video id', default=page_id)
-            return {
-                '_type': 'url_transparent',
-                'url': 'tvp:' + video_id,
-                'description': self._og_search_description(
-                    webpage, default=None) or (self._html_search_meta(
-                        'description', webpage, default=None)
-                        if '//s.tvp.pl/files/portal/v' in webpage else None),
-                'thumbnail': self._og_search_thumbnail(webpage, default=None),
-                'ie_key': 'TVPEmbed',
-            }
+        # classic server-side rendered sites
+        video_id = self._search_regex([
+            r'<iframe[^>]+src="[^"]*?embed\.php\?(?:[^&]+&)*ID=(\d+)',
+            r'<iframe[^>]+src="[^"]*?object_id=(\d+)',
+            r"object_id\s*:\s*'(\d+)'",
+            r'data-video-id="(\d+)"',
+
+            # abc.tvp.pl - somehow there are more than one video IDs that seem to be the same video?
+            # the first one is referenced to as "copyid", and seems to be unused by the website
+            r'<script>\s*tvpabc\.video\.init\(\s*\d+,\s*(\d+)\s*\)\s*</script>',
+        ], webpage, 'video id', default=page_id)
+        return {
+            '_type': 'url_transparent',
+            'url': 'tvp:' + video_id,
+            'description': self._og_search_description(
+                webpage, default=None) or (self._html_search_meta(
+                    'description', webpage, default=None)
+                    if '//s.tvp.pl/files/portal/v' in webpage else None),
+            'thumbnail': self._og_search_thumbnail(webpage, default=None),
+            'ie_key': 'TVPEmbed',
+        }
 
 
 class TVPStreamIE(InfoExtractor):
