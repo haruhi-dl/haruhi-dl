@@ -126,9 +126,6 @@ class CDAIE(CDABaseExtractor):
         metadata = self._download_json(
             self._BASE_URL + '/video/' + video_id, video_id, headers=headers)['video']
 
-        if metadata.get('premium') is True and metadata.get('premium_free') is not True:
-            raise ExtractorError('This video is only available for premium users.', expected=True)
-
         uploader = try_get(metadata, lambda x: x['author']['login'])
         # anonymous uploader
         if uploader == 'anonim':
@@ -136,6 +133,8 @@ class CDAIE(CDABaseExtractor):
 
         formats = []
         for quality in metadata['qualities']:
+            if not quality['file']:
+                continue
             formats.append({
                 'url': quality['file'],
                 'format': quality['title'],
@@ -143,6 +142,13 @@ class CDAIE(CDABaseExtractor):
                 'height': int_or_none(quality['name'][:-1]),    # for the format sorting
                 'filesize': quality.get('length'),
             })
+
+        if not formats:
+            if metadata.get('premium') is True and metadata.get('premium_free') is not True:
+                raise ExtractorError('This video is only available for premium users.', expected=True)
+            raise ExtractorError('No video qualities found', video_id=video_id)
+
+        self._sort_formats(formats)
 
         return {
             'id': video_id,
