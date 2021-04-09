@@ -204,6 +204,14 @@ class InfoExtractor(object):
                     * downloader_options  A dictionary of downloader options as
                                  described in FileDownloader
 
+                    Internally, extractors can include subtitles in the format
+                    list, in this format:
+                    * _subtitle  The subtitle object, in the same format
+                                 as in subtitles field
+                    * _key       The tag for the provided subtitle
+                    This is never included in the output JSON, but moved
+                    into the subtitles field.
+
     url:            Final video URL.
     ext:            Video filename extension.
     format:         The video format, defaults to ext (used for --get-format)
@@ -247,11 +255,15 @@ class InfoExtractor(object):
     subtitles:      The available subtitles as a dictionary in the format
                     {tag: subformats}. "tag" is usually a language code, and
                     "subformats" is a list sorted from lower to higher
-                    preference, each element is a dictionary with the "ext"
-                    entry and one of:
+                    preference, each element is a dictionary,
+                    which must contain one of these values:
                         * "data": The subtitles file contents
                         * "url": A URL pointing to the subtitles file
-                    "ext" will be calculated from URL if missing
+                    These values are guessed based on other data, if missing,
+                    in a way analogic to the formats data:
+                        * "ext" - subtitle extension name (vtt, srt, ...)
+                        * "proto" - download protocol (https, http, m3u8, ...)
+                        * "http_headers"
     automatic_captions: Like 'subtitles', used by the YoutubeIE for
                     automatically generated captions
     duration:       Length of the video in seconds, as an integer or float.
