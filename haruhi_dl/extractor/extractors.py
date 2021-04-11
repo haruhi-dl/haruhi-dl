@@ -1107,6 +1107,7 @@ from .scte import (
     SCTECourseIE,
 )
 from .seeker import SeekerIE
+from .sejmpl import SejmPlArchivalIE
 from .senateisvp import SenateISVPIE
 from .sendtonews import SendtoNewsIE
 from .servus import ServusIE
