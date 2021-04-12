@@ -64,11 +64,16 @@ def _extract_episode(data, episode_id=None):
 class SpreakerIE(InfoExtractor):
     _VALID_URL = r'''(?x)
                     https?://
-                        api\.spreaker\.com/
+                        (?:(?:api|widget|www)\.)?spreaker\.com/
                         (?:
-                            (?:download/)?episode|
-                            v2/episodes
-                        )/
+                            (?:
+                                (?:download/)?episode|
+                                v2/episodes
+                            )/
+                            |(?:
+                                player\?(?:.+?&)?episode_id=
+                            )
+                        )
                         (?P<id>\d+)
                     '''
     _TESTS = [{
@@ -94,6 +99,12 @@ class SpreakerIE(InfoExtractor):
         'only_matching': True,
     }, {
         'url': 'https://api.spreaker.com/v2/episodes/12534508?export=episode_segments',
+        'only_matching': True,
+    }, {
+        'url': 'https://www.spreaker.com/episode/44098221',
+        'only_matching': True,
+    }, {
+        'url': 'https://widget.spreaker.com/player?episode_id=44098221',
         'only_matching': True,
     }]
 
