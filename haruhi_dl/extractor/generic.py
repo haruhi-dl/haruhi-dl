@@ -136,6 +136,7 @@ from .pulsembed import PulsEmbedIE
 from .arcpublishing import ArcPublishingIE
 from .medialaan import MedialaanIE
 from .simplecast import SimplecastIE
+from .spreaker import SpreakerIE
 
 
 class GenericIE(InfoExtractor):
@@ -2301,6 +2302,20 @@ class GenericIE(InfoExtractor):
             },
             'playlist_mincount': 52,
         },
+        {
+            # Spreaker embed
+            'url': 'https://socjalizm.fm/jak-bedzie-w-socjalizmie/praca/',
+            'info_dict': {
+                'id': '44098221',
+                'ext': 'mp3',
+                'title': 'Jak będzie w socjalizmie? Praca.',
+                'uploader': 'Socjalizm FM',
+                'description': 'md5:d2833c41296a996153353890c329e1af',
+                'upload_date': '20210329',
+                'uploader_id': '13705223',
+                'timestamp': 1617024666,
+            },
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -2739,6 +2754,7 @@ class GenericIE(InfoExtractor):
             ArcPublishingIE,
             MedialaanIE,
             SimplecastIE,
+            SpreakerIE,
         ):
             try:
                 ie_key = embie.ie_key()
