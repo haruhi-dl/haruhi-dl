@@ -87,17 +87,27 @@ class SejmPlArchivalIE(InfoExtractor):
         }
 
 
+# actually, this is common between Sejm and Senat, the 2 houses of PL parliament
 class SejmPlVideoIE(InfoExtractor):
-    _VALID_URL = r'https?://[^.]+\.dcs\.redcdn\.pl/[^/]+/o2/sejm/(?P<id>[^/]+)/(?P<filename>[^./]+)\.livx\?(?P<qs>.+)'
-    IE_NAME = 'sejm.pl:video'
+    _VALID_URL = r'https?://[^.]+\.dcs\.redcdn\.pl/[^/]+/o2/(?P<house>sejm|senat)/(?P<id>[^/]+)/(?P<filename>[^./]+)\.livx\?(?P<qs>.+)'
+    IE_NAME = 'parlament-pl:video'
+
+    _TESTS = [{
+        'url': 'https://r.dcs.redcdn.pl/livedash/o2/senat/ENC02/channel.livx?indexMode=true&startTime=638272860000&stopTime=638292544000',
+        'info_dict': {
+            'id': 'ENC02-638272860000-638292544000',
+            'ext': 'mp4',
+            'title': 'ENC02',
+        },
+    }]
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
-        camera, filename, qs = mobj.group('id', 'filename', 'qs')
+        house, camera, filename, qs = mobj.group('house', 'id', 'filename', 'qs')
         qs = parse_qs(qs)
         start_time, stop_time = int(qs["startTime"][0]), int(qs["stopTime"][0])
 
-        file = f'https://r.dcs.redcdn.pl/%s/o2/sejm/{camera}/{filename}.livx?startTime={start_time}&stopTime={stop_time}'
+        file = f'https://r.dcs.redcdn.pl/%s/o2/{house}/{camera}/{filename}.livx?startTime={start_time}&stopTime={stop_time}'
         file_index = file + '&indexMode=true'
 
         # sejm videos don't have an id, just a camera (pov) id and time range
@@ -111,11 +121,13 @@ class SejmPlVideoIE(InfoExtractor):
         }]
         formats.extend(self._extract_mpd_formats(file_index % 'livedash', video_id, mpd_id='dash'))
         formats.extend(self._extract_m3u8_formats(
-            file_index.replace('?', '/playlist.m3u8?') % 'livehls', video_id, m3u8_id='hls'))
+            file_index.replace('?', '/playlist.m3u8?') % 'livehls', video_id, m3u8_id='hls', ext='mp4'))
+        formats.extend(self._extract_ism_formats(
+            file_index.replace('?', '/manifest?') % 'livess', video_id, ism_id='ss'))
 
         self._sort_formats(formats)
 
-        duration = stop_time - start_time
+        duration = (stop_time - start_time) // 1000
 
         return {
             'id': video_id,
