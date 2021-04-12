@@ -1212,6 +1212,10 @@ from .spreaker import (
 )
 from .springboardplatform import SpringboardPlatformIE
 from .sprout import SproutIE
+from .spryciarze import (
+    SpryciarzeIE,
+    SpryciarzePageIE,
+)
 from .srgssr import (
     SRGSSRIE,
     SRGSSRPlayIE,
