@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import itertools
+import re
 
 from .common import InfoExtractor
 from ..compat import compat_str
@@ -107,6 +108,12 @@ class SpreakerIE(InfoExtractor):
         'url': 'https://widget.spreaker.com/player?episode_id=44098221',
         'only_matching': True,
     }]
+
+    @staticmethod
+    def _extract_urls(webpage, **kw):
+        return ['https://api.spreaker.com/episode/%s' % mobj.group('id') for mobj in re.finditer(
+            r'<iframe\b[^>]+src=(["\'])(?:(?:https?)?:)?//widget\.spreaker\.com/player\?(?:.+?&)?episode_id=(?P<id>\d+)',
+            webpage)]
 
     def _real_extract(self, url):
         episode_id = self._match_id(url)
