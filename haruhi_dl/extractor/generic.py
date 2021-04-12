@@ -137,6 +137,10 @@ from .arcpublishing import ArcPublishingIE
 from .medialaan import MedialaanIE
 from .simplecast import SimplecastIE
 from .spreaker import SpreakerIE
+from .castos import (
+    CastosHostedIE,
+    CastosSSPIE,
+)
 
 
 class GenericIE(InfoExtractor):
@@ -2316,6 +2320,24 @@ class GenericIE(InfoExtractor):
                 'timestamp': 1617024666,
             },
         },
+        {
+            # Castos (hosted) player
+            'url': 'https://castos.com/enhanced-podcast-player/',
+            'info_dict': {
+                'id': '210448',
+                'ext': 'mp3',
+                'title': '4 Ways To Create A Video Podcast (And Why You Should Try It)',
+            },
+        },
+        {
+            # Castos Super Simple Podcasting (WordPress plugin, selfhosted)
+            'url': 'https://pzbn.pl/4-heated-terf-moment/',
+            'info_dict': {
+                'id': '38',
+                'ext': 'mp3',
+                'title': '#4: Heated TERF moment',
+            },
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -2755,6 +2777,7 @@ class GenericIE(InfoExtractor):
             MedialaanIE,
             SimplecastIE,
             SpreakerIE,
+            CastosHostedIE,
         ):
             try:
                 ie_key = embie.ie_key()
@@ -3216,6 +3239,10 @@ class GenericIE(InfoExtractor):
         pulsembed_entries = PulsEmbedIE._extract_entries(webpage)
         if pulsembed_entries:
             return self.playlist_result(pulsembed_entries, video_id, video_title)
+
+        castos_ssp_entries = CastosSSPIE._extract_entries(webpage)
+        if castos_ssp_entries:
+            return self.playlist_result(castos_ssp_entries, video_id, video_title)
 
         # Look for HTML5 media
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')

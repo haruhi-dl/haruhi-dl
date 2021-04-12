@@ -183,6 +183,7 @@ from .carambatv import (
     CarambaTVPageIE,
 )
 from .cartoonnetwork import CartoonNetworkIE
+from .castos import CastosHostedIE
 from .cbc import (
     CBCIE,
     CBCPlayerIE,
