@@ -70,6 +70,7 @@ from ..utils import (
     str_or_none,
     str_to_int,
     strip_or_none,
+    try_get,
     unescapeHTML,
     unified_strdate,
     unified_timestamp,
@@ -1287,6 +1288,23 @@ class InfoExtractor(object):
                     continue
                 info[count_key] = interaction_count
 
+        def extract_author(e):
+            if not e:
+                return None
+            if not e.get('author'):
+                return None
+            e = e['author']
+            if isinstance(e, str):
+                info['uploader'] = e
+            elif isinstance(e, dict):
+                etype = e.get('@type')
+                if etype in ('Person', 'Organization'):
+                    info.update({
+                        'uploader': e.get('name'),
+                        'uploader_id': e.get('identifier'),
+                        'uploader_url': try_get(e, lambda x: x['url']['url'], str),
+                    })
+
         media_object_types = ('MediaObject', 'VideoObject', 'AudioObject', 'MusicVideoObject')
 
         def extract_media_object(e):
@@ -1304,7 +1322,6 @@ class InfoExtractor(object):
                 'thumbnails': thumbnails,
                 'duration': parse_duration(e.get('duration')),
                 'timestamp': unified_timestamp(e.get('uploadDate')),
-                'uploader': str_or_none(e.get('author')),
                 'filesize': float_or_none(e.get('contentSize')),
                 'tbr': int_or_none(e.get('bitrate')),
                 'width': int_or_none(e.get('width')),
@@ -1312,6 +1329,7 @@ class InfoExtractor(object):
                 'view_count': int_or_none(e.get('interactionCount')),
             })
             extract_interaction_statistic(e)
+            extract_author(e)
 
         for e in json_ld:
             if '@context' in e:
