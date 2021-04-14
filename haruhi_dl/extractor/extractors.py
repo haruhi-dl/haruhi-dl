@@ -1113,7 +1113,7 @@ from .sejmpl import (
     SejmPlVideoIE,
 )
 from .senateisvp import SenateISVPIE
-from .senatpl import SenatPlArchivalIE
+from .senatpl import SenatPlIE
 from .sendtonews import SendtoNewsIE
 from .servus import ServusIE
 from .sevenplus import SevenPlusIE
