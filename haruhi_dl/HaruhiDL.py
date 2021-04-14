@@ -1947,8 +1947,32 @@ class HaruhiDL(object):
 
                     def compatible_formats(formats):
                         video, audio = formats
-                        # Check extension
+                        # Check extensions and codecs
                         video_ext, audio_ext = video.get('ext'), audio.get('ext')
+                        video_codec, audio_codec = video.get('vcodec'), audio.get('acodec')
+
+                        if video_codec and audio_codec:
+                            COMPATIBLE_CODECS = {
+                                'mp4': (
+                                    # fourcc (m3u8, mpd)
+                                    'av01', 'hevc', 'avc1', 'mp4a',
+                                    # whatever the ism does
+                                    'h264', 'aacl',
+                                ),
+                                'webm': (
+                                    'av01', 'vp9', 'vp8', 'opus', 'vrbs',
+                                    # these are in the webm spec, so putting it here to be sure
+                                    'vp9x', 'vp8x',
+                                ),
+                            }
+                            video_codec = video_codec[:4].lower()
+                            audio_codec = audio_codec[:4].lower()
+                            for ext in COMPATIBLE_CODECS:
+                                if all(codec in COMPATIBLE_CODECS[ext]
+                                       for codec in (video_codec, audio_codec)):
+                                    info_dict['ext'] = ext
+                                    return True
+
                         if video_ext and audio_ext:
                             COMPATIBLE_EXTS = (
                                 ('mp3', 'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'ismv', 'isma'),
@@ -1957,7 +1981,6 @@ class HaruhiDL(object):
                             for exts in COMPATIBLE_EXTS:
                                 if video_ext in exts and audio_ext in exts:
                                     return True
-                        # TODO: Check acodec/vcodec
                         return False
 
                     filename_real_ext = os.path.splitext(filename)[1][1:]
