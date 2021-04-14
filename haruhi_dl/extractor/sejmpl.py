@@ -3,7 +3,9 @@
 from .common import InfoExtractor
 from ..utils import (
     clean_html,
+    int_or_none,
     js_to_json,
+    try_get,
 )
 
 import datetime
@@ -11,9 +13,9 @@ import re
 from urllib.parse import parse_qs
 
 
-class SejmPlArchivalIE(InfoExtractor):
-    _VALID_URL = r'https?://(?:www\.)?sejm\.gov\.pl/Sejm(?P<term>\d+)\.nsf/transmisje_arch\.xsp(?:\?(?:[^&\s]+(?:&[^&\s]+)*)?)?(?:#|unid=)(?P<id>[\dA-F]+)'
-    IE_NAME = 'sejm.pl:archival'
+class SejmPlIE(InfoExtractor):
+    _VALID_URL = r'https?://(?:www\.)?sejm\.gov\.pl/Sejm(?P<term>\d+)\.nsf/transmisje(?:_arch)?\.xsp(?:\?(?:[^&\s]+(?:&[^&\s]+)*)?)?(?:#|unid=)(?P<id>[\dA-F]+)'
+    IE_NAME = 'sejm.gov.pl'
 
     _TESTS = [{
         # multiple cameras, PJM translator
@@ -23,6 +25,10 @@ class SejmPlArchivalIE(InfoExtractor):
             'title': '11. posiedzenie Sejmu IX kadencji',
         },
         'playlist_count': 10,
+    }, {
+        # live stream
+        'url': 'https://www.sejm.gov.pl/Sejm9.nsf/transmisje.xsp?unid=DF7D229E316BBC5AC12586A8003E90AC#',
+        'only_matching': True,
     }]
 
     def _real_extract(self, url):
@@ -33,6 +39,7 @@ class SejmPlArchivalIE(InfoExtractor):
             video_id, headers={
                 'Referer': 'https://www.sejm.gov.pl/Sejm%s.nsf/transmisje_arch.xsp' % (term),
             })
+        # despite it says "transmisje_arch", it works for live streams too!
         data = self._download_json(
             'https://www.sejm.gov.pl/Sejm%s.nsf/transmisje_arch.xsp/json/%s' % (term, video_id),
             video_id, headers={
@@ -48,16 +55,22 @@ class SejmPlArchivalIE(InfoExtractor):
             return int(date.timestamp() * 1000)
 
         start_time = iso_date_to_wtf_atende_wants(params['start'])
-        stop_time = iso_date_to_wtf_atende_wants(params['stop'])
+        if 'transmisje_arch.xsp' in url:
+            stop_time = iso_date_to_wtf_atende_wants(params['stop'])
+        else:
+            stop_time = None
 
-        duration = stop_time - start_time
+        duration = (stop_time - start_time) if stop_time else None
 
         entries = []
 
         def add_entry(file):
             if not file:
                 return
-            file = 'https:%s?startTime=%d&stopTime=%d' % (file, start_time, stop_time)
+            file = 'https:%s?startTime=%d' % (file, start_time)
+            # live streams don't use stopTime
+            if stop_time:
+                file += '&stopTime=%d' % stop_time
             stream_id = self._search_regex(r'/o2/sejm/([^/]+)/[^./]+\.livx', file, 'stream id')
             entries.append({
                 '_type': 'url_transparent',
@@ -84,6 +97,7 @@ class SejmPlArchivalIE(InfoExtractor):
             'title': data['title'],
             'description': clean_html(data['desc']),
             'duration': duration,
+            'is_live': 'transmisje.xsp' in url,
         }
 
 
@@ -105,9 +119,12 @@ class SejmPlVideoIE(InfoExtractor):
         mobj = re.match(self._VALID_URL, url)
         house, camera, filename, qs = mobj.group('house', 'id', 'filename', 'qs')
         qs = parse_qs(qs)
-        start_time, stop_time = int(qs["startTime"][0]), int(qs["stopTime"][0])
+        start_time = int(qs["startTime"][0])
+        stop_time = int_or_none(try_get(qs, lambda x: x["stopTime"][0]))
 
-        file = f'https://r.dcs.redcdn.pl/%s/o2/{house}/{camera}/{filename}.livx?startTime={start_time}&stopTime={stop_time}'
+        file = f'https://r.dcs.redcdn.pl/%s/o2/{house}/{camera}/{filename}.livx?startTime={start_time}'
+        if stop_time:
+            file += f'&stopTime={stop_time}'
         file_index = file + '&indexMode=true'
 
         # sejm videos don't have an id, just a camera (pov) id and time range
@@ -134,4 +151,6 @@ class SejmPlVideoIE(InfoExtractor):
             'title': camera,
             'formats': formats,
             'duration': duration,
+            # if there's no stop, it's live
+            'is_live': stop_time is None,
         }

@@ -1109,7 +1109,7 @@ from .scte import (
 )
 from .seeker import SeekerIE
 from .sejmpl import (
-    SejmPlArchivalIE,
+    SejmPlIE,
     SejmPlVideoIE,
 )
 from .senateisvp import SenateISVPIE
