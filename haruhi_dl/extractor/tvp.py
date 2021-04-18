@@ -10,6 +10,7 @@ from ..utils import (
     determine_ext,
     ExtractorError,
     int_or_none,
+    js_to_json,
     str_or_none,
     try_get,
     unescapeHTML,
@@ -83,6 +84,15 @@ class TVPIE(InfoExtractor):
             'skip_download': True,
         }
     }, {
+        # yet another vue page
+        # more pope, youth will handle that
+        'url': 'https://jp2.tvp.pl/46925618/filmy',
+        'info_dict': {
+            'id': '46925618',
+            'title': 'Filmy',
+        },
+        'playlist_mincount': 19,
+    }, {
         # ABC-specific video embeding
         'url': 'https://abc.tvp.pl/48636269/zubry-odc-124',
         'info_dict': {
@@ -122,19 +132,27 @@ class TVPIE(InfoExtractor):
 
     def _parse_vue_website_data(self, webpage, page_id):
         website_data = self._search_regex([
-            r'window\.__websiteData\s*=\s*({(?:.|\s)+?});',
+            # website - regiony, tvp.info
+            # directory - jp2.tvp.pl
+            r'window\.__(?:website|directory)Data\s*=\s*({(?:.|\s)+?});',
         ], webpage, 'website data')
         if not website_data:
             return None
-        # "sanitize" "JSON" trailing comma before parsing
-        website_data = re.sub(r',\s+}$', '}', website_data)
-        # replace JSON string with parsed dict
-        website_data = self._parse_json(website_data, page_id)
-        return website_data
+        return self._parse_json(website_data, page_id, transform_source=js_to_json)
 
     def _extract_vue_video(self, video_data, page_id=None):
+        if isinstance(video_data, str):
+            video_data = self._parse_json(video_data, page_id, transform_source=js_to_json)
         thumbnails = []
         image = video_data.get('image')
+        is_website = video_data.get('type') == 'website'
+        if is_website:
+            url = video_data['url']
+            fucked_up_url_parts = re.match(r'https?://vod\.tvp\.pl/(\d+)/([^/?#]+)', url)
+            if fucked_up_url_parts:
+                url = f'https://vod.tvp.pl/website/{fucked_up_url_parts.group(2)},{fucked_up_url_parts.group(1)}'
+        else:
+            url = 'tvp:' + str_or_none(video_data.get('_id') or page_id)
         if image:
             for thumb in (image if isinstance(image, list) else [image]):
                 thmb_url = str_or_none(thumb.get('url'))
@@ -145,8 +163,8 @@ class TVPIE(InfoExtractor):
         return {
             '_type': 'url_transparent',
             'id': str_or_none(video_data.get('_id') or page_id),
-            'url': 'tvp:' + str_or_none(video_data.get('_id') or page_id),
-            'ie_key': 'TVPEmbed',
+            'url': url,
+            'ie_key': 'TVPEmbed' if not is_website else 'TVPWebsite',
             'title': str_or_none(video_data.get('title')),
             'description': str_or_none(video_data.get('lead')),
             'timestamp': int_or_none(video_data.get('release_date_long')),
@@ -157,24 +175,29 @@ class TVPIE(InfoExtractor):
     def _handle_vuejs_page(self, url, webpage, page_id):
         # vue client-side rendered sites (all regional pages + tvp.info)
         video_data = self._search_regex([
-            r'window\.__(?:news|video)Data\s*=\s*({(?:.|\s)+?});',
+            r'window\.__(?:news|video)Data\s*=\s*({(?:.|\s)+?})\s*;',
         ], webpage, 'video data', default=None)
         if video_data:
-            return self._extract_vue_video(
-                self._parse_json(video_data, page_id),
-                page_id=page_id)
+            return self._extract_vue_video(video_data, page_id=page_id)
         # paged playlists
         website_data = self._parse_vue_website_data(webpage, page_id)
         if website_data:
             entries = []
-            if website_data.get('latestVideo'):
-                entries.append(self._extract_vue_video(website_data['latestVideo']))
-            for video in website_data.get('videos') or []:
-                entries.append(self._extract_vue_video(video))
+
+            def extract_videos(wd):
+                if wd.get('latestVideo'):
+                    entries.append(self._extract_vue_video(wd['latestVideo']))
+                for video in wd.get('videos') or []:
+                    entries.append(self._extract_vue_video(video))
+                for video in wd.get('items') or []:
+                    entries.append(self._extract_vue_video(video))
+
+            extract_videos(website_data)
+
             items_total_count = int_or_none(website_data.get('items_total_count'))
             items_per_page = int_or_none(website_data.get('items_per_page'))
             if items_total_count > len(entries) - 1:
-                pages = items_total_count / items_per_page
+                pages = (items_total_count / items_per_page) + 1
                 if pages != int(pages):
                     pages = int(pages) + 1
                 for page in range(2, pages):
@@ -185,8 +208,7 @@ class TVPIE(InfoExtractor):
                         self._download_webpage(url, page_id, note='Downloading page #%d' % page,
                                                query={'page': page}),
                         page_id)
-                    for video in page_website_data.get('videos') or []:
-                        entries.append(self._extract_vue_video(video))
+                    extract_videos(page_website_data)
 
             return {
                 '_type': 'playlist',
@@ -201,12 +223,10 @@ class TVPIE(InfoExtractor):
         page_id = self._match_id(url)
         webpage = self._download_webpage(url, page_id)
 
-        # regional pages are always vue.js
-        if '//s.tvp.pl/files/portale-v4/regiony-tvp-pl' in webpage:
-            return self._handle_vuejs_page(url, webpage, page_id)
-
         # some tvp.info pages are vue.js, some are not
-        if 'window.__videoData' in webpage or 'window.__websiteData' in webpage:
+        if re.search(
+            r'window\.__(?:video|news|website|directory)Data\s*=',
+                webpage):
             return self._handle_vuejs_page(url, webpage, page_id)
 
         # classic server-side rendered sites
