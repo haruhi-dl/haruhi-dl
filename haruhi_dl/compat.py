@@ -28,7 +28,7 @@ import urllib.response as compat_urllib_response
 import http.cookiejar as compat_cookiejar
 compat_cookiejar_Cookie = compat_cookiejar.Cookie
 import http.cookies as compat_cookies
-compat_SimpleCookie = compat_cookies.SimpleCookie
+compat_cookies_SimpleCookie = compat_cookies.SimpleCookie
 import html.entities as compat_html_entities
 compat_html_entities_html5 = compat_html_entities.html5
 import http.client as compat_http_client
@@ -149,7 +149,6 @@ __all__ = [
     'compat_HTMLParseError',
     'compat_HTMLParser',
     'compat_HTTPError',
-    'compat_SimpleCookie',
     'compat_Struct',
     'compat_b64decode',
     'compat_basestring',
@@ -157,6 +156,7 @@ __all__ = [
     'compat_cookiejar',
     'compat_cookiejar_Cookie',
     'compat_cookies',
+    'compat_cookies_SimpleCookie',
     'compat_ctypes_WINFUNCTYPE',
     'compat_etree_Element',
     'compat_etree_fromstring',
