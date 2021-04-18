@@ -45,6 +45,7 @@ class MastodonSHIE(SelfhostedInfoExtractor):
         '<li><a href="https://docs.joinmastodon.org/">Documentation</a></li>',
         '<title>Pleroma</title>',
         '<noscript>To use Pleroma, please enable JavaScript.</noscript>',
+        '<noscript>To use Soapbox, please enable JavaScript.</noscript>',
         'Alternatively, try one of the <a href="https://apps.gab.com">native apps</a> for Gab Social for your platform.',
     )
     _SH_VALID_CONTENT_REGEXES = (
@@ -96,6 +97,14 @@ class MastodonSHIE(SelfhostedInfoExtractor):
             'title': 're:.+ - He shoots, he scores and the crowd went wild.... #Animal #Sports',
             'ext': 'mp4',
         },
+    }, {
+        # Soapbox, audio file
+        'url': 'https://gleasonator.com/notice/9zvJY6h7jJzwopKAIi',
+        'info_dict': {
+            'id': '9zvJY6h7jJzwopKAIi',
+            'title': 're:.+ - #FEDIBLOCK',
+            'ext': 'oga',
+        },
     }]
 
     def _selfhosted_extract(self, url, webpage=None):
@@ -118,12 +127,13 @@ class MastodonSHIE(SelfhostedInfoExtractor):
 
         entries = []
         for media in metadata['media_attachments']:
-            if media['type'] == 'video':
+            if media['type'] in ('video', 'audio'):
                 entries.append({
                     'id': media['id'],
                     'title': str_or_none(media['description']),
                     'url': str_or_none(media['url']),
-                    'thumbnail': str_or_none(media['preview_url']),
+                    'thumbnail': str_or_none(media['preview_url']) if media['type'] == 'video' else None,
+                    'vcodec': 'none' if media['type'] == 'audio' else None,
                 })
         if len(entries) == 0:
             raise ExtractorError('No audio/video attachments')
