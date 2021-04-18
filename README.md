@@ -14,30 +14,78 @@ A Microsoft GitHub mirror exists as well: https://github.com/haruhi-dl/haruhi-dl
 
 ## Installing
 
-haruhi-dl is available on PyPI: [![version on PyPI](https://img.shields.io/pypi/v/haruhi-dl?style=flat-square)](https://pypi.org/project/haruhi-dl/)
+System-specific ways:
+
+- [Windows .exe files](https://git.sakamoto.pl/laudompat/haruhi-dl/-/releases) ([mirror](https://github.com/haruhi-dl/haruhi-dl/releases)) - just unpack and run the exe file in cmd/powershell! (ffmpeg/rtmpdump not included, playwright extractors won't work)
+- [Arch Linux (AUR)](https://aur.archlinux.org/packages/haruhi-dl/) - `yay -S haruhi-dl` (managed by mlunax)
+- [macOS (homebrew)](https://formulae.brew.sh/formula/haruhi-dl) - `brew install haruhi-dl` (managed by Homebrew)
+
+haruhi-dl is also available on PyPI: [![version on PyPI](https://img.shields.io/pypi/v/haruhi-dl?style=flat-square)](https://pypi.org/project/haruhi-dl/)
 
 Install release from PyPI on Python 3.x:
+
 ```sh
 $ python3 -m pip install --upgrade haruhi-dl
 ```
+
 Install from master (unstable) on Python 3.x:
+
 ```sh
 $ python3 -m pip install --upgrade git+https://git.sakamoto.pl/laudompat/haruhi-dl.git
 ```
 
-**Python 2 support is dropped and we recommend to switch to Python 3**, though it may still work.
+**Python 2 support is dropped, use Python 3.**
 
 ## Usage
 
 ```sh
 $ haruhi-dl "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
+
 That's it! You just got rickrolled!
 
 Full manual with all options:
+
 ```sh
 $ haruhi-dl --help
 ```
+
+## Differences from youtube-dl
+
+_This is not a complete list._
+
+- Changed license from Unlicense to LGPL 3.0
+- Extracting and downloading video with subtitles from m3u8 (HLS) - this also includes subtitles from Twitter and some other services
+- Support for BitTorrent protocol (only used when explicitly enabled by user with `--allow-p2p` or `--prefer-p2p`; aria2c required)
+- Specific way to handle selfhosted services (untied to specific providers/domains, like PeerTube, Funkwhale, Mastodon)
+- Specific way to handle content proxy sites (like Nitter for Twitter)
+- Merging formats by codecs instead of file extensions, if possible (you'd rather like your AV1+opus downloads from YouTube to be .webm, than .mkv, don't you?)
+- New/improved/fixed extractors:
+  - PeerTube (extracting playlists, channels and user accounts, optionally downloading with BitTorrent)
+  - Funkwhale
+  - TikTok (extractors for user profiles, hashtags and music - all except single video and music with `--no-playlist` require Playwright)
+  - cda.pl
+  - Ipla
+  - Weibo (DASH formats)
+  - LinkedIn (videos from user posts)
+  - Acast
+  - Mastodon (including Pleroma, Gab Social, Soapbox)
+  - Ring Publishing (aka PulsEmbed, PulseVideo, OnetMVP; Ringier Axel Springer)
+  - TVP (support for TVPlayer2, client-rendered sites and TVP ABC, refactored some extractors to use mobile JSON API)
+  - TVN24 (support for main page, Fakty and magazine frontend)
+  - PolskieRadio
+  - Agora (wyborcza.pl video, wyborcza.pl/wysokieobcasy.pl/audycje.tokfm.pl podcasts, tuba.fm)
+  - sejm.gov.pl/senat.gov.pl
+- Some improvements with handling JSON-LD
+
+## Bug reports
+
+Please send the bug details to <bug@haruhi.download> or on [Microsoft GitHub](https://github.com/haruhi-dl/haruhi-dl/issues).
+
 ## Contributing
 
 If you want to contribute, send us a diff to <contribute@haruhi.download>, or submit a Pull Request on [our mirror at Microsoft GitHub](https://github.com/haruhi-dl/haruhi-dl).
+
+Why contribute to this fork, and not youtube-dl?
+
+- You make sure your contributions will always be free - under Unlicense, anyone can take your code, modify it, and close the source. LGPL 3.0 makes it clear, that any contributions must be published.
