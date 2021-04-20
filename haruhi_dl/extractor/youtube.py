@@ -2356,15 +2356,6 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
         return info_dict
 
 
-class YoutubeAjaxListInfoExtractor(YoutubeBaseListInfoExtractor):
-    def _download_continuation(self, continuation, list_id, page_no, session_id=None):
-        return self._download_json('https://www.youtube.com/browse_ajax', list_id,
-                                   note='Downloading %s page #%d (ajax)' % (self._LIST_NAME, page_no),
-                                   headers=self._YOUTUBE_CLIENT_HEADERS, query={
-                                       'continuation': continuation,
-                                   })
-
-
 class YoutubeYti1ListInfoExtractor(YoutubeBaseListInfoExtractor):
     # /youtubei/v1/[action]
     _ACTION_URL = 'https://www.youtube.com/youtubei/v1/%s?key=%s' % ('%s', YoutubeBaseInfoExtractor._YOUTUBE_API_KEY)
@@ -2403,7 +2394,7 @@ class YoutubeYti1ListInfoExtractor(YoutubeBaseListInfoExtractor):
                                    data=bytes(json.dumps(data), encoding='utf-8'))
 
 
-class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
+class YoutubeChannelIE(YoutubeYti1ListInfoExtractor):
     IE_NAME = 'youtube:channel'
     _VALID_URL = r'https?://(?:www\.|music\.)?youtube\.com/(?P<type>user|channel|c)/(?P<id>[\w-]+)(?!/live)'
     _LIST_NAME = 'channel'
@@ -2442,18 +2433,18 @@ class YoutubeChannelIE(YoutubeAjaxListInfoExtractor):
     def _parse_init_video_list(self, data):
         grid_renderer = try_get(data, [
             # initial
-            lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'][1]['tabRenderer']['content']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents'][0]['gridRenderer'],
-            # continuation ajax
-            lambda x: x[1]['response']['continuationContents']['gridContinuation'],
+            lambda x: x['contents']['twoColumnBrowseResultsRenderer']['tabs'][1]['tabRenderer']['content']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents'][0]['gridRenderer']['items'],
+            # continuation yti1
+            lambda x: x['onResponseReceivedActions'][0]['appendContinuationItemsAction']['continuationItems'],
         ])
         if not grid_renderer:
             raise ExtractorError('Could not extract gridRenderer')
         return {
             'entries': [self._parse_video(item, entry_key='gridVideoRenderer', full_data=data)
-                        for item in grid_renderer['items']],
-            'continuation': try_get(grid_renderer,
-                                    lambda x: x['continuations'][0]['nextContinuationData']['continuation'],
-                                    expected_type=compat_str),
+                        for item in grid_renderer],
+            'continuation': try_get(grid_renderer, [
+                lambda x: x[-1]['continuationItemRenderer']['continuationEndpoint']['continuationCommand']['token'],
+            ], expected_type=str),
             'info_dict': {
                 'title': try_get(data, lambda x: x['header']['c4TabbedHeaderRenderer']['title'], expected_type=compat_str),
             },
@@ -2509,7 +2500,7 @@ class YoutubePlaylistIE(YoutubeYti1ListInfoExtractor):
             'id': 'PLCjDnXEsxzUTkHuSM5KCTgaUCR4yUySq8',
             'title': 'coolstuff',
         },
-        'playlist_mincount': 58,
+        'playlist_mincount': 57,
     }, {
         # a lot of pages, good for checking continuity
         'url': 'https://www.youtube.com/playlist?list=PLv3TTBr1W_9tppikBxAE_G6qjWdBljBHJ',
