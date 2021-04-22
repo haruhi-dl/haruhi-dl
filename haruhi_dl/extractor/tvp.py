@@ -389,7 +389,7 @@ class TVPEmbedIE(InfoExtractor):
         for file in content['files']:
             video_url = file['url']
             if video_url.endswith('.m3u8'):
-                formats.extend(self._extract_m3u8_formats(video_url, video_id, m3u8_id='hls'))
+                formats.extend(self._extract_m3u8_formats(video_url, video_id, m3u8_id='hls', ext='mp4'))
             elif video_url.endswith('.mpd'):
                 formats.extend(self._extract_mpd_formats(video_url, video_id, mpd_id='dash'))
             elif video_url.endswith('.f4m'):
@@ -397,12 +397,12 @@ class TVPEmbedIE(InfoExtractor):
             elif video_url.endswith('.ism/manifest'):
                 formats.extend(self._extract_ism_formats(video_url, video_id, ism_id='mss'))
             else:
-                # probably just mp4 versions
+                # mp4, wmv or something
                 quality = file.get('quality', {})
                 formats.append({
                     'format_id': 'direct',
                     'url': video_url,
-                    'ext': determine_ext(video_url, 'mp4'),
+                    'ext': determine_ext(video_url, file['type']),
                     'fps': int_or_none(quality.get('fps')),
                     'tbr': int_or_none(quality.get('bitrate')),
                     'width': int_or_none(quality.get('width')),
