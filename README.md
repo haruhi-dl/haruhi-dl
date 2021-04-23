@@ -89,3 +89,9 @@ If you want to contribute, send us a diff to <contribute@haruhi.download>, or su
 Why contribute to this fork, and not youtube-dl?
 
 - You make sure your contributions will always be free - under Unlicense, anyone can take your code, modify it, and close the source. LGPL 3.0 makes it clear, that any contributions must be published.
+
+## Donations
+
+If my contributions helped you, please consider sending me a small tip.
+
+[![Buy Me a Coffee at ko-fi.com](https://cdn.ko-fi.com/cdn/kofi1.png?v=2)](https://ko-fi.com/selfisekai)
