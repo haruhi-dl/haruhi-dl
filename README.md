@@ -59,7 +59,7 @@ _This is not a complete list._
 - Support for BitTorrent protocol (only used when explicitly enabled by user with `--allow-p2p` or `--prefer-p2p`; aria2c required)
 - Specific way to handle selfhosted services (untied to specific providers/domains, like PeerTube, Funkwhale, Mastodon)
 - Specific way to handle content proxy sites (like Nitter for Twitter)
-- Merging formats by codecs instead of file extensions, if possible (you'd rather like your AV1+opus downloads from YouTube to be .webm, than .mkv, don't you?)
+- Merging formats by codecs instead of file extensions, if possible (you'd rather like your AV1+opus downloads from YouTube to be .webm, than .mkv, wouldn't you?)
 - New/improved/fixed extractors:
   - PeerTube (extracting playlists, channels and user accounts, optionally downloading with BitTorrent)
   - Funkwhale
