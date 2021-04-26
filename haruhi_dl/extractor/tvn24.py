@@ -57,7 +57,7 @@ class TVNBaseIE(InfoExtractor):
 
 
 class TVN24IE(TVNBaseIE):
-    _VALID_URL = r'https?://(?:www\.)?(?P<domain>(?:(?:[^/]+)\.)?tvn24\.pl)/(?:[^/]+/)*[^/?#\s]+[,-](?P<id>\d+)(?:\.html)?'
+    _VALID_URL = r'https?://(?:www\.)?(?P<domain>(?:(?:[^/]+)\.)?tvn(?:24)?\.pl)/(?:[^/]+/)*[^/?#\s]+[,-](?P<id>\d+)(?:\.html)?'
     _TESTS = [{
         'url': 'https://tvn24.pl/polska/edyta-gorniak-napisala-o-statystach-w-szpitalach-udajacych-chorych-na-covid-19-jerzy-polaczek-i-marek-posobkiewicz-odpowiadaja-zapraszamy-4747899',
         'info_dict': {
@@ -67,7 +67,7 @@ class TVN24IE(TVNBaseIE):
         'playlist_count': 5,
     }, {
         # different layout
-        'url': 'https://tvnmeteo.tvn24.pl/magazyny/maja-w-ogrodzie,13/odcinki-online,1,4,1,0/pnacza-ptaki-i-iglaki-odc-691-hgtv-odc-29,1771763.html',
+        'url': 'https://tvn24.pl/tvnmeteo/magazyny/nowa-maja-w-ogrodzie,13/odcinki-online,1,4,1,0/pnacza-ptaki-i-iglaki-odc-691-hgtv-odc-29,1771763.html',
         'info_dict': {
             'id': '1771763',
             'ext': 'mp4',
@@ -94,6 +94,15 @@ class TVN24IE(TVNBaseIE):
             'description': 'md5:684d2e09f57c7ed03a277bc5ce295d63',
         },
     }, {
+        # no data-qualities, just data-src
+        'url': 'https://uwaga.tvn.pl/reportaze,2671,n/po-wyroku-trybunalu-kobiety-nie-moga-poddac-sie-aborcji,337993.html',
+        'info_dict': {
+            'id': '337993',
+            'ext': 'mp4',
+            'title': 'Wady letalne, czyli śmiertelne. "Boję się następnej ciąży"',
+            'description': 'md5:4f5efe579b7f801d5a8d7a75c0809260',
+        },
+    }, {
         'url': 'http://fakty.tvn24.pl/ogladaj-online,60/53-konferencja-bezpieczenstwa-w-monachium,716431.html',
         'only_matching': True,
     }, {
@@ -108,18 +117,18 @@ class TVN24IE(TVNBaseIE):
         mobj = re.match(self._VALID_URL, url)
         domain, display_id = mobj.group('domain', 'id')
 
-        if '/magazyn-tvn24/' in url:
-            return self._handle_magazine_frontend(url, display_id)
-        elif domain in ('tvn24.pl', ):
-            return self._handle_nextjs_frontend(url, display_id)
-        elif domain in ('fakty.tvn24.pl', ):
-            return self._handle_fakty_frontend(url, display_id)
-        else:
-            return self._handle_old_frontend(url, display_id)
-
-    def _handle_old_frontend(self, url, display_id):
         webpage = self._download_webpage(url, display_id)
 
+        if domain == 'tvn24.pl':
+            if '<script id="__NEXT_DATA__"' in webpage:
+                return self._handle_nextjs_frontend(url, display_id, webpage)
+            if '/magazyn-tvn24/' in url:
+                return self._handle_magazine_frontend(url, display_id, webpage)
+        if 'window.VideoManager.initVideo(' in webpage:
+            return self._handle_fakty_frontend(url, display_id, webpage)
+        return self._handle_old_frontend(url, display_id, webpage)
+
+    def _handle_old_frontend(self, url, display_id, webpage):
         title = self._og_search_title(
             webpage, default=None) or self._search_regex(
             r'<h\d+[^>]+class=["\']magazineItemHeader[^>]+>(.+?)</h',
@@ -132,16 +141,23 @@ class TVN24IE(TVNBaseIE):
                     name, group='json', default=default, fatal=fatal) or '{}',
                 display_id, transform_source=unescapeHTML, fatal=fatal)
 
-        quality_data = extract_json('data-quality', 'formats')
+        quality_data = extract_json('data-quality', 'formats', default=None, fatal=False)
 
         formats = []
-        for format_id, url in quality_data.items():
+        if quality_data:
+            for format_id, url in quality_data.items():
+                formats.append({
+                    'url': url,
+                    'format_id': format_id,
+                    'height': int_or_none(format_id.rstrip('p')),
+                })
+            self._sort_formats(formats)
+        else:
             formats.append({
-                'url': url,
-                'format_id': format_id,
-                'height': int_or_none(format_id.rstrip('p')),
+                'url': self._search_regex(
+                    r'\bdata-src=(["\'])(?P<url>(?!\1).+?)\1',
+                    webpage, 'video url', group='url'),
             })
-        self._sort_formats(formats)
 
         description = self._og_search_description(webpage, default=None)
         thumbnail = self._og_search_thumbnail(
@@ -170,20 +186,24 @@ class TVN24IE(TVNBaseIE):
             'formats': formats,
         }
 
-    def _handle_magazine_frontend(self, url, display_id):
-        webpage = self._download_webpage(url, display_id)
-
+    def _handle_magazine_frontend(self, url, display_id, webpage):
         entries = []
-        for vid_el in re.finditer(r'(?P<video><div\b[^>]+\bdata-src=[^>]+>)\s*(?:</[^>]+>\s*)*<figcaption>(?P<title>(?:.|\s)+?)</figcaption>', webpage):
+        for vid_el in re.finditer(r'(?P<video><div\b[^>]+\bdata-src=[^>]+>)\s*(?:</[^>]+>\s*)*?(?:<figcaption>(?P<title>(?:.|\s)+?)</figcaption>)?', webpage):
             vid = extract_attributes(vid_el.group('video'))
 
             formats = []
-            for fmt_name, fmt_url in self._parse_json(unescapeHTML(vid['data-quality']), display_id).items():
-                formats.append({
-                    'format_id': fmt_name,
-                    'height': int_or_none(fmt_name[:-1]),
-                    'url': fmt_url,
-                })
+            qualities = vid.get('data-quality')
+            if qualities:
+                for fmt_name, fmt_url in self._parse_json(unescapeHTML(qualities), display_id).items():
+                    formats.append({
+                        'format_id': fmt_name,
+                        'height': int_or_none(fmt_name[:-1]),
+                        'url': fmt_url,
+                    })
+            else:
+                formats = [{
+                    'url': vid['data-src'],
+                }]
 
             self._sort_formats(formats)
             entries.append({
@@ -193,6 +213,9 @@ class TVN24IE(TVNBaseIE):
                 'thumbnail': vid.get('data-poster'),
             })
 
+        if not entries:
+            raise ExtractorError('No videos found')
+
         return {
             '_type': 'playlist',
             'id': display_id,
@@ -201,9 +224,7 @@ class TVN24IE(TVNBaseIE):
             'description': self._og_search_description(webpage),
         }
 
-    def _handle_nextjs_frontend(self, url, display_id):
-        webpage = self._download_webpage(url, display_id)
-
+    def _handle_nextjs_frontend(self, url, display_id, webpage):
         next_data = self._search_nextjs_data(webpage, display_id)
         context = next_data['props']['initialProps']['pageProps']['context']
 
@@ -241,9 +262,7 @@ class TVN24IE(TVNBaseIE):
             'alt_title': context['fields']['title'],
         }
 
-    def _handle_fakty_frontend(self, url, display_id):
-        webpage = self._download_webpage(url, display_id)
-
+    def _handle_fakty_frontend(self, url, display_id, webpage):
         data = self._parse_json(
             self._search_regex(
                 r"window\.VideoManager\.initVideo\('[^']+',\s*({.+?})\s*,\s*{.+?}\s*\);",
