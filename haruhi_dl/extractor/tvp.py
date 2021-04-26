@@ -221,7 +221,14 @@ class TVPIE(InfoExtractor):
 
     def _real_extract(self, url):
         page_id = self._match_id(url)
-        webpage = self._download_webpage(url, page_id)
+        webpage, urlh = self._download_webpage_handle(url, page_id)
+
+        # sometimes vod.tvp.pl urls look like... pretty much any TVP url, that does a redirect
+        # example: https://vod.tvp.pl/48463890/wadowickie-spotkania-z-janem-pawlem-ii
+        # VOD videos will work with this extractor,
+        # but VOD website needs to be handled with its extractor
+        if re.match(TVPWebsiteIE._VALID_URL, urlh.url):
+            return self.url_result(urlh.url, ie=TVPWebsiteIE.ie_key(), video_id=page_id)
 
         # some tvp.info pages are vue.js, some are not
         if re.search(
