@@ -1618,6 +1618,10 @@ from .weibo import (
 from .weiqitv import WeiqiTVIE
 from .wistia import WistiaIE
 from .worldstarhiphop import WorldStarHipHopIE
+from .wppilot import (
+    WPPilotIE,
+    WPPilotChannelsIE,
+)
 from .wppl import WpPlIE
 from .wsj import (
     WSJIE,
