@@ -41,6 +41,12 @@ class WPPilotBaseIE(InfoExtractor):
         self._login()
 
     def _login(self):
+        if any(cookie.domain == '.wp.pl' and cookie.name == 'netviapisessid'
+               for cookie in self._downloader.cookiejar):
+            # session exists, already logged in
+            self._LOGGED_IN = True
+            return None
+
         username, password = self._get_login_info()
         if not username:
             return None
@@ -131,6 +137,10 @@ class WPPilotIE(WPPilotBaseIE):
                 }).encode('utf-8')))
             if try_get(close, lambda x: x['data']['status']) == 'ok':
                 return self.url_result('wppilot:%s' % video_id, ie=WPPilotIE.ie_key())
+
+        error = try_get(video, lambda x: x['_meta']['error'])
+        if error:
+            raise ExtractorError(f"WP said: \"{error['name']}\" ({error['code']})")
 
         formats = []
         stream_headers = {}
