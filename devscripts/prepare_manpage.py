@@ -8,11 +8,11 @@ import re
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 README_FILE = os.path.join(ROOT_DIR, 'README.md')
 
-PREFIX = r'''%YOUTUBE-DL(1)
+PREFIX = r'''%HARUHI-DL(1)
 
 # NAME
 
-youtube\-dl \- download videos from youtube.com or other video platforms
+haruhi\-dl \- download videos from youtube.com or other video platforms
 
 # SYNOPSIS
 
