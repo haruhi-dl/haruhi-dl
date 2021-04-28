@@ -95,6 +95,32 @@ class WPPilotIE(WPPilotBaseIE):
     _VALID_URL = r'(?:https?://pilot\.wp\.pl/tv/?#|wppilot:)(?P<id>[a-z\d-]+)'
     IE_NAME = 'wppilot'
 
+    _TESTS = [{
+        'url': 'https://pilot.wp.pl/tv/#telewizja-wp-hd',
+        'info_dict': {
+            'id': '158',
+            'ext': 'm3u8',
+            'title': 'Telewizja WP HD',
+        },
+        'params': {
+            'format': 'bestvideo',
+        },
+    }, {
+        # audio only
+        'url': 'https://pilot.wp.pl/tv/#radio-nowy-swiat',
+        'info_dict': {
+            'id': '238',
+            'ext': 'm3u8',
+            'title': 'Radio Nowy Świat',
+        },
+        'params': {
+            'format': 'bestaudio',
+        },
+    }, {
+        'url': 'wppilot:9',
+        'only_matching': True,
+    }]
+
     def _get_channel(self, id_or_slug):
         video_list = self._get_channel_list(cache=True)
         key = 'id' if re.match(r'^\d+$', id_or_slug) else 'slug'
@@ -173,6 +199,18 @@ class WPPilotIE(WPPilotBaseIE):
 class WPPilotChannelsIE(WPPilotBaseIE):
     _VALID_URL = r'(?:https?://pilot\.wp\.pl/(?:tv/?)?(?:\?[^#]*)?#?|wppilot:)$'
     IE_NAME = 'wppilot:channels'
+
+    _TESTS = [{
+        'url': 'wppilot:',
+        'info_dict': {
+            'id': 'wppilot',
+            'title': 'WP Pilot',
+        },
+        'playlist_mincount': 100,
+    }, {
+        'url': 'https://pilot.wp.pl/',
+        'only_matching': True,
+    }]
 
     def _real_extract(self, url):
         channel_list = self._get_channel_list()
