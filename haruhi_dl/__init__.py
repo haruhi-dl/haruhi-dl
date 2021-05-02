@@ -176,6 +176,8 @@ def _real_main(argv=None):
         opts.max_sleep_interval = opts.sleep_interval
     if opts.ap_mso and opts.ap_mso not in MSO_INFO:
         parser.error('Unsupported TV Provider, use --ap-list-mso to get a list of supported TV Providers')
+    if opts.force_generic_extractor and opts.force_use_mastodon:
+        parser.error('force either generic extractor or Mastodon')
 
     def parse_retries(retries):
         if retries in ('inf', 'infinite'):
@@ -348,6 +350,7 @@ def _real_main(argv=None):
         'restrictfilenames': opts.restrictfilenames,
         'ignoreerrors': opts.ignoreerrors,
         'force_generic_extractor': opts.force_generic_extractor,
+        'force_use_mastodon': opts.force_use_mastodon,
         'ie_key': opts.ie_key,
         'ratelimit': opts.ratelimit,
         'nooverwrites': opts.nooverwrites,

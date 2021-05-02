@@ -401,6 +401,13 @@ def parseOpts(overrideArguments=None):
         action='store_true', dest='ap_list_mso', default=False,
         help='List all supported multiple-system operators')
 
+    selfhosted_ie = optparse.OptionGroup(parser, 'Selfhosted IE Options')
+    selfhosted_ie.add_option(
+        '--force-use-mastodon',
+        action='store_true', dest='force_use_mastodon', default=False,
+        help='Force use the Mastodon extractor (to get follower-only/direct posts, '
+        'or circuvement PeerTube censorship via Pleroma; both require logging in)')
+
     video_format = optparse.OptionGroup(parser, 'Video Format Options')
     video_format.add_option(
         '-f', '--format',
@@ -904,6 +911,7 @@ def parseOpts(overrideArguments=None):
     parser.add_option_group(video_format)
     parser.add_option_group(subtitles)
     parser.add_option_group(authentication)
+    parser.add_option_group(selfhosted_ie)
     parser.add_option_group(adobe_pass)
     parser.add_option_group(postproc)
 
