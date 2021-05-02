@@ -787,6 +787,10 @@ class HaruhiDL(object):
         if not ie_key and force_generic_extractor:
             ie_key = 'Generic'
 
+        force_use_mastodon = self.params.get('force_use_mastodon')
+        if not ie_key and force_use_mastodon:
+            ie_key = 'MastodonSH'
+
         if not ie_key:
             ie_key = self.params.get('ie_key')
 
@@ -796,7 +800,7 @@ class HaruhiDL(object):
             ies = self._ies
 
         for ie in ies:
-            if not ie.suitable(url):
+            if not force_use_mastodon and not ie.suitable(url):
                 continue
 
             ie = self.get_info_extractor(ie.ie_key())

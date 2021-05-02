@@ -5,11 +5,23 @@ from .common import SelfhostedInfoExtractor
 
 from ..utils import (
     clean_html,
+    float_or_none,
+    int_or_none,
     str_or_none,
+    try_get,
+    unescapeHTML,
     ExtractorError,
 )
 
+from urllib.parse import (
+    parse_qs,
+    urlencode,
+    urlparse,
+)
+import json
 import re
+
+from .peertube import PeerTubeSHIE
 
 
 class MastodonSHIE(SelfhostedInfoExtractor):
@@ -23,6 +35,7 @@ class MastodonSHIE(SelfhostedInfoExtractor):
     """
     IE_NAME = 'mastodon'
     _VALID_URL = r'mastodon:(?P<host>[^:]+):(?P<id>.+)'
+    _NETRC_MACHINE = 'mastodon'
     _SH_VALID_URL = r'''(?x)
         https?://
             (?P<host>[^/\s]+)/
@@ -107,20 +120,176 @@ class MastodonSHIE(SelfhostedInfoExtractor):
         },
     }]
 
+    def _determine_instance_software(self, host, webpage=None):
+        if webpage:
+            for i, string in enumerate(self._SH_VALID_CONTENT_STRINGS):
+                if string in webpage:
+                    return ['mastodon', 'mastodon', 'pleroma', 'pleroma', 'pleroma', 'gab'][i]
+            if any(s in webpage for s in PeerTubeSHIE._SH_VALID_CONTENT_STRINGS):
+                return 'peertube'
+
+        nodeinfo_href = self._download_json(
+            f'https://{host}/.well-known/nodeinfo', host, 'Downloading instance nodeinfo link')
+
+        nodeinfo = self._download_json(
+            nodeinfo_href['links'][-1]['href'], host, 'Downloading instance nodeinfo')
+
+        return nodeinfo['software']['name']
+
+    def _login(self):
+        username, password = self._get_login_info()
+        if not username:
+            return False
+
+        # very basic regex, but the instance domain (the one where user has an account)
+        # must be separated from the user login
+        mobj = re.match(r'^(?P<username>[^@]+(?:@[^@]+)?)@(?P<instance>.+)$', username)
+        if not mobj:
+            self.report_warning(
+                'Invalid login format - must be in format [username or email]@[instance]')
+        username, instance = mobj.group('username', 'instance')
+
+        app_info = self._download_json(
+            f'https://{instance}/api/v1/apps', None, 'Creating an app', headers={
+                'Content-Type': 'application/json',
+            }, data=bytes(json.dumps({
+                'client_name': 'haruhi-dl',
+                'redirect_uris': 'urn:ietf:wg:oauth:2.0:oob',
+                'scopes': 'read',
+                'website': 'https://haruhi.download',
+            }).encode('utf-8')))
+
+        login_webpage = self._download_webpage(
+            f'https://{instance}/oauth/authorize', None, 'Downloading login page', query={
+                'client_id': app_info['client_id'],
+                'scope': 'read',
+                'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
+                'response_type': 'code',
+            })
+        oauth_token = None
+        # this needs to be codebase-specific, as the HTML page differs between codebases
+        if 'xlink:href="#mastodon-svg-logo-full"' in login_webpage:
+            # mastodon
+            if '@' not in username:
+                self.report_warning(
+                    'Invalid login format - for Mastodon instances e-mail address is required')
+            login_form = self._hidden_inputs(login_webpage)
+            login_form['user[email]'] = username
+            login_form['user[password]'] = password
+            login_req = self._download_webpage(
+                f'https://{instance}/auth/sign_in', None, 'Sending login details',
+                headers={
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }, data=bytes(urlencode(login_form).encode('utf-8')))
+            auth_form = self._hidden_inputs(
+                self._search_regex(
+                    r'(?s)(<form\b[^>]+>.+?>Authorize</.+?</form>)',
+                    login_req, 'authorization form'))
+            _, urlh = self._download_webpage_handle(
+                f'https://{instance}/oauth/authorize', None, 'Confirming authorization',
+                headers={
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }, data=bytes(urlencode(auth_form).encode('utf-8')))
+            oauth_token = parse_qs(urlparse(urlh.url).query)['code'][0]
+        elif 'content: "✔\\fe0e";' in login_webpage:
+            # pleroma
+            login_form = self._hidden_inputs(login_webpage)
+            login_form['authorization[scope][]'] = 'read'
+            login_form['authorization[name]'] = username
+            login_form['authorization[password]'] = password
+            login_req = self._download_webpage(
+                f'https://{instance}/oauth/authorize', None, 'Sending login details',
+                headers={
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }, data=bytes(urlencode(login_form).encode('utf-8')))
+            # TODO: 2FA, error handling
+            oauth_token = self._search_regex(
+                r'<h2>\s*Token code is\s*<br>\s*([a-zA-Z\d_-]+)\s*</h2>',
+                login_req, 'oauth token')
+        else:
+            raise ExtractorError('Unknown instance type')
+
+        actual_token = self._download_json(
+            f'https://{instance}/oauth/token', None, 'Downloading the actual token',
+            headers={
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }, data=bytes(urlencode({
+                'client_id': app_info['client_id'],
+                'client_secret': app_info['client_secret'],
+                'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
+                'scope': 'read',
+                'code': oauth_token,
+                'grant_type': 'authorization_code',
+            }).encode('utf-8')))
+        return {
+            'instance': instance,
+            'authorization': f"{actual_token['token_type']} {actual_token['access_token']}",
+        }
+
     def _selfhosted_extract(self, url, webpage=None):
         mobj = re.match(self._VALID_URL, url)
+        ap_censorship_circuvement = False
         if not mobj:
             mobj = re.match(self._SH_VALID_URL, url)
+        if not mobj and self._downloader.params.get('force_use_mastodon'):
+            mobj = re.match(PeerTubeSHIE._VALID_URL, url)
+            if mobj:
+                ap_censorship_circuvement = 'peertube'
+        if not mobj and self._downloader.params.get('force_use_mastodon'):
+            mobj = re.match(PeerTubeSHIE._SH_VALID_URL, url)
+            if mobj:
+                ap_censorship_circuvement = 'peertube'
+        if not mobj:
+            raise ExtractorError('Unrecognized url type')
         host, id = mobj.group('host', 'id')
 
-        if any(frag in url for frag in ('/objects/', '/activities/')):
-            if not webpage:
-                webpage = self._download_webpage(url, '%s:%s' % (host, id), expected_status=302)
-            real_url = self._og_search_property('url', webpage, default=None)
-            if real_url:
-                return self.url_result(real_url, ie='MastodonSH')
+        login_info = self._login()
 
-        metadata = self._download_json('https://%s/api/v1/statuses/%s' % (host, id), '%s:%s' % (host, id))
+        if login_info and host != login_info['instance']:
+            wf_url = url
+            if not url.startswith('http'):
+                software = ap_censorship_circuvement
+                if not software:
+                    software = self._determine_instance_software(host, webpage)
+                url_part = None
+                if software == 'pleroma':
+                    if '-' in id:   # UUID
+                        url_part = 'objects'
+                    else:
+                        url_part = 'notice'
+                elif software == 'peertube':
+                    url_part = 'videos/watch'
+                elif software in ('mastodon', 'gab'):
+                    # mastodon and gab social require usernames in the url,
+                    # but we can't determine the username without fetching the post,
+                    # but we can't fetch the post without determining the username...
+                    raise ExtractorError(f'Use the full url with --force-use-mastodon to download from {software}', expected=True)
+                else:
+                    raise ExtractorError(f'Unknown software: {software}')
+                wf_url = f'https://{host}/{url_part}/{id}'
+            search = self._download_json(
+                f"https://{login_info['instance']}/api/v2/search", '%s:%s' % (host, id),
+                query={
+                    'q': wf_url,
+                    'type': 'statuses',
+                    'resolve': True,
+                }, headers={
+                    'Authorization': login_info['authorization'],
+                })
+            assert len(search['statuses']) == 1
+            metadata = search['statuses'][0]
+        else:
+            if not login_info and any(frag in url for frag in ('/objects/', '/activities/')):
+                if not webpage:
+                    webpage = self._download_webpage(url, '%s:%s' % (host, id), expected_status=302)
+                real_url = self._og_search_property('url', webpage, default=None)
+                if real_url:
+                    return self.url_result(real_url, ie='MastodonSH')
+            metadata = self._download_json(
+                'https://%s/api/v1/statuses/%s' % (host, id), '%s:%s' % (host, id),
+                headers={
+                    'Authorization': login_info['authorization'],
+                } if login_info else {})
 
         if not metadata['media_attachments']:
             raise ExtractorError('No attached medias')
@@ -134,11 +303,20 @@ class MastodonSHIE(SelfhostedInfoExtractor):
                     'url': str_or_none(media['url']),
                     'thumbnail': str_or_none(media['preview_url']) if media['type'] == 'video' else None,
                     'vcodec': 'none' if media['type'] == 'audio' else None,
+                    'duration': float_or_none(try_get(media, lambda x: x['meta']['original']['duration'])),
+                    'width': int_or_none(try_get(media, lambda x: x['meta']['original']['width'])),
+                    'height': int_or_none(try_get(media, lambda x: x['meta']['original']['height'])),
+                    'tbr': int_or_none(try_get(media, lambda x: x['meta']['original']['bitrate'])),
                 })
         if len(entries) == 0:
             raise ExtractorError('No audio/video attachments')
 
         title = '%s - %s' % (str_or_none(metadata['account'].get('display_name') or metadata['account']['acct']), clean_html(str_or_none(metadata['content'])))
+        if ap_censorship_circuvement == 'peertube':
+            title = unescapeHTML(
+                self._search_regex(
+                    r'^<p><a href="[^"]+">(.+?)</a></p>',
+                    metadata['content'], 'video title'))
 
         info_dict = {
             "id": id,
