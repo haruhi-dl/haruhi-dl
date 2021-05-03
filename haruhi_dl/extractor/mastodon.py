@@ -149,15 +149,18 @@ class MastodonSHIE(SelfhostedInfoExtractor):
                 'Invalid login format - must be in format [username or email]@[instance]')
         username, instance = mobj.group('username', 'instance')
 
-        app_info = self._download_json(
-            f'https://{instance}/api/v1/apps', None, 'Creating an app', headers={
-                'Content-Type': 'application/json',
-            }, data=bytes(json.dumps({
-                'client_name': 'haruhi-dl',
-                'redirect_uris': 'urn:ietf:wg:oauth:2.0:oob',
-                'scopes': 'read',
-                'website': 'https://haruhi.download',
-            }).encode('utf-8')))
+        app_info = self._downloader.cache.load('mastodon-apps', instance)
+        if not app_info:
+            app_info = self._download_json(
+                f'https://{instance}/api/v1/apps', None, 'Creating an app', headers={
+                    'Content-Type': 'application/json',
+                }, data=bytes(json.dumps({
+                    'client_name': 'haruhi-dl',
+                    'redirect_uris': 'urn:ietf:wg:oauth:2.0:oob',
+                    'scopes': 'read',
+                    'website': 'https://haruhi.download',
+                }).encode('utf-8')))
+            self._downloader.cache.store('mastodon-apps', instance, app_info)
 
         login_webpage = self._download_webpage(
             f'https://{instance}/oauth/authorize', None, 'Downloading login page', query={
@@ -176,21 +179,25 @@ class MastodonSHIE(SelfhostedInfoExtractor):
             login_form = self._hidden_inputs(login_webpage)
             login_form['user[email]'] = username
             login_form['user[password]'] = password
-            login_req = self._download_webpage(
+            login_req, urlh = self._download_webpage_handle(
                 f'https://{instance}/auth/sign_in', None, 'Sending login details',
                 headers={
                     'Content-Type': 'application/x-www-form-urlencoded',
                 }, data=bytes(urlencode(login_form).encode('utf-8')))
-            auth_form = self._hidden_inputs(
-                self._search_regex(
-                    r'(?s)(<form\b[^>]+>.+?>Authorize</.+?</form>)',
-                    login_req, 'authorization form'))
-            _, urlh = self._download_webpage_handle(
-                f'https://{instance}/oauth/authorize', None, 'Confirming authorization',
-                headers={
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                }, data=bytes(urlencode(auth_form).encode('utf-8')))
-            oauth_token = parse_qs(urlparse(urlh.url).query)['code'][0]
+            # cached apps may already be authorized
+            if '/oauth/authorize/native' in urlh.url:
+                oauth_token = parse_qs(urlparse(urlh.url).query)['code'][0]
+            else:
+                auth_form = self._hidden_inputs(
+                    self._search_regex(
+                        r'(?s)(<form\b[^>]+>.+?>Authorize</.+?</form>)',
+                        login_req, 'authorization form'))
+                _, urlh = self._download_webpage_handle(
+                    f'https://{instance}/oauth/authorize', None, 'Confirming authorization',
+                    headers={
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }, data=bytes(urlencode(auth_form).encode('utf-8')))
+                oauth_token = parse_qs(urlparse(urlh.url).query)['code'][0]
         elif 'content: "✔\\fe0e";' in login_webpage:
             # pleroma
             login_form = self._hidden_inputs(login_webpage)
