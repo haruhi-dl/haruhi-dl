@@ -1,3 +1,56 @@
+version idk
+Core
+* merging formats by codecs
+* [json_ld] better author extraction
++ --force-use-mastodon option
+* support for HTTP 308 redirects
++ [test_execution] add test for lazy extractors
+
+Extractor
+* [tvp:series] fallback to web
+- [ninateka] remove extractor
+* [tvn24] refactor handling next.js frontend
+* [cda] fix premium videos for premium users (?)
+* [tvp] support for tvp.info vue.js pages
++ [sejm.gov.pl] new extractors
++ [senat.gov.pl] new extractors
+* [spreaker] new url schemes
+* [spreaker] support for embedded player
++ [spryciarze.pl] new extractors
++ [castos] new extractors
++ [magentamusik360] new extractor
++ [arnes] new extractor
++ [palcomp3] new extractor
+* [screencastomatic] fix extraction
+* [youku] update ccode
++ [line] support live.line.me
+* [curiositystream] fix format extraction
+* [jamendo] fix track extraction
+* [pornhub] extracting DASH and HLS formats
+* [mtv] fix Viacom A/B testing video player
++ [maoritv] new extractor
+* [pluralsight] extend anti-throttling timeout
+* [mastodon] support for soapbox and audio files
+* [tvp] fix jp2.tvp.pl
+* [youtube:channel] fix multiple page extraction
+* [tvp:embed] handling formats better way
+* [tvn] better extraction method choosing
+* [tvp] fix tvp:website extracting with weird urls
++ [wppilot] new extractors
++ [mastodon] logging in to mastodon/pleroma
++ [mastodon] fetching posts via different instances
++ [mastodon] fetching peertube videos via pleroma instances
+* [bbc] extract full description from __INITIAL_DATA__
+* [tver] redirect all downloads to Brightcove
+* [medaltv] fix extraction
+* [francetvinfo] improve video id extraction
+* [xfileshare] support for wolfstream.tv
+* [tv2dk] fix extraction
+* [svtplay] improve extraction
+* [xtube] fix formats extraction
+* [twitter] improve formats extraction from vmap URL
+
+
 version 2021.04.01
 Core
 - Removed Herobrine
