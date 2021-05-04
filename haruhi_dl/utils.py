@@ -1853,24 +1853,11 @@ def write_json_file(obj, fn):
         raise
 
 
-if sys.version_info >= (2, 7):
-    def find_xpath_attr(node, xpath, key, val=None):
-        """ Find the xpath xpath[@key=val] """
-        assert re.match(r'^[a-zA-Z_-]+$', key)
-        expr = xpath + ('[@%s]' % key if val is None else "[@%s='%s']" % (key, val))
-        return node.find(expr)
-else:
-    def find_xpath_attr(node, xpath, key, val=None):
-        for f in node.findall(compat_xpath(xpath)):
-            if key not in f.attrib:
-                continue
-            if val is None or f.attrib.get(key) == val:
-                return f
-        return None
-
-# On python2.6 the xml.etree.ElementTree.Element methods don't support
-# the namespace parameter
-
+def find_xpath_attr(node, xpath, key, val=None):
+    """ Find the xpath xpath[@key=val] """
+    assert re.match(r'^[a-zA-Z_-]+$', key)
+    expr = xpath + ('[@%s]' % key if val is None else "[@%s='%s']" % (key, val))
+    return node.find(expr)
 
 def xpath_with_ns(path, ns_map):
     components = [c.split(':') for c in path.split('/')]
@@ -2225,7 +2212,7 @@ def get_subprocess_encoding():
     return encoding
 
 
-def encodeFilename(s, for_subprocess=False):
+def encodeFilename(s):
     """
     @param s The name of the file
     """
@@ -2266,11 +2253,11 @@ def encodeArgument(s):
         # Uncomment the following line after fixing all post processors
         # assert False, 'Internal error: %r should be of type %r, is %r' % (s, compat_str, type(s))
         s = s.decode('ascii')
-    return encodeFilename(s, True)
+    return encodeFilename(s)
 
 
 def decodeArgument(b):
-    return decodeFilename(b, True)
+    return decodeFilename(b)
 
 
 def decodeOption(optval):
@@ -2299,22 +2286,14 @@ def make_HTTPS_handler(params, **kwargs):
         if opts_no_check_certificate:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-        try:
-            return HaruhiDLHTTPSHandler(params, context=context, **kwargs)
-        except TypeError:
-            # Python 2.7.8
-            # (create_default_context present but HTTPSHandler has no context=)
-            pass
-
-    if sys.version_info < (3, 2):
-        return HaruhiDLHTTPSHandler(params, **kwargs)
-    else:  # Python < 3.4
-        context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-        context.verify_mode = (ssl.CERT_NONE
-                               if opts_no_check_certificate
-                               else ssl.CERT_REQUIRED)
-        context.set_default_verify_paths()
         return HaruhiDLHTTPSHandler(params, context=context, **kwargs)
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.verify_mode = (ssl.CERT_NONE
+                            if opts_no_check_certificate
+                            else ssl.CERT_REQUIRED)
+    context.set_default_verify_paths()
+    return HaruhiDLHTTPSHandler(params, context=context, **kwargs)
 
 
 def bug_reports_message():
@@ -2474,11 +2453,6 @@ class XAttrUnavailableError(HaruhiDLError):
 
 
 def _create_http_connection(hdl_handler, http_class, is_https, *args, **kwargs):
-    # Working around python 2 bug (see http://bugs.python.org/issue17849) by limiting
-    # expected HTTP responses to meet HTTP/1.0 or later (see also
-    # https://github.com/ytdl-org/youtube-dl/issues/6727)
-    if sys.version_info < (3, 0):
-        kwargs['strict'] = True
     hc = http_class(*args, **compat_kwargs(kwargs))
     source_address = hdl_handler._params.get('source_address')
 
@@ -2521,19 +2495,7 @@ def _create_http_connection(hdl_handler, http_class, is_https, *args, **kwargs):
         if hasattr(hc, '_create_connection'):
             hc._create_connection = _create_connection
         sa = (source_address, 0)
-        if hasattr(hc, 'source_address'):  # Python 2.7+
-            hc.source_address = sa
-        else:  # Python 2.6
-            def _hc_connect(self, *args, **kwargs):
-                sock = _create_connection(
-                    (self.host, self.port), self.timeout, sa)
-                if is_https:
-                    self.sock = ssl.wrap_socket(
-                        sock, self.key_file, self.cert_file,
-                        ssl_version=ssl.PROTOCOL_TLSv1)
-                else:
-                    self.sock = sock
-            hc.connect = functools.partial(_hc_connect, hc)
+        hc.source_address = sa
 
     return hc
 
@@ -2612,11 +2574,6 @@ class HaruhiDLHandler(compat_urllib_request.HTTPHandler):
                 req.add_header(h, v)
 
         req.headers = handle_youtubedl_headers(req.headers)
-
-        if sys.version_info < (2, 7) and '#' in req.get_full_url():
-            # Python 2.6 is brain-dead when it comes to fragments
-            req._Request__original = req._Request__original.partition('#')[0]
-            req._Request__r_type = req._Request__r_type.partition('#')[0]
 
         return req
 
@@ -2724,9 +2681,7 @@ class HaruhiDLHTTPSHandler(compat_urllib_request.HTTPSHandler):
         kwargs = {}
         conn_class = self._https_conn_class
 
-        if hasattr(self, '_context'):  # python > 2.6
-            kwargs['context'] = self._context
-        if hasattr(self, '_check_hostname'):  # python 3.x
+        if hasattr(self, '_check_hostname'):
             kwargs['check_hostname'] = self._check_hostname
 
         socks_proxy = req.headers.get('Ytdl-socks-proxy')
@@ -2917,12 +2872,6 @@ class HaruhiDLRedirectHandler(compat_urllib_request.HTTPRedirectHandler):
         # from the user (of urllib.request, in this case).  In practice,
         # essentially all clients do redirect in this case, so we do
         # the same.
-
-        # On python 2 urlh.geturl() may sometimes return redirect URL
-        # as byte string instead of unicode. This workaround allows
-        # to force it always return unicode.
-        if sys.version_info[0] < 3:
-            newurl = compat_str(newurl)
 
         # Be conciliant with URIs containing a space.  This is mainly
         # redundant with the more complete encoding done in http_error_302(),
@@ -3222,8 +3171,7 @@ def write_string(s, out=None, encoding=None):
         if _windows_write_string(s, out):
             return
 
-    if ('b' in getattr(out, 'mode', '')
-            or sys.version_info[0] < 3):  # Python 2 lies about mode of sys.stderr
+    if ('b' in getattr(out, 'mode', '')):
         byt = s.encode(encoding or preferredencoding(), 'ignore')
         out.write(byt)
     elif hasattr(out, 'buffer'):
