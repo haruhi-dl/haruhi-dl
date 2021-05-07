@@ -10,6 +10,7 @@ from ..utils import (
     str_or_none,
     try_get,
     unescapeHTML,
+    url_or_none,
     ExtractorError,
 )
 
@@ -117,6 +118,18 @@ class MastodonSHIE(SelfhostedInfoExtractor):
             'id': '9zvJY6h7jJzwopKAIi',
             'title': 're:.+ - #FEDIBLOCK',
             'ext': 'oga',
+        },
+    }, {
+        # mastodon, card to youtube
+        'url': 'https://mstdn.social/@polamatysiak/106183574509332910',
+        'info_dict': {
+            'id': 'RWDU0BjcYp0',
+            'ext': 'mp4',
+            'title': 'polamatysiak - Moje wczorajsze wystąpienie w Sejmie, koniecznie zobaczcie do końca 🙂 \n#pracaposłanki\n\nhttps://youtu.be/RWDU0BjcYp0',
+            'description': 'md5:0c16fa11a698d5d1b171963fd6833297',
+            'uploader': 'Paulina Matysiak',
+            'uploader_id': 'UCLRAd9-Hw6kEI1aPBrSaF9A',
+            'upload_date': '20210505',
         },
     }]
 
@@ -298,11 +311,8 @@ class MastodonSHIE(SelfhostedInfoExtractor):
                     'Authorization': login_info['authorization'],
                 } if login_info else {})
 
-        if not metadata['media_attachments']:
-            raise ExtractorError('No attached medias')
-
         entries = []
-        for media in metadata['media_attachments']:
+        for media in metadata['media_attachments'] or ():
             if media['type'] in ('video', 'audio'):
                 entries.append({
                     'id': media['id'],
@@ -315,8 +325,6 @@ class MastodonSHIE(SelfhostedInfoExtractor):
                     'height': int_or_none(try_get(media, lambda x: x['meta']['original']['height'])),
                     'tbr': int_or_none(try_get(media, lambda x: x['meta']['original']['bitrate'])),
                 })
-        if len(entries) == 0:
-            raise ExtractorError('No audio/video attachments')
 
         title = '%s - %s' % (str_or_none(metadata['account'].get('display_name') or metadata['account']['acct']), clean_html(str_or_none(metadata['content'])))
         if ap_censorship_circuvement == 'peertube':
@@ -324,6 +332,17 @@ class MastodonSHIE(SelfhostedInfoExtractor):
                 self._search_regex(
                     r'^<p><a href="[^"]+">(.+?)</a></p>',
                     metadata['content'], 'video title'))
+
+        if len(entries) == 0:
+            card = metadata.get('card')
+            if card:
+                return {
+                    '_type': 'url_transparent',
+                    'url': card['url'],
+                    'title': title,
+                    'thumbnail': url_or_none(card.get('image')),
+                }
+            raise ExtractorError('No audio/video attachments')
 
         info_dict = {
             "id": id,
