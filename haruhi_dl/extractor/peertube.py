@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import datetime
+from urllib.parse import urlencode
 import re
 
 from .common import SelfhostedInfoExtractor
@@ -14,6 +16,7 @@ from ..utils import (
     unified_timestamp,
     url_or_none,
     urljoin,
+    ExtractorError,
 )
 
 
@@ -27,10 +30,55 @@ class PeerTubeBaseExtractor(SelfhostedInfoExtractor):
         '>We are sorry but it seems that PeerTube is not compatible with your web browser.<',
         '<meta property="og:platform" content="PeerTube"',
     )
+    _NETRC_MACHINE = 'peertube'
+    _LOGIN_INFO = None
+
+    def _login(self):
+        if self._LOGIN_INFO:
+            ts = datetime.datetime.now().timestamp()
+            if self._LOGIN_INFO['expires_on'] >= ts + 5:
+                return True
+
+        username, password = self._get_login_info()
+        if not username:
+            return None
+
+        # the instance domain (the one where user has an account) must be separated from the user e-mail
+        mobj = re.match(r'^(?P<username>[^@]+(?:@[^@]+)?)@(?P<instance>.+)$', username)
+        if not mobj:
+            self.report_warning(
+                'Invalid login format - must be in format [username or email]@[instance]')
+        username, instance = mobj.group('username', 'instance')
+
+        oauth_keys = self._downloader.cache.load('peertube-oauth', instance)
+        if not oauth_keys:
+            oauth_keys = self._download_json(f'https://{instance}/api/v1/oauth-clients/local', instance, 'Downloading OAuth keys')
+            self._downloader.cache.store('peertube-oauth', instance, oauth_keys)
+        client_id, client_secret = oauth_keys['client_id'], oauth_keys['client_secret']
+
+        auth_res = self._download_json(f'https://{instance}/api/v1/users/token', instance, 'Logging in', data=bytes(urlencode({
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'response_type': 'code',
+            'grant_type': 'password',
+            'scope': 'user',
+            'username': username,
+            'password': password,
+        }).encode('utf-8')))
+
+        ts = datetime.datetime.now().timestamp()
+        auth_res['instance'] = instance
+        auth_res['expires_on'] = ts + auth_res['expires_in']
+        auth_res['refresh_token_expires_on'] = ts + auth_res['refresh_token_expires_in']
+        # not using self to set the details to expose it to all peertube extractors
+        PeerTubeBaseExtractor._LOGIN_INFO = auth_res
 
     def _call_api(self, host, resource, resource_id, path, note=None, errnote=None, fatal=True):
         return self._download_json(
             self._API_BASE % (host, resource, resource_id, path), resource_id,
+            headers={
+                'Authorization': f'Bearer {self._LOGIN_INFO["access_token"]}',
+            } if self._LOGIN_INFO and self._LOGIN_INFO['instance'] == host else {},
             note=note, errnote=errnote, fatal=fatal)
 
     def _parse_video(self, video, url):
@@ -221,6 +269,17 @@ class PeerTubeSHIE(PeerTubeBaseExtractor):
     def _selfhosted_extract(self, url, webpage=None):
         host, video_id = self._match_id_and_host(url)
 
+        self._login()
+
+        if self._LOGIN_INFO and self._LOGIN_INFO['instance'] != host:
+            video_search = self._call_api(
+                self._LOGIN_INFO['instance'], 'search', 'videos', '?' + urlencode({
+                    'search': f'https://{host}/videos/watch/{video_id}',
+                }), note='Searching for remote video')
+            if len(video_search) == 0:
+                raise ExtractorError('Remote video not found')
+            host, video_id = self._LOGIN_INFO['instance'], video_search['data'][0]['uuid']
+
         video = self._call_api(
             host, 'videos', video_id, '', note='Downloading video JSON')
 
@@ -261,6 +320,8 @@ class PeerTubePlaylistSHIE(PeerTubeBaseExtractor):
 
     def _selfhosted_extract(self, url, webpage=None):
         host, display_id = self._match_id_and_host(url)
+
+        self._login()
 
         playlist_data = self._call_api(host, 'video-playlists', display_id, '', 'Downloading playlist metadata')
         entries = []
@@ -308,6 +369,8 @@ class PeerTubeChannelSHIE(PeerTubeBaseExtractor):
     def _selfhosted_extract(self, url, webpage=None):
         host, display_id = self._match_id_and_host(url)
 
+        self._login()
+
         channel_data = self._call_api(host, 'video-channels', display_id, '', 'Downloading channel metadata')
         entries = []
         i = 0
@@ -354,6 +417,8 @@ class PeerTubeAccountSHIE(PeerTubeBaseExtractor):
 
     def _selfhosted_extract(self, url, webpage=None):
         host, display_id = self._match_id_and_host(url)
+
+        self._login()
 
         account_data = self._call_api(host, 'accounts', display_id, '', 'Downloading account metadata')
         entries = []
