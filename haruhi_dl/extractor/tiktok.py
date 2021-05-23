@@ -155,6 +155,16 @@ class TikTokIE(TikTokBaseIE):
 
 
 class TikTokPlaywrightBaseIE(TikTokBaseIE):
+    def _dedup_by_ids(self, items):
+        deduped = []
+        dedids = []
+        for item in deduped:
+            if item['id'] in dedids:
+                continue
+            dedids.append(item['id'])
+            deduped.append(item)
+        return deduped
+
     def _scroll_the_page(self, page, item_list_re, display_id):
         if page.title() == 'tiktok-verify-page':
             raise ExtractorError('TikTok requires captcha, use --cookies')
@@ -223,6 +233,7 @@ class TikTokUserIE(TikTokPlaywrightBaseIE):
         next_data_items = try_get(page_props, lambda x: x['items'], expected_type=list)
         if next_data_items:
             items = next_data_items + items
+        items = self._dedup_by_ids(items)
 
         info_dict = {
             '_type': 'playlist',
@@ -265,6 +276,7 @@ class TikTokHashtagIE(TikTokPlaywrightBaseIE):
         next_data_items = try_get(page_props, lambda x: x['items'], expected_type=list)
         if next_data_items:
             items = next_data_items + items
+        items = self._dedup_by_ids(items)
 
         return {
             '_type': 'playlist',
@@ -333,6 +345,7 @@ class TikTokMusicIE(TikTokPlaywrightBaseIE):
         next_data_items = try_get(page_props, lambda x: x['items'], expected_type=list)
         if next_data_items:
             items = next_data_items + items
+        items = self._dedup_by_ids(items)
 
         info_dict = {
             '_type': 'playlist',
