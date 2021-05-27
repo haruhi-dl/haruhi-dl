@@ -20,6 +20,17 @@ class MisskeySHIE(SelfhostedInfoExtractor):
         '<!-- If you are reading this message... how about joining the development of Misskey? -->',
     )
 
+    _TESTS = [{
+        'url': 'https://catgirl.life/notes/8lh52dlrii',
+        'info_dict': {
+            'id': '8lh52dlrii',
+            'ext': 'mp4',
+            'timestamp': 1604387877,
+            'upload_date': '20201103',
+            'title': '@graf@poa.st @Moon@shitposter.club \n*kickstarts your federation*',
+        },
+    }]
+
     def _selfhosted_extract(self, url, webpage=None):
         host, video_id = self._match_id_and_host(url)
 
