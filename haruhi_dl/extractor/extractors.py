@@ -1035,6 +1035,10 @@ from .radiode import RadioDeIE
 from .radiojavan import RadioJavanIE
 from .radiobremen import RadioBremenIE
 from .radiofrance import RadioFranceIE
+from .radiokapital import (
+    RadioKapitalIE,
+    RadioKapitalShowIE,
+)
 from .rai import (
     RaiPlayIE,
     RaiPlayLiveIE,
