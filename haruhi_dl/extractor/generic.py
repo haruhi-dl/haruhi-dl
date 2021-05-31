@@ -141,6 +141,7 @@ from .castos import (
     CastosHostedIE,
     CastosSSPIE,
 )
+from .vk import VKIE
 
 
 class GenericIE(InfoExtractor):
@@ -2338,6 +2339,11 @@ class GenericIE(InfoExtractor):
                 'title': '#4: Heated TERF moment',
             },
         },
+        {
+            # Sibnet embed (https://help.sibnet.ru/?sibnet_video_embed)
+            'url': 'https://phpbb3.x-tk.ru/bbcode-video-sibnet-t24.html',
+            'only_matching': True,
+        },
     ]
 
     def report_following_redirect(self, new_url):
@@ -3243,6 +3249,11 @@ class GenericIE(InfoExtractor):
         castos_ssp_entries = CastosSSPIE._extract_entries(webpage)
         if castos_ssp_entries:
             return self.playlist_result(castos_ssp_entries, video_id, video_title)
+
+        # Look for sibnet embedded player
+        sibnet_urls = VKIE._extract_sibnet_urls(webpage)
+        if sibnet_urls:
+            return self.playlist_from_matches(sibnet_urls, video_id, video_title)
 
         # Look for HTML5 media
         entries = self._parse_html5_media_entries(url, webpage, video_id, m3u8_id='hls')
