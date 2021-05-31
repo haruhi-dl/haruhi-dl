@@ -1484,8 +1484,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             data = compat_urllib_parse_urlencode({
                 'video_id': video_id,
                 'eurl': 'https://youtube.googleapis.com/v/' + video_id,
-                #                'sts': self._search_regex(
-                #                   r'"sts"\s*:\s*(\d+)', embed_webpage, 'sts', default=''),
+                'html5': 1,
             })
             video_info_url = proto + '://www.youtube.com/get_video_info?' + data
             try:
