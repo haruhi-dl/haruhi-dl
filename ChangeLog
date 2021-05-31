@@ -5,6 +5,8 @@ Core
 + --force-use-mastodon option
 * support for HTTP 308 redirects
 + [test_execution] add test for lazy extractors
+* Improve extract_info doc
+* [options] Fix thumbnail option group name
 
 Extractor
 * [tvp:series] fallback to web
@@ -49,6 +51,38 @@ Extractor
 * [svtplay] improve extraction
 * [xtube] fix formats extraction
 * [twitter] improve formats extraction from vmap URL
+* [mastodon] cache apps on logging in
+* [mastodon] support cards to external services
+* [peertube] logging in
+* [tiktok] deduplicate videos
++ [misskey] new extractor
++ [radiokapital] new extractors
+* [youtube] fix videos with age gate
+* [kaltura] Make embed code alternatives actually work
+* [kaltura] Improve iframe extraction
+* [dispeak] Improve FLV extraction
+* [dispeak] DRY and update tests
+* [gdcvault] Add support for HTML5 videos
+* [funimation] Add support for optional lang code in URLs
+* [medaltv] Relax _VALID_URL
+- [blinkx] Remove extractor
+* [orf:radio] Switch download URLs to HTTPS
++ [generic] Add Referer header for direct videojs download URLs
++ [vk] Add support for sibnet embeds
++ [generic] Add support for sibnet embeds
+* [phoenix] Fix extraction
+* [generic] Add support for og:audio
+* [vivo] Add support for vivo.st
+* [eroprofile] Fix extraction
+* [playstuff] Add extractor
+* [shahid] relax _VALID_URL
+* [redbulltv] fix embed data extraction
+* [vimeo] fix vimeo pro embed extraction
+* [twitch:clips] Add access token query to download URLs
+* [twitch:clips] Improve extraction
+* [ted] Prefer own formats over external sources
+* [ustream] Detect https embeds
+* [ard] Relax _VALID_URL and fix video ids
 
 
 version 2021.04.01
