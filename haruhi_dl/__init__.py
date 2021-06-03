@@ -178,6 +178,8 @@ def _real_main(argv=None):
         parser.error('Unsupported TV Provider, use --ap-list-mso to get a list of supported TV Providers')
     if opts.force_generic_extractor and opts.force_use_mastodon:
         parser.error('force either generic extractor or Mastodon')
+    if opts.force_playwright_browser not in ('firefox', 'chromium', 'webkit', None):
+        parser.error('invalid browser forced, must be on of: firefox, chromium, webkit')
 
     def parse_retries(retries):
         if retries in ('inf', 'infinite'):
@@ -424,6 +426,7 @@ def _real_main(argv=None):
         'headless_playwright': opts.headless_playwright,
         'sleep_interval': opts.sleep_interval,
         'max_sleep_interval': opts.max_sleep_interval,
+        'force_playwright_browser': opts.force_playwright_browser,
         'external_downloader': opts.external_downloader,
         'list_thumbnails': opts.list_thumbnails,
         'playlist_items': opts.playlist_items,
