@@ -1,7 +1,5 @@
 # coding: utf-8
-from __future__ import unicode_literals
-
-from .compat import compat_cookiejar_Cookie
+from http.cookiejar import Cookie
 from .utils import (
     ExtractorError,
     is_outdated_version,
@@ -87,11 +85,11 @@ class PlaywrightHelper():
     def _set_cookies_from_browser(self, cookies):
         for cookie in cookies:
             self._extractor._downloader.cookiejar.set_cookie(
-                compat_cookiejar_Cookie(0, cookie['name'], cookie['value'], cookie.get('port'), False,
-                                        cookie['domain'], False, cookie['domain'].startswith('.'),
-                                        cookie['path'], cookie['path'] != '/',
-                                        cookie['secure'], cookie['expires'],
-                                        False, None, None, None))
+                Cookie(0, cookie['name'], cookie['value'], cookie.get('port'), False,
+                       cookie['domain'], False, cookie['domain'].startswith('.'),
+                       cookie['path'], cookie['path'] != '/',
+                       cookie['secure'], cookie['expires'],
+                       False, None, None, None))
 
     def open_page(self, url, display_id, browser_used='firefox', note='Opening page in %(browser)s', html=None):
         pw = self.pw()
