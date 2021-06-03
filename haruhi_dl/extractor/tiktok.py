@@ -158,7 +158,7 @@ class TikTokPlaywrightBaseIE(TikTokBaseIE):
     def _dedup_by_ids(self, items):
         deduped = []
         dedids = []
-        for item in deduped:
+        for item in items:
             if item['id'] in dedids:
                 continue
             dedids.append(item['id'])
