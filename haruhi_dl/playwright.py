@@ -94,6 +94,8 @@ class PlaywrightHelper():
     def open_page(self, url, display_id, browser_used='firefox', note='Opening page in %(browser)s', html=None):
         pw = self.pw()
         self.pw_instance = pw
+        if self._extractor._downloader.params.get('force_playwright_browser') is not None:
+            browser_used = self._extractor._downloader.params.get('force_playwright_browser')
         browser = {
             'firefox': pw.firefox,
             'chromium': pw.chromium,

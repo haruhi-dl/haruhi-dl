@@ -604,6 +604,10 @@ def parseOpts(overrideArguments=None):
             'Upper bound of a range for randomized sleep before each download '
             '(maximum possible number of seconds to sleep). Must only be used '
             'along with --min-sleep-interval.'))
+    workarounds.add_option(
+        '--force-playwright-browser', dest='force_playwright_browser',
+        help=('Force use a selected browser with extractors using Playwright.'
+              'Must be one of: firefox, chromium, webkit.'))
 
     verbosity = optparse.OptionGroup(parser, 'Verbosity / Simulation Options')
     verbosity.add_option(
