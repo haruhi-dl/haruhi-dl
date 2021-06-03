@@ -713,7 +713,7 @@ def parseOpts(overrideArguments=None):
         help='Do NOT contact the haruhi-dl server for debugging')
     verbosity.add_option(
         '--no-headless-playwright',
-        dest='headless_playwright', action='store_false', default=False,
+        dest='headless_playwright', action='store_false', default=True,
         help='Show browsers automated with Playwright on the screen')
 
     filesystem = optparse.OptionGroup(parser, 'Filesystem Options')
