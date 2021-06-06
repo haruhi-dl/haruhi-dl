@@ -28,7 +28,6 @@ from ..utils import (
     float_or_none,
     get_element_by_id,
     int_or_none,
-    list_geoblocked_countres,
     mimetype2ext,
     parse_codecs,
     parse_duration,
@@ -44,6 +43,7 @@ from ..utils import (
     uppercase_escape,
     url_or_none,
     urlencode_postdata,
+    GeoRestrictedError,
 )
 
 
@@ -567,24 +567,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'format': '141/bestaudio[ext=m4a]',
             },
         },
-        # JS player signature function name containing $
-        {
-            'url': 'https://www.youtube.com/watch?v=nfWlot6h_JM',
-            'info_dict': {
-                'id': 'nfWlot6h_JM',
-                'ext': 'm4a',
-                'title': 'Taylor Swift - Shake It Off',
-                'description': 'md5:9dc0bd58efe700594b54f7d82bed0bac',
-                'duration': 242,
-                'uploader': 'TaylorSwiftVEVO',
-                'uploader_id': 'TaylorSwiftVEVO',
-                'upload_date': '20140818',
-            },
-            'params': {
-                'youtube_include_dash_manifest': True,
-                'format': '141/bestaudio[ext=m4a]',
-            },
-        },
         # Normal age-gate video (No vevo, embed allowed)
         {
             'url': 'https://youtube.com/watch?v=HtVdAasjOgU',
@@ -635,24 +617,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'expected_warnings': [
                 'DASH manifest missing',
             ]
-        },
-        # Olympics (https://github.com/ytdl-org/youtube-dl/issues/4431)
-        {
-            'url': 'lqQg6PlCWgI',
-            'info_dict': {
-                'id': 'lqQg6PlCWgI',
-                'ext': 'mp4',
-                'duration': 6085,
-                'upload_date': '20150827',
-                'uploader_id': 'olympic',
-                'uploader_url': r're:https?://(?:www\.)?youtube\.com/user/olympic',
-                'description': 'HO09  - Women -  GER-AUS - Hockey - 31 July 2012 - London 2012 Olympic Games',
-                'uploader': 'Olympic',
-                'title': 'Hockey - Women -  GER-AUS - London 2012 Olympic Games',
-            },
-            'params': {
-                'skip_download': 'requires avconv',
-            }
         },
         # Non-square pixels
         {
@@ -880,26 +844,6 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'only_matching': True,
         },
         {
-            # invalid -> valid video id redirection
-            'url': 'DJztXj2GPfl',
-            'info_dict': {
-                'id': 'DJztXj2GPfk',
-                'ext': 'mp4',
-                'title': 'Panjabi MC - Mundian To Bach Ke (The Dictator Soundtrack)',
-                'description': 'md5:bf577a41da97918e94fa9798d9228825',
-                'upload_date': '20090125',
-                'uploader': 'Prochorowka',
-                'uploader_id': 'Prochorowka',
-                'uploader_url': r're:https?://(?:www\.)?youtube\.com/user/Prochorowka',
-                'artist': 'Panjabi MC',
-                'track': 'Beware of the Boys (Mundian to Bach Ke) - Motivo Hi-Lectro Remix',
-                'album': 'Beware of the Boys (Mundian To Bach Ke)',
-            },
-            'params': {
-                'skip_download': True,
-            },
-        },
-        {
             # empty description results in an empty string
             'url': 'https://www.youtube.com/watch?v=x41yOUIvK2k',
             'info_dict': {
@@ -919,6 +863,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'url': 'https://youtube.com/shorts/7awd-y_DTQY',
             'only_matching': True,
         },
+        {
+            'url': 'https://www.youtube.com/video/2NDLF-k2PwA',
+            'only_matching': True,
+        }
     ]
 
     _VALID_SIG_VALUE_RE = r'^AO[a-zA-Z0-9_-]+=*$'
@@ -1132,7 +1080,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             # to be implemented in future that will replace this workaround (see
             # https://github.com/ytdl-org/youtube-dl/issues/7468,
             # https://github.com/ytdl-org/youtube-dl/pull/7599)
-            r';ytplayer\.config\s*=\s*({.+?});ytplayer',
+            r';ytplayer\.config\s*=\s*({.+?});\s*ytplayer',
             r';ytplayer\.config\s*=\s*({.+?});',
         )
         config = self._search_regex(
@@ -1473,14 +1421,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
 
         # Get video info
         video_info = {}
-        embed_webpage = None
         if (self._og_search_property('restrictions:age', video_webpage, default=None) == '18+'
                 or re.search(r'player-age-gate-content">', video_webpage) is not None):
             age_gate = True
             # We simulate the access to the video from www.youtube.com/v/{video_id}
             # this can be viewed without login into Youtube
-            url = proto + '://www.youtube.com/embed/%s' % video_id
-            embed_webpage = self._download_webpage(url, video_id, 'Downloading embed webpage')
             data = compat_urllib_parse_urlencode({
                 'video_id': video_id,
                 'eurl': 'https://youtube.googleapis.com/v/' + video_id,
@@ -1490,8 +1435,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             try:
                 video_info_webpage = self._download_webpage(
                     video_info_url, video_id,
-                    note='Refetching age-gated info webpage',
-                    errnote='unable to download video info webpage')
+                    note='Downloading age-gated video info',
+                    errnote='unable to download video info')
             except ExtractorError:
                 video_info_webpage = None
             if video_info_webpage:
@@ -1522,9 +1467,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                     player_response = extract_player_response(args.get('player_response'), video_id)
             if not player_response:
                 player_response = extract_player_response(
-                    self._search_regex(
+                    self._search_regex((
+                        # js-like syntax
+                        r'(?:window(?:\["|\.)|var )ytInitialPlayerResponse(?:"])?\s*=\s*({.+?(?!\\)});(?:if \(ytcsi|var [a-zA-Z\_])',
                         r'(?:window(?:\["|\.)|var )ytInitialPlayerResponse(?:"])?\s*=\s*({.+?(?!\\)});',
-                        video_webpage, 'ytInitialPlayerResponse', fatal=False), video_id)
+                    ), video_webpage, 'ytInitialPlayerResponse', fatal=False), video_id)
             if not video_info or self._downloader.params.get('youtube_include_dash_manifest', True):
                 add_dash_mpd_pr(player_response)
 
@@ -1722,23 +1669,15 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         ASSETS_RE = r'"jsUrl":"(/s/player/.*?/player_ias.vflset/.*?/base.js)'
 
                         player_url = self._search_regex(
-                            ASSETS_RE,
-                            embed_webpage if age_gate else video_webpage, '', default=player_url)
+                            ASSETS_RE, video_webpage, '', default=player_url)
 
                         if not player_url and not age_gate:
                             # We need the embed website after all
-                            if embed_webpage is None:
-                                embed_url = proto + '://www.youtube.com/embed/%s' % video_id
-                                embed_webpage = self._download_webpage(
-                                    embed_url, video_id, 'Downloading embed webpage')
+                            embed_url = proto + '://www.youtube.com/embed/%s' % video_id
+                            embed_webpage = self._download_webpage(
+                                embed_url, video_id, 'Downloading embed webpage')
                             player_url = self._search_regex(
                                 ASSETS_RE, embed_webpage, 'JS player URL')
-
-                        # if player_url is None:
-                        #    player_url_json = self._search_regex(
-                        #        r'ytplayer\.config.*?"url"\s*:\s*("[^"]+")',
-                        #        video_webpage, 'age gate player URL')
-                        #    player_url = json.loads(player_url_json)
 
                     if 'sig' in url_data:
                         url += '&signature=' + url_data['sig'][0]
@@ -1871,11 +1810,11 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                              or ', who has blocked it on copyright grounds' in error_desc
                              or 'It is not available in your country.' in error_desc
                              or ', who has blocked it in your country on copyright grounds.' in error_desc):
-                        raise ExtractorError(
-                            list_geoblocked_countres(
-                                self._search_regex(
-                                    r'<meta itemprop="regionsAllowed" content="((?:(?:[A-Z]{2},)*[A-Z]{2})?)">',
-                                    video_webpage, 'allowed region list').split(',')),
+                        raise GeoRestrictedError(
+                            error_desc,
+                            countries=self._search_regex(
+                                r'<meta itemprop="regionsAllowed" content="((?:(?:[A-Z]{2},)*[A-Z]{2})?)">',
+                                video_webpage, 'allowed region list').split(','),
                             expected=True)
                     if error_desc and 'Playback on other websites has been disabled' in error_desc:
                         raise ExtractorError(
