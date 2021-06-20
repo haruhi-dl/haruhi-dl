@@ -1,3 +1,14 @@
+version 2021.06.20
+Core
+* [playwright] fixed headlessness
++ [playwright] option to force a specific browser
+
+Extractor
+* [tiktok] fix empty video lists
+* [youtube] fix and speed-up age-gate circumvention
+* [youtube] fix videos with JS-like syntax
+
+
 version 2021.06.01
 Core
 * merging formats by codecs
