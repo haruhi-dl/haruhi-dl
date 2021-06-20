@@ -1,6 +1,6 @@
 #!/bin/bash
 data="$(curl -s "https://www.youtube.com/s/player/$1/player_ias.vflset/en_GB/base.js")"
-func="$(grep -P '[a-z]\=a\.split.*a\.join' <<< "$data")"
+func="$(grep -P '[a-z]\=a\.split\([\"'"'"']{2}.*a\.join' <<< "$data")"
 echo "full extracted function: $func"
 
 obfuscatedName="$(grep -Poh '\(""\);[A-Za-z]+' <<< "$func" | sed -s 's/("");//')"
