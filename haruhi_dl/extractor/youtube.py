@@ -1430,6 +1430,8 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 'video_id': video_id,
                 'eurl': 'https://youtube.googleapis.com/v/' + video_id,
                 'html5': 1,
+                'c': 'TVHTML5',
+                'cver': '6.20180913',
             })
             video_info_url = proto + '://www.youtube.com/get_video_info?' + data
             try:
