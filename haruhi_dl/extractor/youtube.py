@@ -1814,8 +1814,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                             error_desc,
                             countries=self._search_regex(
                                 r'<meta itemprop="regionsAllowed" content="((?:(?:[A-Z]{2},)*[A-Z]{2})?)">',
-                                video_webpage, 'allowed region list').split(','),
-                            expected=True)
+                                video_webpage, 'allowed region list').split(','))
                     if error_desc and 'Playback on other websites has been disabled' in error_desc:
                         raise ExtractorError(
                             'Embeds disabled for this video, account (with passed credit card or photo ID check, if in EU/EEA/CH/UK) is required',
