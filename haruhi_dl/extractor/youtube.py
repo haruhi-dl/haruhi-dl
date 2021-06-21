@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from datetime import datetime
 import json
 import hashlib
+from inspect import getsource
 import random
 import re
 import time
@@ -45,6 +46,10 @@ from ..utils import (
     urlencode_postdata,
     GeoRestrictedError,
 )
+try:
+    from ..extractor_artifacts.youtube import _decrypt_signature_protected
+except ImportError:
+    _decrypt_signature_protected = None
 
 
 class YoutubeBaseInfoExtractor(InfoExtractor):
@@ -901,7 +906,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             raise ExtractorError('Cannot identify player %r' % player_url)
         return id_m.group('id')
 
-    def _extract_signature_function(self, video_id, player_url, example_sig):
+    def _extract_signature_function(self, video_id, player_url):
         player_id = self._extract_player_info(player_url)
 
         # Read from filesystem cache
@@ -1012,30 +1017,43 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 '    return %s\n') % (signature_id_tuple, expr_code)
         self.to_screen('Extracted signature function:\n' + code)
 
-    def mess(self, a, b):
+    @staticmethod
+    def mess(a, b):
         c = a[0]
         a[0] = a[b % len(a)]
         a[b % len(a)] = c
         return a
 
-    def _decrypt_signature_protected(self, s):
-        a = list(s)
-        a = self.mess(a, 49)
-        a = self.mess(a, 26)
-        a.reverse()
-        a = self.mess(a, 62)
-        a.reverse()
-        a = a[2:]
-        return "".join(a)
-
     def _full_signature_handling(self, sig, player_url, video_id):
-        signature = self._decrypt_signature_protected(sig)
+        signature = _decrypt_signature_protected(sig)
         if re.match(self._VALID_SIG_VALUE_RE, signature):
             return signature
         if self._downloader.params.get('verbose'):
             self.to_screen("Built-in signature decryption failed, trying dynamic")
-        sig_decrypt_stack = self._extract_signature_function(video_id, player_url, sig)
+        sig_decrypt_stack = self._extract_signature_function(video_id, player_url)
         return self._do_decrypt_signature(sig, sig_decrypt_stack)
+
+    def _generate_prerelease_file(self):
+        # It's Monday, so I'm in a bad mood, but at least my sailor uniform is super cute!
+        video_id = 'ieQ1rAIjzXc'
+        self._set_consent()
+        webpage = self._download_webpage('https://www.youtube.com/watch?v=%s' % video_id, video_id)
+        player_url = self._search_regex(r'"jsUrl":"(/s/player/.*?/player_ias.vflset/.*?/base.js)', webpage, 'player url')
+        sig_decrypt_stack = self._extract_signature_function(video_id, player_url)
+        func = re.sub(r'(?m)^    ', '', getsource(self.mess).replace('@staticmethod', ''))
+        func += '\n\ndef _decrypt_signature_protected(sig):\n'
+        stack = ['a = list(sig)']
+        for fun in sig_decrypt_stack:
+            if fun[0] == 'splice':
+                stack.append(f'a = a[{fun[1]}:]')
+            elif fun[0] == 'reverse':
+                stack.append('a.reverse()')
+            elif fun[0] == 'mess':
+                stack.append(f'a = mess(a, {fun[1]})')
+            else:
+                raise ExtractorError('Unknown stack action: %s' % (fun[0]))
+        stack.append("return ''.join(a)")
+        return func + '\n'.join(map(lambda x: ' ' * 4 + x, stack)) + '\n'
 
     def _get_subtitles(self, video_id, webpage):
         try:

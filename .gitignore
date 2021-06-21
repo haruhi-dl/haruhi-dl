@@ -15,6 +15,7 @@ haruhi-dl.1
 haruhi-dl.bash-completion
 haruhi-dl.fish
 haruhi_dl/extractor/lazy_extractors.py
+haruhi_dl/extractor_artifacts/
 haruhi-dl
 haruhi-dl.exe
 haruhi-dl.tar.gz
