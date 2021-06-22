@@ -126,7 +126,6 @@ class PornHubIE(PornHubBaseIE):
     _VALID_URL = r'''(?x)
                     https?://
                         (?:
-                            (?:[^/]+\.)?(?P<host>pornhub(?:premium)?\.(?:com|net|org))/(?:(?:view_video\.php|video/show)\?viewkey=|embed/)|
                             (?:[^/]+\.)?
                             %s
                             /(?:(?:view_video\.php|video/show)\?viewkey=|embed/)|
