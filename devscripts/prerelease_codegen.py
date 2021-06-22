@@ -21,6 +21,7 @@ if not os.path.exists(artifact_dir):
 
 for ie_name in (
     'Youtube',
+    'Soundcloud',
 ):
     ie = hdl.get_info_extractor(ie_name)
     try:

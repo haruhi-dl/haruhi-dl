@@ -30,6 +30,10 @@ from ..utils import (
     url_or_none,
     urlhandle_detect_ext,
 )
+try:
+    from ..extractor_artifacts.soundcloud import prerelease_client_id
+except ImportError:
+    prerelease_client_id = None
 
 
 class SoundcloudEmbedIE(InfoExtractor):
@@ -289,6 +293,10 @@ class SoundcloudIE(InfoExtractor):
                     return
         raise ExtractorError('Unable to extract client id')
 
+    def _generate_prerelease_file(self):
+        self._update_client_id()
+        return 'prerelease_client_id = {!r}\n'.format(self._CLIENT_ID)
+
     def _download_json(self, *args, **kwargs):
         non_fatal = kwargs.get('fatal') is False
         if non_fatal:
@@ -310,7 +318,7 @@ class SoundcloudIE(InfoExtractor):
                 raise
 
     def _real_initialize(self):
-        self._CLIENT_ID = self._downloader.cache.load('soundcloud', 'client_id') or 'YUKXoArFcqrlQn9tfNHvvyfnDISj04zk'
+        self._CLIENT_ID = self._downloader.cache.load('soundcloud', 'client_id') or prerelease_client_id or 'YUKXoArFcqrlQn9tfNHvvyfnDISj04zk'
 
     @classmethod
     def _resolv_url(cls, url):
