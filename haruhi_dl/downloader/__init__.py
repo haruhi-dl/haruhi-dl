@@ -1,5 +1,18 @@
 from __future__ import unicode_literals
 
+from ..utils import (
+    determine_protocol,
+)
+
+
+def _get_real_downloader(info_dict, protocol=None, *args, **kwargs):
+    info_copy = info_dict.copy()
+    if protocol:
+        info_copy['protocol'] = protocol
+    return get_suitable_downloader(info_copy, *args, **kwargs)
+
+
+# Some of these require _get_real_downloader
 from .common import FileDownloader
 from .f4m import F4mFD
 from .hls import HlsFD
@@ -8,14 +21,11 @@ from .rtmp import RtmpFD
 from .dash import DashSegmentsFD
 from .rtsp import RtspFD
 from .ism import IsmFD
+from .niconico import NiconicoDmcFD
 from .external import (
     get_external_downloader,
     Aria2cFD,
     FFmpegFD,
-)
-
-from ..utils import (
-    determine_protocol,
 )
 
 PROTOCOL_MAP = {
@@ -28,6 +38,7 @@ PROTOCOL_MAP = {
     'http_dash_segments': DashSegmentsFD,
     'ism': IsmFD,
     'bittorrent': Aria2cFD,
+    'niconico_dmc': NiconicoDmcFD,
 }
 
 
