@@ -1025,9 +1025,10 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         return a
 
     def _full_signature_handling(self, sig, player_url, video_id):
-        signature = _decrypt_signature_protected(sig)
-        if re.match(self._VALID_SIG_VALUE_RE, signature):
-            return signature
+        if _decrypt_signature_protected:
+            signature = _decrypt_signature_protected(sig)
+            if re.match(self._VALID_SIG_VALUE_RE, signature):
+                return signature
         if self._downloader.params.get('verbose'):
             self.to_screen("Built-in signature decryption failed, trying dynamic")
         sig_decrypt_stack = self._extract_signature_function(video_id, player_url)

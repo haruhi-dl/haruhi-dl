@@ -115,7 +115,7 @@ setup(
     packages=[
         'haruhi_dl',
         'haruhi_dl.extractor', 'haruhi_dl.downloader',
-        'haruhi_dl.postprocessor'],
+        'haruhi_dl.postprocessor', 'haruhi_dl.extractor_artifacts'],
 
     # Provokes warning on most systems (why?!)
     # test_suite = 'nose.collector',
