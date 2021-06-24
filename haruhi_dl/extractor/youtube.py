@@ -2241,8 +2241,9 @@ class YoutubeBaseListInfoExtractor(YoutubeBaseInfoExtractor):
         webpage = self._download_webpage(url, list_id,
                                          note='Downloading %s page #1 (webpage)' % (self._LIST_NAME))
         return self._parse_json(
-            self._search_regex(
-                r'(?:window(?:\["|\.)|var )ytInitialData(?:"])?\s*=\s*({.+});',
+            self._search_regex((
+                r'(?:window(?:\["|\.)|var )ytInitialData(?:"])?\s*=\s*({.+});</script>',
+                r'(?:window(?:\["|\.)|var )ytInitialData(?:"])?\s*=\s*({.+});'),
                 webpage, 'initial data JSON'), 'initial data JSON'), webpage
 
     def _real_extract(self, url, results=None, query=None):
