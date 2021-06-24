@@ -16,8 +16,8 @@ fi
 
 sed "s/__version__ = '.*'/__version__ = '$v'/g" -i haruhi_dl/version.py
 
-python3 devscripts/prerelease_codegen.py
 python3 setup.py build_lazy_extractors
+python3 devscripts/prerelease_codegen.py
 rm -R build dist
 python3 setup.py sdist bdist_wheel
 python3 -m twine upload dist/*
