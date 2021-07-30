@@ -21,7 +21,7 @@ from ..utils import (
 
 
 class PeerTubeBaseExtractor(SelfhostedInfoExtractor):
-    _UUID_RE = r'[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
+    _UUID_RE = r'[\da-zA-Z]{22}|[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}'
     _API_BASE = 'https://%s/api/v1/%s/%s/%s'
     _SH_VALID_CONTENT_STRINGS = (
         '<title>PeerTube<',
@@ -180,16 +180,16 @@ class PeerTubeBaseExtractor(SelfhostedInfoExtractor):
 
 class PeerTubeSHIE(PeerTubeBaseExtractor):
     _VALID_URL = r'peertube:(?P<host>[^:]+):(?P<id>%s)' % (PeerTubeBaseExtractor._UUID_RE)
-    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos)/(?P<id>%s)' % (PeerTubeBaseExtractor._UUID_RE)
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:videos/(?:watch|embed)|api/v\d/videos|w)/(?P<id>%s)' % (PeerTubeBaseExtractor._UUID_RE)
 
     _TESTS = [{
         'url': 'https://framatube.org/videos/watch/9c9de5e8-0a1e-484a-b099-e80766180a6d',
-        'md5': '9bed8c0137913e17b86334e5885aacff',
+        'md5': '8563064d245a4be5705bddb22bb00a28',
         'info_dict': {
             'id': '9c9de5e8-0a1e-484a-b099-e80766180a6d',
             'ext': 'mp4',
             'title': 'What is PeerTube?',
-            'description': 'md5:3fefb8dde2b189186ce0719fda6f7b10',
+            'description': 'md5:96adbaf219b4d41747bfc5937df0b017',
             'thumbnail': r're:https?://.*\.(?:jpg|png)',
             'timestamp': 1538391166,
             'upload_date': '20181001',
@@ -220,6 +220,27 @@ class PeerTubeSHIE(PeerTubeBaseExtractor):
             'upload_date': '20200420',
             'uploader': 'Drew DeVault',
         }
+    }, {
+        # new url scheme since PeerTube 3.3
+        'url': 'https://peertube2.cpy.re/w/3fbif9S3WmtTP8gGsC5HBd',
+        'info_dict': {
+            'id': '122d093a-1ede-43bd-bd34-59d2931ffc5e',
+            'ext': 'mp4',
+            'title': 'E2E tests',
+            'uploader_id': '37855',
+            'timestamp': 1589276219,
+            'upload_date': '20200512',
+            'uploader': 'chocobozzz',
+        },
+    }, {
+        'url': 'https://peertube2.cpy.re/w/122d093a-1ede-43bd-bd34-59d2931ffc5e',
+        'only_matching': True,
+    }, {
+        'url': 'https://peertube2.cpy.re/api/v1/videos/3fbif9S3WmtTP8gGsC5HBd',
+        'only_matching': True,
+    }, {
+        'url': 'peertube:peertube2.cpy.re:3fbif9S3WmtTP8gGsC5HBd',
+        'only_matching': True,
     }, {
         'url': 'https://peertube.tamanoir.foucry.net/videos/watch/0b04f13d-1e18-4f1d-814e-4979aa7c9c44',
         'only_matching': True,
@@ -289,7 +310,7 @@ class PeerTubeSHIE(PeerTubeBaseExtractor):
 
         description = None
         if webpage:
-            description = self._og_search_description(webpage)
+            description = self._og_search_description(webpage, default=None)
         if not description:
             full_description = self._call_api(
                 host, 'videos', video_id, 'description', note='Downloading description JSON',
@@ -305,7 +326,7 @@ class PeerTubeSHIE(PeerTubeBaseExtractor):
 
 class PeerTubePlaylistSHIE(PeerTubeBaseExtractor):
     _VALID_URL = r'peertube:playlist:(?P<host>[^:]+):(?P<id>.+)'
-    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:videos/(?:watch|embed)/playlist|api/v\d/video-playlists)/(?P<id>%s)' % (PeerTubeBaseExtractor._UUID_RE)
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:videos/(?:watch|embed)/playlist|api/v\d/video-playlists|w/p)/(?P<id>%s)' % (PeerTubeBaseExtractor._UUID_RE)
 
     _TESTS = [{
         'url': 'https://video.internet-czas-dzialac.pl/videos/watch/playlist/3c81b894-acde-4539-91a2-1748b208c14c?playlistPosition=1',
@@ -316,6 +337,9 @@ class PeerTubePlaylistSHIE(PeerTubeBaseExtractor):
             'uploader': 'Internet. Czas działać!',
         },
         'playlist_mincount': 14,
+    }, {
+        'url': 'https://peertube2.cpy.re/w/p/hrAdcvjkMMkHJ28upnoN21',
+        'only_matching': True,
     }]
 
     def _selfhosted_extract(self, url, webpage=None):
@@ -352,18 +376,21 @@ class PeerTubePlaylistSHIE(PeerTubeBaseExtractor):
 
 class PeerTubeChannelSHIE(PeerTubeBaseExtractor):
     _VALID_URL = r'peertube:channel:(?P<host>[^:]+):(?P<id>.+)'
-    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:api/v\d/)?video-channels/(?P<id>[^/?#]+)(?:/videos)?'
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:(?:api/v\d/)?video-channels|c)/(?P<id>[^/?#]+)(?:/videos)?'
 
     _TESTS = [{
         'url': 'https://video.internet-czas-dzialac.pl/video-channels/internet_czas_dzialac/videos',
         'info_dict': {
             'id': '2',
-            'title': 'internet_czas_dzialac',
-            'description': 'md5:4d2e215ea0d9ae4501a556ef6e9a5308',
+            'title': 'Internet. Czas działać!',
+            'description': 'md5:ac35d70f6625b04b189e0b4b76e62e17',
             'uploader_id': 3,
             'uploader': 'Internet. Czas działać!',
         },
         'playlist_mincount': 14,
+    }, {
+        'url': 'https://video.internet-czas-dzialac.pl/c/internet_czas_dzialac',
+        'only_matching': True,
     }]
 
     def _selfhosted_extract(self, url, webpage=None):
@@ -401,18 +428,21 @@ class PeerTubeChannelSHIE(PeerTubeBaseExtractor):
 
 class PeerTubeAccountSHIE(PeerTubeBaseExtractor):
     _VALID_URL = r'peertube:account:(?P<host>[^:]+):(?P<id>.+)'
-    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:api/v\d/)?accounts/(?P<id>[^/?#]+)(?:/video(?:s|-channels))?'
+    _SH_VALID_URL = r'https?://(?P<host>[^/]+)/(?:(?:api/v\d/)?accounts|a)/(?P<id>[^/?#]+)(?:/video(?:s|-channels))?'
 
     _TESTS = [{
         'url': 'https://video.internet-czas-dzialac.pl/accounts/icd/video-channels',
         'info_dict': {
             'id': '3',
-            'description': 'md5:ab3c9b934dd39030eea1c9fe76079870',
+            'description': 'md5:ac35d70f6625b04b189e0b4b76e62e17',
             'uploader': 'Internet. Czas działać!',
             'title': 'Internet. Czas działać!',
             'uploader_id': 3,
         },
         'playlist_mincount': 14,
+    }, {
+        'url': 'https://video.internet-czas-dzialac.pl/a/icd',
+        'only_matching': True,
     }]
 
     def _selfhosted_extract(self, url, webpage=None):
