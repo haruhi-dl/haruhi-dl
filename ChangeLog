@@ -1,3 +1,9 @@
+version 2021.08.01
+Extractor
+* [youtube] fixed agegate
+* [niconico] dmc downloader from youtube-dlp
+* [peertube] new URL schemas
+
 version 2021.06.20
 Core
 * [playwright] fixed headlessness
