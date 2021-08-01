@@ -1441,29 +1441,32 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
         if (self._og_search_property('restrictions:age', video_webpage, default=None) == '18+'
                 or re.search(r'player-age-gate-content">', video_webpage) is not None):
             age_gate = True
-            # We simulate the access to the video from www.youtube.com/v/{video_id}
-            # this can be viewed without login into Youtube
-            data = compat_urllib_parse_urlencode({
-                'video_id': video_id,
-                'eurl': 'https://youtube.googleapis.com/v/' + video_id,
-                'html5': 1,
-                'c': 'TVHTML5',
-                'cver': '6.20180913',
-            })
-            video_info_url = proto + '://www.youtube.com/get_video_info?' + data
             try:
-                video_info_webpage = self._download_webpage(
-                    video_info_url, video_id,
-                    note='Downloading age-gated video info',
+                yti1_player = self._download_webpage(
+                    proto + '://www.youtube.com/youtubei/v1/player', video_id,
+                    headers={
+                        'User-Agent': 'Mozilla/5.0 (SMART-TV; Linux; Tizen 4.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.0 Safari/537.36',
+                        'Content-Type': 'application/json',
+                        'X-Goog-Api-Key': self._YOUTUBE_API_KEY,
+                    },
+                    data=bytes(json.dumps({
+                        'context': {
+                            'client': {
+                                'clientName': 'WEB',
+                                'clientVersion': '2.20210721.00.00',
+                                'clientScreen': 'EMBED',
+                            },
+                        },
+                        'videoId': video_id,
+                    }).encode('utf-8')),
+                    note='Downloading age-gated player info',
                     errnote='unable to download video info')
             except ExtractorError:
-                video_info_webpage = None
-            if video_info_webpage:
-                video_info = compat_parse_qs(video_info_webpage)
-                pl_response = video_info.get('player_response', [None])[0]
-                player_response = extract_player_response(pl_response, video_id)
+                yti1_player = None
+            if yti1_player:
+                player_response = extract_player_response(yti1_player, video_id)
                 add_dash_mpd(video_info)
-                view_count = extract_view_count(video_info)
+                view_count = extract_view_count(video_id)
         else:
             age_gate = False
             # Try looking directly into the video webpage
