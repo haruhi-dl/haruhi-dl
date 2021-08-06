@@ -8,6 +8,7 @@ from .common import InfoExtractor
 from ..utils import (
     int_or_none,
     url_or_none,
+    ExtractorError,
 )
 
 
@@ -79,7 +80,9 @@ class IplaIE(InfoExtractor):
             'Content-type': 'application/json'
         }
 
-        res = self._download_json('http://b2c-mobile.redefine.pl/rpc/navigation/', media_id, data=req, headers=headers)
+        res = self._download_json('https://b2c-mobile.redefine.pl/rpc/navigation/', media_id, data=req, headers=headers)
+        if not res.get('result'):
+            raise ExtractorError(f"Ipla said: {res['error']['message']} - {res['error']['data']['userMessage']}")
         return res['result']['mediaItem']
 
     def get_url(self, media_id, source_id):
@@ -93,4 +96,6 @@ class IplaIE(InfoExtractor):
         }
 
         res = self._download_json('https://b2c-mobile.redefine.pl/rpc/drm/', media_id, data=req, headers=headers)
+        if not res.get('result'):
+            raise ExtractorError(f"Ipla said: {res['error']['message']} - {res['error']['data']['userMessage']}")
         return res['result']['url']
