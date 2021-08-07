@@ -82,6 +82,8 @@ class IplaIE(InfoExtractor):
 
         res = self._download_json('https://b2c-mobile.redefine.pl/rpc/navigation/', media_id, data=req, headers=headers)
         if not res.get('result'):
+            if res['error']['code'] == 13404:
+                raise ExtractorError('Video requires DRM protection', expected=True)
             raise ExtractorError(f"Ipla said: {res['error']['message']} - {res['error']['data']['userMessage']}")
         return res['result']['mediaItem']
 
