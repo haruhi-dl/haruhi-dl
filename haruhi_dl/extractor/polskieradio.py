@@ -92,6 +92,14 @@ class PolskieRadioIE(PolskieRadioBaseExtractor):
             },
         }]
     }, {
+        # PR4 audition - other frontend
+        'url': 'https://www.polskieradio.pl/10/6071/Artykul/2610977,Poglos-29-pazdziernika-godz-2301',
+        'info_dict': {
+            'id': '2610977',
+            'ext': 'mp3',
+            'title': 'Pogłos 29 października godz. 23:01',
+        },
+    }, {
         'url': 'http://polskieradio.pl/9/305/Artykul/1632955,Bardzo-popularne-slowo-remis',
         'only_matching': True,
     }, {
@@ -113,23 +121,33 @@ class PolskieRadioIE(PolskieRadioBaseExtractor):
 
         content = self._search_regex(
             r'(?s)<div[^>]+class="\s*this-article\s*"[^>]*>(.+?)<div[^>]+class="tags"[^>]*>',
-            webpage, 'content')
+            webpage, 'content', default=None)
 
         timestamp = unified_timestamp(self._html_search_regex(
             r'(?s)<span[^>]+id="datetime2"[^>]*>(.+?)</span>',
-            webpage, 'timestamp', fatal=False))
+            webpage, 'timestamp', default=None))
 
-        thumbnail_url = self._og_search_thumbnail(webpage)
+        thumbnail_url = self._og_search_thumbnail(webpage, default=None)
 
         title = self._og_search_title(webpage).strip()
+
+        description = strip_or_none(self._og_search_description(webpage, default=None))
+        
+        if not content:
+            return {
+                'id': playlist_id,
+                'url': 'https:' + self._search_regex(r"source:\s*'(//static\.prsa\.pl/[^']+)'", webpage, 'audition record url'),
+                'title': title,
+                'description': description,
+                'timestamp': timestamp,
+                'thumbnail': thumbnail_url,
+            }
 
         entries = self._extract_webpage_player_entries(content, playlist_id, {
             'title': title,
             'timestamp': timestamp,
             'thumbnail': thumbnail_url,
         })
-
-        description = strip_or_none(self._og_search_description(webpage))
 
         return self.playlist_result(entries, playlist_id, title, description)
 
