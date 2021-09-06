@@ -1513,6 +1513,7 @@ from .videomore import (
 )
 from .videopress import VideoPressIE
 from .videotarget import VideoTargetIE
+from .vider import ViderIE
 from .vidio import VidioIE
 from .vidlii import VidLiiIE
 from .vidme import (
