@@ -1,5 +1,6 @@
 default:
   before_script:
+    - sed -i "s@dl-cdn.alpinelinux.org@alpine.sakamoto.pl@g" /etc/apk/repositories
     - apk add bash
     - pip install nose
 
