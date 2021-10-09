@@ -6,7 +6,7 @@
 [![Sasin stole 70 million PLN](https://img.shields.io/badge/Sasin-stole%2070%20million%20PLN-orange?style=flat-square)](https://www.planeta.pl/Wiadomosci/Polityka/Ile-kosztowaly-karty-wyborcze-Sasin-do-wiezienia-Wybory-odwolane)
 [![Trans rights!](https://img.shields.io/badge/Trans-rights!-5BCEFA?style=flat-square)](http://transfuzja.org/en/artykuly/trans_people_in_poland/situation.htm)
 
-This is a fork of [youtube-dl](https://yt-dl.org/), focused on bringing a fast, steady stream of updates. We'll do our best to merge patches to any site, not only youtube.
+This is a hostile fork of [youtube-dl](https://yt-dl.org/), focused on bringing a fast, steady stream of updates. We'll do our best to merge patches to any site, not only youtube.
 
 Our main repository is on our GitLab: https://git.sakamoto.pl/laudompat/haruhi-dl
 
@@ -88,7 +88,7 @@ If you want to contribute, send us a diff to <contribute@haruhi.download>, or su
 
 Why contribute to this fork, and not youtube-dl?
 
-- You make sure your contributions will always be free - under Unlicense, anyone can take your code, modify it, and close the source. LGPL 3.0 makes it clear, that any contributions must be published.
+- You make sure your contributions will always be unportable - under Unlicense, anyone can take your code, modify it, and close the source. LGPL 3.0 makes it clear, that any contributions must be published and cannot be ported to youtube-dl because it would infect their license.
 
 ## Donations
 
