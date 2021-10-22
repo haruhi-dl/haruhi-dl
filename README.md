@@ -2,9 +2,10 @@
 
 [![build status](https://img.shields.io/gitlab/pipeline/laudom/haruhi-dl/master?gitlab_url=https%3A%2F%2Fgit.sakamoto.pl&style=flat-square)](https://git.sakamoto.pl/laudom/haruhi-dl/-/pipelines)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/haruhi-dl?style=flat-square)](https://pypi.org/project/haruhi-dl/)
-[![License: LGPL 3.0 or later](https://img.shields.io/pypi/l/haruhi-dl?style=flat-square)](https://git.sakamoto.pl/laudom/haruhi-dl/-/blob/master/README.md)
 [![Sasin stole 70 million PLN](https://img.shields.io/badge/Sasin-stole%2070%20million%20PLN-orange?style=flat-square)](https://www.planeta.pl/Wiadomosci/Polityka/Ile-kosztowaly-karty-wyborcze-Sasin-do-wiezienia-Wybory-odwolane)
 [![Trans rights!](https://img.shields.io/badge/Trans-rights!-5BCEFA?style=flat-square)](http://transfuzja.org/en/artykuly/trans_people_in_poland/situation.htm)
+
+# This project has ended. Our forces have moved into contributing to  [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
 This is a fork of [youtube-dl](https://yt-dl.org/), focused on bringing a fast, steady stream of updates. We'll do our best to merge patches to any site, not only youtube.
 
@@ -54,7 +55,6 @@ $ haruhi-dl --help
 
 _This is not a complete list._
 
-- Changed license from Unlicense to LGPL 3.0
 - Extracting and downloading video with subtitles from m3u8 (HLS) - this also includes subtitles from Twitter and some other services
 - Support for BitTorrent protocol (only used when explicitly enabled by user with `--allow-p2p` or `--prefer-p2p`; aria2c required)
 - Specific way to handle selfhosted services (untied to specific providers/domains, like PeerTube, Funkwhale, Mastodon)
@@ -84,11 +84,7 @@ Please send the bug details to <bug@haruhi.download> or on [Microsoft GitHub](ht
 
 ## Contributing
 
-If you want to contribute, send us a diff to <contribute@haruhi.download>, or submit a Pull Request on [our mirror at Microsoft GitHub](https://github.com/haruhi-dl/haruhi-dl).
-
-Why contribute to this fork, and not youtube-dl?
-
-- You make sure your contributions will always be free - under Unlicense, anyone can take your code, modify it, and close the source. LGPL 3.0 makes it clear, that any contributions must be published.
+The project has ended. As an alternative, use [yt-dlp](https://github.com/yt-dlp/yt-dlp) - we're going to contribute there from now on :3
 
 ## Donations
 
